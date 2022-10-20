@@ -37,7 +37,7 @@
 ╠═════════════════════════════ Framework ══════════════════════════════╣
 ║                                                                      ║
 ║  Pronghorn is a performant, direct approach to Module scripting.     ║
-║   No Clients or Services, just Modules and Remotes.                  ║
+║   No Controllers or Services, just Modules and Remotes.              ║
 ║                                                                      ║
 ║  All content is stored in the Global, Modules, and Remotes tables.   ║
 ║                                                                      ║
