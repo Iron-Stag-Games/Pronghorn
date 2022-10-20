@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local New: any, Global: any, Modules: any, Remotes: any = {}, nil, nil, nil
+local New: any = {} local Global: any, Modules: any, Remotes: any, Print, Warn, Trace = nil, nil, nil, nil, nil, nil
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -131,4 +131,6 @@ function New.TrackedVariable(Variable: any): {
 	return Actions
 end
 
-return function(GlobalEnv, ModulesEnv, RemotesEnv) Global, Modules, Remotes = GlobalEnv, ModulesEnv, RemotesEnv return New end
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+return function(A, B, C, D, E, F, _) Global, Modules, Remotes, Print, Warn, Trace = A, B, C, D, E, F return New end

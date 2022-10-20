@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local Remotes: any, Global: any, Modules: any = {}, nil, nil
+local Remotes: any = {} local Global: any, Modules: any, Print, Warn, Trace, New: any = nil, nil, nil, nil, nil, nil
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Services
@@ -219,4 +219,6 @@ function Remotes:Deferred()
 	end
 end
 
-return function(GlobalEnv, ModulesEnv, _) Global, Modules = GlobalEnv, ModulesEnv return Remotes end
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+return function(A, B, _, D, E, F, G) Global, Modules, Print, Warn, Trace, New = A, B, D, E, F, G return Remotes end

@@ -21,4 +21,4 @@ unscoped_variables = "deny"
 
 [config]
 shadowing = { ignore_pattern = "^self$|^_" }
-unused_variable = { ignore_pattern = "^Global$|^Modules$|^Remotes$|^_", allow_unused_self = true }
+unused_variable = { ignore_pattern = "^Global$|^Modules$|^Remotes$|^Print$|^Warn$|^Trace$|^New$|^_", allow_unused_self = true }

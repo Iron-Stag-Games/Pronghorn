@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local Debug: any, Global: any, Modules: any, Remotes: any = {__unpack = true}, nil, nil, nil
+local Debug: any = {} local Global: any, Modules: any, Remotes: any, New: any = nil, nil, nil, nil
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -50,4 +50,6 @@ function Debug.Trace(...)
 	end
 end
 
-return function(GlobalEnv, ModulesEnv, RemotesEnv) Global, Modules, Remotes = GlobalEnv, ModulesEnv, RemotesEnv return Debug end
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+return function(A, B, C, _, _, _) Global, Modules, Remotes = A, B, C return Debug end

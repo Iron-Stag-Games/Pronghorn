@@ -30,7 +30,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                     Pronghorn Framework  Rev. B1                     ║
+║                     Pronghorn Framework  Rev. B2                     ║
 ║             https://iron-stag-games.github.io/Pronghorn              ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -50,17 +50,12 @@
 ║                                                                      ║
 ║  Modules that access the framework require a header and footer.      ║
 ║   Otherwise, they must not return a Function.                        ║
-║   See 'New.lua' for an example of a header and footer.               ║
 ║                                                                      ║
 ║  Module Functions with the following names are automated:            ║
 ║   - Init() - Runs after all modules are imported. Cannot yield.      ║
 ║   - Deferred() - Runs after all modules have initialized.            ║
 ║   - PlayerAdded(Player) - Players.PlayerAdded shortcut.              ║
 ║   - PlayerRemoving(Player) - Players.PlayerRemoving shortcut.        ║
-║                                                                      ║
-║  The '__unpack' flag unpacks Module data into the Modules table.     ║
-║   When set, a reference to the Module will not be created.           ║
-║   See 'Debug\init.lua' for an example of the __unpack flag.          ║
 ║                                                                      ║
 ╠═══════════════════════════ Remotes Module ═══════════════════════════╣
 ║                                                                      ║
@@ -78,9 +73,9 @@
 ║                                                                      ║
 ║  The Debug Module is used to filter the output by Module.            ║
 ║   Its Functions are unpacked as the following:                       ║
-║    - Modules.Print()                                                 ║
-║    - Modules.Warn()                                                  ║
-║    - Modules.Traceback()                                             ║
+║    - Print()                                                         ║
+║    - Warn()                                                          ║
+║    - Trace()                                                         ║
 ║   Edit 'Debug\EnabledChannels.lua' for output configuration.         ║
 ║                                                                      ║
 ╠═════════════════════════════ New Module ═════════════════════════════╣

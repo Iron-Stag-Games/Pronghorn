@@ -28,7 +28,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                     Pronghorn Framework  Rev. B1                     ║
+║                     Pronghorn Framework  Rev. B2                     ║
 ║             https://iron-stag-games.github.io/Pronghorn              ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -48,17 +48,12 @@
 ║                                                                      ║
 ║  Modules that access the framework require a header and footer.      ║
 ║   Otherwise, they must not return a Function.                        ║
-║   See 'New.lua' for an example of a header and footer.               ║
 ║                                                                      ║
 ║  Module Functions with the following names are automated:            ║
 ║   - Init() - Runs after all modules are imported. Cannot yield.      ║
 ║   - Deferred() - Runs after all modules have initialized.            ║
 ║   - PlayerAdded(Player) - Players.PlayerAdded shortcut.              ║
 ║   - PlayerRemoving(Player) - Players.PlayerRemoving shortcut.        ║
-║                                                                      ║
-║  The '__unpack' flag unpacks Module data into the Modules table.     ║
-║   When set, a reference to the Module will not be created.           ║
-║   See 'Debug\init.lua' for an example of the __unpack flag.          ║
 ║                                                                      ║
 ╠═══════════════════════════ Remotes Module ═══════════════════════════╣
 ║                                                                      ║
@@ -76,9 +71,9 @@
 ║                                                                      ║
 ║  The Debug Module is used to filter the output by Module.            ║
 ║   Its Functions are unpacked as the following:                       ║
-║    - Modules.Print()                                                 ║
-║    - Modules.Warn()                                                  ║
-║    - Modules.Traceback()                                             ║
+║    - Print()                                                         ║
+║    - Warn()                                                          ║
+║    - Trace()                                                         ║
 ║   Edit 'Debug\EnabledChannels.lua' for output configuration.         ║
 ║                                                                      ║
 ╠═════════════════════════════ New Module ═════════════════════════════╣
@@ -89,7 +84,7 @@
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]
 
-local Global: any, Modules: any, Remotes: any = {}, {}, nil
+local Global: any, Modules: any = {}, {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Services
@@ -102,12 +97,8 @@ local RunService = game:GetService("RunService")
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local AUTOMATED_FUNCTIONS = {
-	"Init";
-	"Deferred";
-	"PlayerAdded";
-	"PlayerRemoving";
-}
+local CoreModules: any = {}
+local CoreModuleFunctions = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
@@ -148,53 +139,61 @@ local function AssignModule(Path: string?, Key: string, Value: {[any]: any})
 end
 
 local function Import(Paths: {string})
-
-	-- Add modules --
-
 	local AllModules: {{["Object"]: ModuleScript, ["Path"]: string}} = {}
 
-	for _, CoreModule in script:GetChildren() do
-		if CoreModule.Name == "Remotes" then
-			table.insert(AllModules, 1, {Object = CoreModule, Path = nil})
-		else
-			table.insert(AllModules, {Object = CoreModule, Path = nil})
+	-- Core Modules --
+
+	for _, Child in script:GetChildren() do
+		CoreModuleFunctions[Child.Name] = require(Child)
+		CoreModules[Child.Name] = CoreModuleFunctions[Child.Name]()
+	end
+
+	-- Unpack Debug Module
+	CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.Debug = CoreModules.Debug.Print, CoreModules.Debug.Warn, CoreModules.Debug.Trace, nil
+
+	-- Set globals
+	for Name in CoreModules do
+		if CoreModuleFunctions[Name] then
+			CoreModules[Name] = CoreModuleFunctions[Name](Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New)
 		end
 	end
+
+	-- Cleanup
+	table.freeze(CoreModules)
+
+	-- Init
+	for _, CoreModule in CoreModules do
+		if type(CoreModule) == "table" and CoreModule.Init then
+			CoreModule:Init()
+		end
+	end
+
+	-- Deferred
+	for _, CoreModule in CoreModules do
+		if type(CoreModule) == "table" and CoreModule.Deferred then
+			task.spawn(CoreModule.Deferred, CoreModule)
+		end
+	end
+
+	-- User Modules --
 
 	for _, Path in Paths do
 		AddModules(AllModules, Path)
 	end
 
-	-- Import --
-
 	for _, ModuleTable in AllModules do
 		local NewModule = require(ModuleTable.Object)
 		if type(NewModule) == "function" then
-			NewModule = NewModule(Global, Modules, Modules.Remotes)
+			NewModule = NewModule(Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New)
 		end
-
-		if type(NewModule) == "table" and NewModule.__unpack then
-			for Key, Value in NewModule do
-				if Key ~= "__unpack" then
-					if table.find(AUTOMATED_FUNCTIONS, Key) then error("The __unpack flag cannot be set on Modules with automated functions") end
-					AssignModule(ModuleTable.Path, Key, Value)
-				end
-			end
-		else
-			AssignModule(ModuleTable.Path, ModuleTable.Object.Name, NewModule)
-		end
-
+		AssignModule(ModuleTable.Path, ModuleTable.Object.Name, NewModule)
 		ModuleTable.Return = NewModule
 	end
 
-
 	-- Cleanup
-	Remotes = Modules.Remotes
-	Modules.Remotes = nil
 	table.freeze(Modules)
 
-	-- Init --
-
+	-- Init
 	for _, ModuleTable in AllModules do
 		if ModuleTable.Return.Init then
 			local DidHeartbeat;
@@ -210,9 +209,8 @@ local function Import(Paths: {string})
 		end
 	end
 
-	-- Deferred --
-
-	local DeferredComplete = Modules.New.Event()
+	-- Deferred
+	local DeferredComplete = CoreModules.New.Event()
 	local StartWaits = 0
 	for _, ModuleTable in AllModules do
 		if ModuleTable.Return.Deferred then
@@ -227,26 +225,26 @@ local function Import(Paths: {string})
 		end
 	end
 
-	-- PlayerAdded --
-
+	-- PlayerAdded
 	for _, ModuleTable in AllModules do
 		if ModuleTable.Return.PlayerAdded then
 			Players.PlayerAdded:Connect(ModuleTable.Return.PlayerAdded)
 		end
 	end
 
-	-- PlayerRemoving --
-
+	-- PlayerRemoving
 	for _, ModuleTable in AllModules do
 		if ModuleTable.Return.PlayerRemoving then
 			Players.PlayerRemoving:Connect(ModuleTable.Return.PlayerRemoving)
 		end
 	end
 
-	-- Wait for Deferred functions to complete
+	-- Wait for Deferred Functions to complete
 	while StartWaits > 0 do
 		DeferredComplete:Wait()
 	end
 end
 
-return {Import, Global, Modules, Remotes}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+return {Import, Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New}
