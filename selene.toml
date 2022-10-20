@@ -1,0 +1,24 @@
+std = "roblox"
+
+[rules]
+almost_swapped = "deny"
+divide_by_zero = "deny"
+duplicate_keys = "deny"
+global_usage = "deny"
+if_same_then_else = "deny"
+ifs_same_cond = "deny"
+incorrect_standard_library_use = "deny"
+mismatched_arg_count = "deny"
+multiple_statements = "allow"
+parenthese_conditions = "deny"
+roblox_incorrect_color3_new_bounds = "deny"
+roblox_incorrect_roact_usage = "deny"
+shadowing = "deny"
+type_check_inside_call = "deny"
+unbalanced_assignments = "deny"
+undefined_variable = "deny"
+unscoped_variables = "deny"
+
+[config]
+shadowing = { ignore_pattern = "^self$|^_" }
+unused_variable = { ignore_pattern = "^Global$|^Modules$|^Remotes$|^_", allow_unused_self = true }
