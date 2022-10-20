@@ -39,7 +39,7 @@ local ToClientBatchedRemotes: {
 local function SetupPlayer(Player: Player)
 	if not ToClientBatchedRemotes[Player] then
 		ToClientBatchedRemotes[Player] = {
-			Remote = Modules.New.Instance("RemoteEvent", RemotesFolder, Player.UserId);
+			Remote = New.Instance("RemoteEvent", RemotesFolder, Player.UserId);
 			Queue = {};
 		}
 	end
@@ -69,7 +69,7 @@ local function ConnectEventClient(Remote: BindableEvent|RemoteEvent|RemoteFuncti
 			if Context ~= Remotes[ModuleName] then error(("Must call %s:%s() with a colon"):format(ModuleName, Remote.Name)) end
 			local Split = debug.info(2, "s"):split(".")
 			local Environment = "[" .. Split[#Split] .. "]"
-			Modules.Print(Environment, Remote, "Fire", ...)
+			Print(Environment, Remote, "Fire", ...)
 			Remote:FireServer(...)
 		end
 
@@ -84,7 +84,7 @@ local function ConnectEventClient(Remote: BindableEvent|RemoteEvent|RemoteFuncti
 			if Context ~= Remotes[ModuleName] then error(("Must call %s:%s() with a colon"):format(ModuleName, Remote.Name)) end
 			local Split = debug.info(2, "s"):split(".")
 			local Environment = "[" .. Split[#Split] .. "]"
-			Modules.Print(Environment, Remote, "Fire", ...)
+			Print(Environment, Remote, "Fire", ...)
 			return Remote:InvokeServer(...)
 		end
 	end
@@ -109,30 +109,30 @@ function Remotes:CreateToClient(Name: string, Returns: boolean?)
 	if Remotes[ModuleName] and Remotes[ModuleName][Name] then error(("Remote '%s' already created in '%s'"):format(Name, ModuleName)) end
 
 	local Environment = "[" .. ModuleName .. "]"
-	local ServerFolder = RemotesFolder:FindFirstChild(ModuleName) or Modules.New.Instance("Folder", RemotesFolder, ModuleName)
-	local Remote = Modules.New.Instance(Returns and "RemoteFunction" or "BindableEvent", ServerFolder, Name)
+	local ServerFolder = RemotesFolder:FindFirstChild(ModuleName) or New.Instance("Folder", RemotesFolder, ModuleName)
+	local Remote = New.Instance(Returns and "RemoteFunction" or "BindableEvent", ServerFolder, Name)
 	local Actions = {}
 
 	if Returns then
 		function Actions:Fire(...)
-			Modules.Print(Environment, Name, "Fire", ...)
+			Print(Environment, Name, "Fire", ...)
 			return Remote:InvokeClient(...)
 		end
 	else
 		function Actions:Fire(Player, ...)
-			Modules.Print(Environment, Name, "Fire", Player, ...)
+			Print(Environment, Name, "Fire", Player, ...)
 			AddToBatchQueue(Player, {Event = Remote, Parameters = {...}})
 		end
 
 		function Actions:FireAll(...)
-			Modules.Print(Environment, Name, "FireAll", ...)
+			Print(Environment, Name, "FireAll", ...)
 			for _, Player in Players:GetPlayers() do
 				AddToBatchQueue(Player, {Event = Remote, Parameters = {...}})
 			end
 		end
 
 		function Actions:FireAllExcept(IgnorePlayer, ...)
-			Modules.Print(Environment, Name, "FireAllExcept", IgnorePlayer, ...)
+			Print(Environment, Name, "FireAllExcept", IgnorePlayer, ...)
 			for _, Player in Players:GetPlayers() do
 				if Player ~= IgnorePlayer then
 					AddToBatchQueue(Player, {Event = Remote, Parameters = {...}})
@@ -157,8 +157,8 @@ function Remotes:CreateToServer(Name: string, Returns: boolean?, Function: (any)
 	if type(Remotes[ModuleName]) == "function" then error(("Creating remotes under the ModuleScript name '%s' would overwrite a function"):format(ModuleName)) end
 	if Remotes[ModuleName] and Remotes[ModuleName][Name] then error(("Remote '%s' already created in '%s'"):format(Name, ModuleName)) end
 
-	local ServerFolder = RemotesFolder:FindFirstChild(ModuleName) or Modules.New.Instance("Folder", RemotesFolder, ModuleName)
-	local Remote = Modules.New.Instance(Returns and "RemoteFunction" or "RemoteEvent", ServerFolder, Name)
+	local ServerFolder = RemotesFolder:FindFirstChild(ModuleName) or New.Instance("Folder", RemotesFolder, ModuleName)
+	local Remote = New.Instance(Returns and "RemoteFunction" or "RemoteEvent", ServerFolder, Name)
 	local Actions = {}
 
 	if Returns then
@@ -179,7 +179,7 @@ end
 
 function Remotes:Init()
 	if RunService:IsServer() then
-		RemotesFolder = Modules.New.Instance("Folder", ReplicatedStorage, "__remotes")
+		RemotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
 
 		Players.PlayerAdded:Connect(SetupPlayer)
 
@@ -211,7 +211,7 @@ end
 
 function Remotes:Deferred()
 	if RunService:IsClient() then
-		RemotesFolder:WaitForChild(Global.LocalPlayer.UserId).OnClientEvent:Connect(function(Batch: {{Event: BindableEvent, Parameters: {any}}})
+		RemotesFolder:WaitForChild(Players.LocalPlayer.UserId).OnClientEvent:Connect(function(Batch: {{Event: BindableEvent, Parameters: {any}}})
 			for _, Data in Batch do
 				Data.Event:Fire(unpack(Data.Parameters))
 			end

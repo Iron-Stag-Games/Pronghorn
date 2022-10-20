@@ -28,7 +28,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                     Pronghorn Framework  Rev. B2                     ║
+║                     Pronghorn Framework  Rev. B3                     ║
 ║             https://iron-stag-games.github.io/Pronghorn              ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -141,42 +141,6 @@ end
 local function Import(Paths: {string})
 	local AllModules: {{["Object"]: ModuleScript, ["Path"]: string}} = {}
 
-	-- Core Modules --
-
-	for _, Child in script:GetChildren() do
-		CoreModuleFunctions[Child.Name] = require(Child)
-		CoreModules[Child.Name] = CoreModuleFunctions[Child.Name]()
-	end
-
-	-- Unpack Debug Module
-	CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.Debug = CoreModules.Debug.Print, CoreModules.Debug.Warn, CoreModules.Debug.Trace, nil
-
-	-- Set globals
-	for Name in CoreModules do
-		if CoreModuleFunctions[Name] then
-			CoreModules[Name] = CoreModuleFunctions[Name](Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New)
-		end
-	end
-
-	-- Cleanup
-	table.freeze(CoreModules)
-
-	-- Init
-	for _, CoreModule in CoreModules do
-		if type(CoreModule) == "table" and CoreModule.Init then
-			CoreModule:Init()
-		end
-	end
-
-	-- Deferred
-	for _, CoreModule in CoreModules do
-		if type(CoreModule) == "table" and CoreModule.Deferred then
-			task.spawn(CoreModule.Deferred, CoreModule)
-		end
-	end
-
-	-- User Modules --
-
 	for _, Path in Paths do
 		AddModules(AllModules, Path)
 	end
@@ -246,5 +210,39 @@ local function Import(Paths: {string})
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Import Core Modules --
+
+for _, Child in script:GetChildren() do
+	CoreModuleFunctions[Child.Name] = require(Child)
+	CoreModules[Child.Name] = CoreModuleFunctions[Child.Name]()
+end
+
+-- Unpack Debug Module
+CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.Debug = CoreModules.Debug.Print, CoreModules.Debug.Warn, CoreModules.Debug.Trace, nil
+
+-- Set globals
+for Name in CoreModules do
+	if CoreModuleFunctions[Name] then
+		CoreModules[Name] = CoreModuleFunctions[Name](Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New)
+	end
+end
+
+-- Cleanup
+table.freeze(CoreModules)
+
+-- Init
+for _, CoreModule in CoreModules do
+	if type(CoreModule) == "table" and CoreModule.Init then
+		CoreModule:Init()
+	end
+end
+
+-- Deferred
+for _, CoreModule in CoreModules do
+	if type(CoreModule) == "table" and CoreModule.Deferred then
+		task.spawn(CoreModule.Deferred, CoreModule)
+	end
+end
 
 return {Import, Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New}
