@@ -1,4 +1,4 @@
-local ExampleModule: any = {} local Global: any, Modules: any, Remotes: any, Print, Warn, Trace, New: any
+local ExampleModule = {} local Global, Modules, Remotes, Print, Warn, Trace, New
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Services

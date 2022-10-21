@@ -1,4 +1,4 @@
-local Import, Global: any, Modules: any, Remotes: any, Print, Warn, Trace, New: any = unpack(require(game:GetService("ReplicatedStorage"):WaitForChild("Pronghorn")))
+local Import, Global, Modules, Remotes, Print, Warn, Trace, New = unpack(require(game:GetService("ReplicatedStorage"):WaitForChild("Pronghorn")))
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Services

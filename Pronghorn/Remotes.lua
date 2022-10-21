@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local Remotes: any = {} local Global: any, Modules: any, Print, Warn, Trace, New: any = nil, nil, nil, nil, nil, nil -- Core Module boilerplate only. Do not use!
+local Remotes = {} local Global, Modules, Print, Warn, Trace, New = nil, nil, nil, nil, nil, nil -- Core Module boilerplate only. Do not use!
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Services

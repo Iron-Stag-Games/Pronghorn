@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local Debug: any = {} local Global: any, Modules: any, Remotes: any, New: any = nil, nil, nil, nil -- Core Module boilerplate only. Do not use!
+local Debug = {} local Global, Modules, Remotes, New = nil, nil, nil, nil -- Core Module boilerplate only. Do not use!
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
