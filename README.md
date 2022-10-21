@@ -1,5 +1,3 @@
-[![Lua linting](https://github.com/Iron-Stag-Games/Pronghorn/actions/workflows/lua-lint.yml/badge.svg)](https://github.com/Iron-Stag-Games/Pronghorn/actions/workflows/lua-lint.yml)
-
 ```
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
@@ -85,3 +83,5 @@
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
+# Join the Iron Stag Games Discord!
+## [discord.gg/n33vdDr](https://discord.gg/n33vdDr)
