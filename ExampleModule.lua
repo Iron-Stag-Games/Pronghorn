@@ -48,4 +48,4 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return function(A, B, C, D, E, F, G) Global, Modules, Remotes, Print, Warn, Trace, New = A, B, C, D, E, F, G return ExampleModule end
+return function(...) Global, Modules, Remotes, Print, Warn, Trace, New = ... return ExampleModule end

@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local New: any = {} local Global: any, Modules: any, Remotes: any, Print, Warn, Trace = nil, nil, nil, nil, nil, nil
+local New: any = {} local Global: any, Modules: any, Remotes: any, Print, Warn, Trace = nil, nil, nil, nil, nil, nil -- Core Module boilerplate only. Do not use!
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -133,4 +133,4 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return function(A, B, C, D, E, F, _) Global, Modules, Remotes, Print, Warn, Trace = A, B, C, D, E, F return New end
+return function(A, B, C, D, E, F, _) Global, Modules, Remotes, Print, Warn, Trace = A, B, C, D, E, F return New end -- Core Module boilerplate only. Do not use!

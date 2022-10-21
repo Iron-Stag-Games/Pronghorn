@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local Debug: any = {} local Global: any, Modules: any, Remotes: any, New: any = nil, nil, nil, nil
+local Debug: any = {} local Global: any, Modules: any, Remotes: any, New: any = nil, nil, nil, nil -- Core Module boilerplate only. Do not use!
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -52,4 +52,4 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return function(A, B, C, _, _, _) Global, Modules, Remotes = A, B, C return Debug end
+return function(A, B, C, _, _, _, G) Global, Modules, Remotes, New = A, B, C, G return Debug end -- Core Module boilerplate only. Do not use!
