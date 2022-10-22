@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local New: any = {} local Global, Modules, Remotes, Print, Warn, Trace = nil, nil, nil, nil, nil, nil -- Core Module boilerplate only. Do not use!
+local New = {} local Global, Modules, Remotes, Print, Warn, Trace -- Core Module boilerplate only. Do not use!
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
