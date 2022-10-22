@@ -34,7 +34,9 @@
 ║                                                                      ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║                                                                      ║
-║   Pronghorn is a performant, direct approach to Module scripting.    ║
+║          Pronghorn is a direct approach to Module scripting          ║
+║                 that facilitates rapid development.                  ║
+║                                                                      ║
 ║        No Controllers or Services, just Modules and Remotes.         ║
 ║                                                                      ║
 ╠═══════════════════════════════ Usage ════════════════════════════════╣
