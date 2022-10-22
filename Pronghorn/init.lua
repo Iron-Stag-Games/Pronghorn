@@ -28,58 +28,22 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                     Pronghorn Framework  Rev. B4                     ║
-║             https://iron-stag-games.github.io/Pronghorn              ║
+║                     Pronghorn Framework  Rev. B5                     ║
+║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
-╠═════════════════════════════ Framework ══════════════════════════════╣
+╠══════════════════════════════════════════════════════════════════════╣
 ║                                                                      ║
-║  Pronghorn is a performant, direct approach to Module scripting.     ║
-║   No Controllers or Services, just Modules and Remotes.              ║
+║   Pronghorn is a performant, direct approach to Module scripting.    ║
+║        No Controllers or Services, just Modules and Remotes.         ║
 ║                                                                      ║
-║  All content is stored in the Global, Modules, and Remotes tables.   ║
+╠═══════════════════════════════ Usage ════════════════════════════════╣
 ║                                                                      ║
-╠═══════════════════════════════ Script ═══════════════════════════════╣
-║                                                                      ║
-║  The Import() Function is used in a Script to import your Modules.   ║
-║   Modules as descendants of other Modules are not imported.          ║
-║                                                                      ║
-╠══════════════════════════════ Modules ═══════════════════════════════╣
-║                                                                      ║
-║  Modules that access the framework require a header and footer.      ║
+║ - The Import() Function is used in a Script to import your Modules.  ║
+║ - Modules that access the framework require a header and footer.     ║
 ║   Otherwise, they must not return a Function.                        ║
-║                                                                      ║
-║  Module Functions with the following names are automated:            ║
-║   - Init() - Runs after all modules are imported. Cannot yield.      ║
-║   - Deferred() - Runs after all modules have initialized.            ║
-║   - PlayerAdded(Player) - Players.PlayerAdded shortcut.              ║
-║   - PlayerRemoving(Player) - Players.PlayerRemoving shortcut.        ║
-║                                                                      ║
-╠═══════════════════════════ Remotes Module ═══════════════════════════╣
-║                                                                      ║
-║  The Remotes Module is used for all network communication.           ║
-║   Remotes are always immediately visible on the Client.              ║
-║   Remotes are grouped by the origin Module's name.                   ║
-║   CreateToServer() remotes are invoked directly.                     ║
-║    -> Remotes.Module:Remote()                                        ║
-║   CreateToClient() remotes use Fire and FireAll.                     ║
-║    -> Remotes.Module.Remote:Fire(Player)                             ║
-║                                                                      ║
-║  Server-to-Client remotes are batched for improved performance.      ║
-║                                                                      ║
-╠════════════════════════════ Debug Module ════════════════════════════╣
-║                                                                      ║
-║  The Debug Module is used to filter the output by Module.            ║
-║   Its Functions are unpacked as the following:                       ║
-║    - Print()                                                         ║
-║    - Warn()                                                          ║
-║    - Trace()                                                         ║
-║   Edit 'Debug\EnabledChannels.lua' for output configuration.         ║
-║                                                                      ║
-╠═════════════════════════════ New Module ═════════════════════════════╣
-║                                                                      ║
-║  The New Module can be used to create Instances and Event objects.   ║
-║   Event and TrackedVariable objects outperform BindableEvents.       ║
+║ - Modules as descendants of other Modules are not imported.          ║
+║ - Edit 'Debug\EnabledChannels.lua' to toggle the output of Modules.  ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]
@@ -159,7 +123,7 @@ local function Import(Paths: {string})
 
 	-- Init
 	for _, ModuleTable in AllModules do
-		if ModuleTable.Return.Init then
+		if type(ModuleTable.Return) == "table" and ModuleTable.Return.Init then
 			local DidHeartbeat;
 			local HeartbeatConnection;
 			HeartbeatConnection = RunService.Heartbeat:Connect(function()
@@ -177,7 +141,7 @@ local function Import(Paths: {string})
 	local DeferredComplete = CoreModules.New.Event()
 	local StartWaits = 0
 	for _, ModuleTable in AllModules do
-		if ModuleTable.Return.Deferred then
+		if type(ModuleTable.Return) == "table" and ModuleTable.Return.Deferred then
 			StartWaits += 1
 			task.spawn(function()
 				ModuleTable.Return:Deferred()
@@ -191,14 +155,14 @@ local function Import(Paths: {string})
 
 	-- PlayerAdded
 	for _, ModuleTable in AllModules do
-		if ModuleTable.Return.PlayerAdded then
+		if type(ModuleTable.Return) == "table" and ModuleTable.Return.PlayerAdded then
 			Players.PlayerAdded:Connect(ModuleTable.Return.PlayerAdded)
 		end
 	end
 
 	-- PlayerRemoving
 	for _, ModuleTable in AllModules do
-		if ModuleTable.Return.PlayerRemoving then
+		if type(ModuleTable.Return) == "table" and ModuleTable.Return.PlayerRemoving then
 			Players.PlayerRemoving:Connect(ModuleTable.Return.PlayerRemoving)
 		end
 	end

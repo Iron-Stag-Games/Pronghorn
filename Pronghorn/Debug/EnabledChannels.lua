@@ -1,15 +1,17 @@
 return game:GetService("RunService"):IsClient() and {
 	-- Client
 	ExampleScript = true;
-	ExampleModule = true;
+	ExampleClientModule = true;
 
 	-- Shared
 	Remotes = true;
+	ExampleSharedModule = true;
 } or {
 	-- Server
 	ExampleScript = true;
-	ExampleModule = true;
+	ExampleServerModule = true;
 
 	-- Shared
 	Remotes = true;
+	ExampleSharedModule = true;
 }

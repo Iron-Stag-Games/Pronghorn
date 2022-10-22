@@ -11,7 +11,7 @@ local New: any = {} local Global, Modules, Remotes, Print, Warn, Trace = nil, ni
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function New.Instance(ClassName: string, Parent: Instance, Name: string?, Properties: {[string]: any}): Instance
+function New.Instance(ClassName: string, Parent: Instance?, Name: string?, Properties: {[string]: any}): Instance
 	local NewInstance = Instance.new(ClassName)
 
 	if Name then
