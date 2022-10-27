@@ -102,8 +102,7 @@ end
 function Remotes:CreateToClient(Name: string, Returns: boolean?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 
-	local Split = debug.info(2, "s"):split(".")
-	local ModuleName = Split[#Split]
+	local ModuleName = tostring(getfenv(2).script)
 
 	if type(Remotes[ModuleName]) == "function" then error(("Creating remotes under the ModuleScript name '%s' would overwrite a function"):format(ModuleName)) end
 	if Remotes[ModuleName] and Remotes[ModuleName][Name] then error(("Remote '%s' already created in '%s'"):format(Name, ModuleName)) end
@@ -151,8 +150,7 @@ function Remotes:CreateToServer(Name: string, Returns: boolean?, Function: (any)
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 	if not Function then error("ToServer remotes must bind a Function") end
 
-	local Split = debug.info(2, "s"):split(".")
-	local ModuleName = Split[#Split]
+	local ModuleName = tostring(getfenv(2).script)
 
 	if type(Remotes[ModuleName]) == "function" then error(("Creating remotes under the ModuleScript name '%s' would overwrite a function"):format(ModuleName)) end
 	if Remotes[ModuleName] and Remotes[ModuleName][Name] then error(("Remote '%s' already created in '%s'"):format(Name, ModuleName)) end

@@ -11,7 +11,21 @@ local New = {} local Global, Modules, Remotes, Print, Warn, Trace -- Core Module
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function New.Instance(ClassName: string, Parent: Instance?, Name: string?, Properties: {[string]: any}): Instance
+function New.Instance(ClassName: string, ...): Instance
+	local Parent: Instance?, Name: string?, Properties: {[string]: any}?
+	for _, Parameter in {...} do
+		if typeof(Parameter) == "Instance" then
+			if Parent then error("Parent parameter used more than once") end
+			Parent = Parameter
+		elseif type(Parameter) == "string" then
+			if Name then error("Name parameter used more than once") end
+			Name = Parameter
+		elseif type(Parameter) == "table" then
+			if Properties then error("Properties parameter used more than once") end
+			Properties = Parameter
+		end
+	end
+
 	local NewInstance = Instance.new(ClassName)
 
 	if Name then
@@ -22,7 +36,9 @@ function New.Instance(ClassName: string, Parent: Instance?, Name: string?, Prope
 			NewInstance[Key] = Value
 		end
 	end
-	NewInstance.Parent = Parent
+	if Parent then
+		NewInstance.Parent = Parent
+	end
 
 	return NewInstance
 end

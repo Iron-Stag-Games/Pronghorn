@@ -10,6 +10,7 @@ No Controllers or Services, just Modules and Remotes.
 - The Import() Function is used in a Script to import your Modules.
 - Modules that access the framework require a header and footer. Otherwise, they must not return a Function.
 - Modules as descendants of other Modules are not imported.
+- Subfolder structure is included when importing (e.g. Modules.Subfolder1.Subfolder2.ExampleModule)
 - Edit [Debug/EnabledChannels.lua](Pronghorn/Debug/EnabledChannels.lua) to toggle the output of Modules.
 
 # How does Pronghorn compare to Knit?
@@ -32,8 +33,16 @@ No Controllers or Services, just Modules and Remotes.
 
 ## Remotes
 ```lua
+-- Creation
 Remotes:CreateToClient(Name: string, Returns: boolean?)
 Remotes:CreateToServer(Name: string, Returns: boolean?, Function: (any) -> (any))
+
+-- Server Invocation
+Remotes.ExampleModule.ExampleRemote:Fire(Player: Player, ...)
+Remotes.ExampleModule.ExampleRemote:FireAll(...)
+
+-- Client Invocation
+Remotes.ExampleModule:ExampleRemote(...)
 ```
 
 ## Debug
@@ -45,7 +54,9 @@ Trace(...)
 
 ## New
 ```lua
-New.Instance(ClassName: string, Parent: Instance?, Name: string?, Properties: {[string]: any}): Instance
+New.Instance(ClassName: string, Parent: Instance?, Name: string?, Properties: {[string]: any}?): Instance
+    -- Parent, Name, and Properties optional parameters can be provided in any combination and order.
+    -- Ex. New.Instance("Part", {Properties})
 New.Event(): {
 	Fire: (any) -> ();
 	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
@@ -94,11 +105,11 @@ function ExampleModule:Deferred()
     -- Runs after all modules have initialized.
 end
 
-function ExampleModule:PlayerAdded(Player: Player)
+function ExampleModule.PlayerAdded(Player: Player)
     -- Players.PlayerAdded shortcut.
 end
 
-function ExampleModule:PlayerRemoving(Player: Player)
+function ExampleModule.PlayerRemoving(Player: Player)
     -- Players.PlayerRemoving shortcut.
 end
 ```

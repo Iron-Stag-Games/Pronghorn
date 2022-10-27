@@ -18,8 +18,7 @@ local ENABLED_CHANNELS = require(script.EnabledChannels) :: {[string]: boolean}
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 function Debug.Print(...)
-	local Split = debug.info(2, "s"):split(".")
-	local Channel = Split[#Split]
+	local Channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[Channel] == nil then error(("'%s' is not a valid debug channel"):format(Channel)) end
 
@@ -29,8 +28,7 @@ function Debug.Print(...)
 end
 
 function Debug.Warn(...)
-	local Split = debug.info(2, "s"):split(".")
-	local Channel = Split[#Split]
+	local Channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[Channel] == nil then error(("'%s' is not a valid debug channel"):format(Channel)) end
 
@@ -40,8 +38,7 @@ function Debug.Warn(...)
 end
 
 function Debug.Trace(...)
-	local Split = debug.info(2, "s"):split(".")
-	local Channel = Split[#Split]
+	local Channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[Channel] == nil then error(("'%s' is not a valid debug channel"):format(Channel)) end
 
