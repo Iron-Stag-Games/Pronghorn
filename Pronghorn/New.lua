@@ -17,9 +17,9 @@ function New.Instance(ClassName: string, ...): Instance
 		if typeof(Parameter) == "Instance" then
 			if Parent then error("Parent parameter used more than once") end
 			Parent = Parameter
-		elseif type(Parameter) == "string" then
+		elseif type(Parameter) == "string" or type(Parameter) == "number" then
 			if Name then error("Name parameter used more than once") end
-			Name = Parameter
+			Name = tostring(Parameter)
 		elseif type(Parameter) == "table" then
 			if Properties then error("Properties parameter used more than once") end
 			Properties = Parameter
