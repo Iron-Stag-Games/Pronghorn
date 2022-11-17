@@ -28,7 +28,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                     Pronghorn Framework  Rev. B7                     ║
+║                     Pronghorn Framework  Rev. B8                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -180,8 +180,10 @@ end
 -- Import Core Modules --
 
 for _, Child in script:GetChildren() do
-	CoreModuleFunctions[Child.Name] = require(Child)
-	CoreModules[Child.Name] = CoreModuleFunctions[Child.Name]()
+	if Child:IsA("ModuleScript") then
+		CoreModuleFunctions[Child.Name] = require(Child)
+		CoreModules[Child.Name] = CoreModuleFunctions[Child.Name]()
+	end
 end
 
 -- Unpack Debug Module
