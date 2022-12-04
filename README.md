@@ -34,11 +34,11 @@ No Controllers or Services, just Modules and Remotes.
 ## Remotes
 ```lua
 -- Creation
-Remotes:CreateToClient(Name: string, Returns: boolean?)
-Remotes:CreateToServer(Name: string, Returns: boolean?, Function: (any) -> (any))
+Remotes:CreateToClient(name: string, returns: boolean?)
+Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> (any))
 
 -- Server Invocation
-Remotes.ExampleModule.ExampleRemote:Fire(Player: Player, ...)
+Remotes.ExampleModule.ExampleRemote:Fire(player: Player, ...)
 Remotes.ExampleModule.ExampleRemote:FireAll(...)
 
 -- Client Invocation
@@ -54,7 +54,7 @@ Trace(...)
 
 ## New
 ```lua
-New.Instance(ClassName: string, Parent: Instance?, Name: string?, Properties: {[string]: any}?): Instance
+New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any}?): Instance
 	-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
 	-- Ex. New.Instance("Part", {Properties})
 New.Event(): {
@@ -65,7 +65,7 @@ New.Event(): {
 }
 New.TrackedVariable(Variable: any): {
 	Get: () -> (any);
-	Set: (Value: any) -> ();
+	Set: (value: any) -> ();
 	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
 	ConnectOnce: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
 	Wait: () -> (any);
@@ -121,17 +121,17 @@ function ExampleServerModule:Init()
 	Remotes:CreateToClient("TableCounted")
 	-- Second parameter is nil, so this Remote is non-returning.
 
-	Remotes:CreateToServer("CountTable", true, function(Player: Player, Table: {any})
-		Remotes.ExampleServerModule.TableCounted:FireAll(Player.Name)
-		return #Table
+	Remotes:CreateToServer("CountTable", true, function(player: Player, tableToCount: {any})
+		Remotes.ExampleServerModule.TableCounted:FireAll(player.Name)
+		return #tableToCount
 	end)
 	-- Second parameter is true, so this Remote returns.
 end
 
 -- On Client
 function ExampleClientModule:Init()
-	Remotes.ExampleServerModule.TableCounted:Connect(function(PlayerName: string)
-		Print(PlayerName, "requested a Table to be counted.")
+	Remotes.ExampleServerModule.TableCounted:Connect(function(playerName: string)
+		Print(playerName, "requested a Table to be counted.")
 	end)
 
 	Print(Remotes.ExampleServerModule:CountTable({"A", "B", "C"}))

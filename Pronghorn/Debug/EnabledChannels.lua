@@ -1,4 +1,4 @@
-return game:GetService("RunService"):IsClient() and {
+return if game:GetService("RunService"):IsClient() then {
 	-- Client
 	ExampleScript = true;
 	ExampleClientModule = true;
@@ -6,7 +6,7 @@ return game:GetService("RunService"):IsClient() and {
 	-- Shared
 	Remotes = true;
 	ExampleSharedModule = true;
-} or {
+} else {
 	-- Server
 	ExampleScript = true;
 	ExampleServerModule = true;

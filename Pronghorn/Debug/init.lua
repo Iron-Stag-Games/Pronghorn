@@ -18,32 +18,32 @@ local ENABLED_CHANNELS = require(script.EnabledChannels) :: {[string]: boolean}
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 function Debug.Print(...)
-	local Channel = tostring(getfenv(2).script)
+	local channel = tostring(getfenv(2).script)
 
-	if ENABLED_CHANNELS[Channel] == nil then error(("'%s' is not a valid debug channel"):format(Channel)) end
+	if ENABLED_CHANNELS[channel] == nil then error(("'%s' is not a valid debug channel"):format(channel)) end
 
-	if ENABLED_CHANNELS[Channel] then
-		print("[" .. Channel .. "]", ...)
+	if ENABLED_CHANNELS[channel] then
+		print("[" .. channel .. "]", ...)
 	end
 end
 
 function Debug.Warn(...)
-	local Channel = tostring(getfenv(2).script)
+	local channel = tostring(getfenv(2).script)
 
-	if ENABLED_CHANNELS[Channel] == nil then error(("'%s' is not a valid debug channel"):format(Channel)) end
+	if ENABLED_CHANNELS[channel] == nil then error(("'%s' is not a valid debug channel"):format(channel)) end
 
-	if ENABLED_CHANNELS[Channel] then
-		warn("[" .. Channel .. "]", ...)
+	if ENABLED_CHANNELS[channel] then
+		warn("[" .. channel .. "]", ...)
 	end
 end
 
 function Debug.Trace(...)
-	local Channel = tostring(getfenv(2).script)
+	local channel = tostring(getfenv(2).script)
 
-	if ENABLED_CHANNELS[Channel] == nil then error(("'%s' is not a valid debug channel"):format(Channel)) end
+	if ENABLED_CHANNELS[channel] == nil then error(("'%s' is not a valid debug channel"):format(channel)) end
 
-	if ENABLED_CHANNELS[Channel] then
-		warn(debug.traceback("[" .. Channel .. "]"), ...)
+	if ENABLED_CHANNELS[channel] then
+		warn(debug.traceback("[" .. channel .. "]"), ...)
 	end
 end
 

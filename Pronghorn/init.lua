@@ -50,7 +50,10 @@
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]
 
-local Global, Modules = {}, {}
+local Pronghorn = {
+	Global = {};
+	Modules = {};
+}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Services
@@ -63,115 +66,118 @@ local RunService = game:GetService("RunService")
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local CoreModules: any = {}
-local CoreModuleFunctions = {}
+local coreModules: any = {}
+local coreModuleFunctions = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function AddModules(AllModules: {}, Object: Instance, CurrentPath: string?)
-	for _, Child in Object:GetChildren() do
-		if Child:IsA("ModuleScript") then
-			if Child ~= script then
-				table.insert(AllModules, {Object = Child, Path = CurrentPath})
+local function addModules(allModules: {}, object: Instance, currentPath: string?)
+	for _, child in object:GetChildren() do
+		if child:IsA("ModuleScript") then
+			if child ~= script then
+				table.insert(allModules, {Object = child, Path = currentPath})
 			end
 		else
-			AddModules(AllModules, Child, (CurrentPath or "") .. "/" .. Child.Name:gsub("/", ""))
+			addModules(allModules, child, (currentPath or "") .. "/" .. child.Name:gsub("/", ""))
 		end
 	end
 end
 
-local function AssignModule(Path: string?, Key: string, Value: {[any]: any})
-	local NewPath = Modules
+local function assignModule(path: string?, key: string, value: {[any]: any})
+	local newPath = Pronghorn.Modules
 
-	if Path then
-		local SubPaths = Path:split("/")
-		if #SubPaths > 1 then
-			for Index = 2, #SubPaths do
-				if Index > 2 or SubPaths[Index] ~= "Common" then
-					if NewPath[SubPaths[Index]] ~= nil and type(NewPath[SubPaths[Index]]) ~= "table" then error(("'%s' is already assigned in the Modules table"):format(Path)) end
-					if NewPath[SubPaths[Index]] == nil then
-						NewPath[SubPaths[Index]] = {}
+	if path then
+		local subPaths = path:split("/")
+		if #subPaths > 1 then
+			for index = 2, #subPaths do
+				if index > 2 or subPaths[index] ~= "Common" then
+					if newPath[subPaths[index]] ~= nil and type(newPath[subPaths[index]]) ~= "table" then error(("'%s' is already assigned in the Modules table"):format(path)) end
+					if newPath[subPaths[index]] == nil then
+						newPath[subPaths[index]] = {}
 					end
-					NewPath = NewPath[SubPaths[Index]]
+					newPath = newPath[subPaths[index]]
 				end
 			end
 		end
 	end
 
-	if NewPath[Key] ~= nil then error(("'%s' is already assigned in the Modules table"):format((Path and Path .. "/" or "") .. Key)) end
-	NewPath[Key] = Value
+	if newPath[key] ~= nil then error(("'%s' is already assigned in the Modules table"):format((if path then path .. "/" else "") .. key)) end
+	newPath[key] = value
 end
 
-local function Import(Paths: {string})
-	local AllModules: {{["Object"]: ModuleScript, ["Path"]: string}} = {}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Module Functions
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-	for _, Path in Paths do
-		AddModules(AllModules, Path)
+function Pronghorn.Import(paths: {string})
+	local allModules: {{["Object"]: ModuleScript, ["Path"]: string}} = {}
+
+	for _, path in paths do
+		addModules(allModules, path)
 	end
 
-	for _, ModuleTable in AllModules do
-		local NewModule = require(ModuleTable.Object)
-		if type(NewModule) == "function" then
-			NewModule = NewModule(Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New)
+	for _, moduleTable in allModules do
+		local newModule = require(moduleTable.Object)
+		if type(newModule) == "function" then
+			newModule = newModule(Pronghorn.Global, Pronghorn.Modules, coreModules.Remotes, coreModules.Print, coreModules.Warn, coreModules.Trace, coreModules.New)
 		end
-		AssignModule(ModuleTable.Path, ModuleTable.Object.Name, NewModule)
-		ModuleTable.Return = NewModule
+		assignModule(moduleTable.Path, moduleTable.Object.Name, newModule)
+		moduleTable.Return = newModule
 	end
 
 	-- Cleanup
-	table.freeze(Modules)
+	table.freeze(Pronghorn.Modules)
 
 	-- Init
-	for _, ModuleTable in AllModules do
-		if type(ModuleTable.Return) == "table" and ModuleTable.Return.Init then
-			local DidHeartbeat;
-			local HeartbeatConnection;
-			HeartbeatConnection = RunService.Heartbeat:Connect(function()
-				DidHeartbeat = true
-				HeartbeatConnection:Disconnect()
+	for _, moduleTable in allModules do
+		if type(moduleTable.Return) == "table" and moduleTable.Return.Init then
+			local didHeartbeat;
+			local heartbeatConnection; heartbeatConnection = RunService.Heartbeat:Connect(function()
+				didHeartbeat = true
+				heartbeatConnection:Disconnect()
 			end)
-			ModuleTable.Return:Init()
-			if DidHeartbeat then
-				error(("%s yielded during Init"):format(ModuleTable.Object:GetFullName()))
+			moduleTable.Return:Init()
+			if didHeartbeat then
+				error(("%s yielded during Init"):format(moduleTable.Object:GetFullName()))
 			end
 		end
 	end
 
 	-- Deferred
-	local DeferredComplete = CoreModules.New.Event()
-	local StartWaits = 0
-	for _, ModuleTable in AllModules do
-		if type(ModuleTable.Return) == "table" and ModuleTable.Return.Deferred then
-			StartWaits += 1
+	local deferredComplete = coreModules.New.Event()
+	local startWaits = 0
+	for _, moduleTable in allModules do
+		if type(moduleTable.Return) == "table" and moduleTable.Return.Deferred then
+			startWaits += 1
 			task.spawn(function()
-				ModuleTable.Return:Deferred()
-				StartWaits -= 1
-				if StartWaits == 0 then
-					DeferredComplete:Fire()
+				moduleTable.Return:Deferred()
+				startWaits -= 1
+				if startWaits == 0 then
+					deferredComplete:Fire()
 				end
 			end)
 		end
 	end
 
 	-- PlayerAdded
-	for _, ModuleTable in AllModules do
-		if type(ModuleTable.Return) == "table" and ModuleTable.Return.PlayerAdded then
-			Players.PlayerAdded:Connect(ModuleTable.Return.PlayerAdded)
+	for _, moduleTable in allModules do
+		if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
+			Players.PlayerAdded:Connect(moduleTable.Return.PlayerAdded)
 		end
 	end
 
 	-- PlayerRemoving
-	for _, ModuleTable in AllModules do
-		if type(ModuleTable.Return) == "table" and ModuleTable.Return.PlayerRemoving then
-			Players.PlayerRemoving:Connect(ModuleTable.Return.PlayerRemoving)
+	for _, moduleTable in allModules do
+		if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoving then
+			Players.PlayerRemoving:Connect(moduleTable.Return.PlayerRemoving)
 		end
 	end
 
 	-- Wait for Deferred Functions to complete
-	while StartWaits > 0 do
-		DeferredComplete:Wait()
+	while startWaits > 0 do
+		deferredComplete:Wait()
 	end
 end
 
@@ -179,38 +185,38 @@ end
 
 -- Import Core Modules --
 
-for _, Child in script:GetChildren() do
-	if Child:IsA("ModuleScript") then
-		CoreModuleFunctions[Child.Name] = require(Child)
-		CoreModules[Child.Name] = CoreModuleFunctions[Child.Name]()
+for _, child in script:GetChildren() do
+	if child:IsA("ModuleScript") then
+		coreModuleFunctions[child.Name] = require(child)
+		coreModules[child.Name] = coreModuleFunctions[child.Name]()
 	end
 end
 
 -- Unpack Debug Module
-CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.Debug = CoreModules.Debug.Print, CoreModules.Debug.Warn, CoreModules.Debug.Trace, nil
+coreModules.Print, coreModules.Warn, coreModules.Trace, coreModules.Debug = coreModules.Debug.Print, coreModules.Debug.Warn, coreModules.Debug.Trace, nil
 
 -- Set globals
-for Name in CoreModules do
-	if CoreModuleFunctions[Name] then
-		CoreModules[Name] = CoreModuleFunctions[Name](Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New)
+for Name in coreModules do
+	if coreModuleFunctions[Name] then
+		coreModules[Name] = coreModuleFunctions[Name](Pronghorn.Global, Pronghorn.Modules, coreModules.Remotes, coreModules.Print, coreModules.Warn, coreModules.Trace, coreModules.New)
 	end
 end
 
 -- Cleanup
-table.freeze(CoreModules)
+table.freeze(coreModules)
 
 -- Init
-for _, CoreModule in CoreModules do
-	if type(CoreModule) == "table" and CoreModule.Init then
-		CoreModule:Init()
+for _, coreModule in coreModules do
+	if type(coreModule) == "table" and coreModule.Init then
+		coreModule:Init()
 	end
 end
 
 -- Deferred
-for _, CoreModule in CoreModules do
-	if type(CoreModule) == "table" and CoreModule.Deferred then
-		task.spawn(CoreModule.Deferred, CoreModule)
+for _, coreModule in coreModules do
+	if type(coreModule) == "table" and coreModule.Deferred then
+		task.spawn(coreModule.Deferred, coreModule)
 	end
 end
 
-return {Import, Global, Modules, CoreModules.Remotes, CoreModules.Print, CoreModules.Warn, CoreModules.Trace, CoreModules.New}
+return {Pronghorn.Import, Pronghorn.Global, Pronghorn.Modules, coreModules.Remotes, coreModules.Print, coreModules.Warn, coreModules.Trace, coreModules.New}

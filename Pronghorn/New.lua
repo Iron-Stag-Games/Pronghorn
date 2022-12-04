@@ -11,36 +11,36 @@ local New = {} local Global, Modules, Remotes, Print, Warn, Trace -- Core Module
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function New.Instance(ClassName: string, ...): Instance
-	local Parent: Instance?, Name: string?, Properties: {[string]: any}?
-	for _, Parameter in {...} do
-		if typeof(Parameter) == "Instance" then
-			if Parent then error("Parent parameter used more than once") end
-			Parent = Parameter
-		elseif type(Parameter) == "string" or type(Parameter) == "number" then
-			if Name then error("Name parameter used more than once") end
-			Name = tostring(Parameter)
-		elseif type(Parameter) == "table" then
-			if Properties then error("Properties parameter used more than once") end
-			Properties = Parameter
+function New.Instance(className: string, ...): Instance
+	local parent: Instance?, name: string?, properties: {[string]: any}?
+	for _, parameter in {...} do
+		if typeof(parameter) == "Instance" then
+			if parent then error("Parent parameter used more than once") end
+			parent = parameter
+		elseif type(parameter) == "string" or type(parameter) == "number" then
+			if name then error("Name parameter used more than once") end
+			name = tostring(parameter)
+		elseif type(parameter) == "table" then
+			if properties then error("Properties parameter used more than once") end
+			properties = parameter
 		end
 	end
 
-	local NewInstance = Instance.new(ClassName)
+	local newInstance = Instance.new(className)
 
-	if Name then
-		NewInstance.Name = Name
+	if name then
+		newInstance.Name = name
 	end
-	if Properties then
-		for Key, Value in Properties do
-			NewInstance[Key] = Value
+	if properties then
+		for key, value in properties do
+			newInstance[key] = value
 		end
 	end
-	if Parent then
-		NewInstance.Parent = Parent
+	if parent then
+		newInstance.Parent = parent
 	end
 
-	return NewInstance
+	return newInstance
 end
 
 function New.Event(): {
@@ -50,101 +50,101 @@ function New.Event(): {
 	Wait: () -> (any);
 }
 
-	local Callbacks: any = {}
-	local Actions: any = {}
+	local callbacks: any = {}
+	local actions: any = {}
 
-	function Actions:Fire(Value: any)
-		for _, Callback in Callbacks do
-			Callback(Value)
+	function actions:Fire(value: any)
+		for _, callback in callbacks do
+			callback(value)
 		end
 	end
 
-	function Actions:Connect(Function: (any) -> ())
-		table.insert(Callbacks, Function)
+	function actions:Connect(callbackFunction: (any) -> ())
+		table.insert(callbacks, callbackFunction)
 		return {Disconnect = function()
-			table.remove(Callbacks, table.find(Callbacks, Function))
+			table.remove(callbacks, table.find(callbacks, callbackFunction))
 		end}
 	end
 
-	function Actions:ConnectOnce(Function: (any) -> ())
-		local Callback; Callback = function(Value: any)
-			Function(Value)
-			table.remove(Callbacks, table.find(Callbacks, Callback))
+	function actions:ConnectOnce(callbackFunction: (any) -> ())
+		local callback; callback = function(value: any)
+			callbackFunction(value)
+			table.remove(callbacks, table.find(callbacks, callback))
 		end
-		table.insert(Callbacks, Callback)
+		table.insert(callbacks, callback)
 		return {Disconnect = function()
-			table.remove(Callbacks, table.find(Callbacks, Callback))
+			table.remove(callbacks, table.find(callbacks, callback))
 		end}
 	end
 
-	function Actions:Wait()
+	function actions:Wait()
 		local Coroutine = coroutine.running()
-		local Callback; Callback = function(Value: any)
-			coroutine.resume(Coroutine, Value)
-			table.remove(Callbacks, table.find(Callbacks, Callback))
+		local callback; callback = function(value: any)
+			coroutine.resume(Coroutine, value)
+			table.remove(callbacks, table.find(callbacks, callback))
 		end
-		table.insert(Callbacks, Callback)
+		table.insert(callbacks, callback)
 		return coroutine.yield()
 	end
 
-	table.freeze(Actions)
+	table.freeze(actions)
 
-	return Actions
+	return actions
 end
 
-function New.TrackedVariable(Variable: any): {
+function New.TrackedVariable(variable: any): {
 	Get: () -> (any);
-	Set: (Value: any) -> ();
+	Set: (value: any) -> ();
 	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
 	ConnectOnce: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
 	Wait: () -> (any);
 }
 
-	local Callbacks: any = {}
-	local Actions: any = {}
+	local callbacks: any = {}
+	local actions: any = {}
 
-	function Actions:Get(): any
-		return Variable
+	function actions:Get(): any
+		return variable
 	end
 
-	function Actions:Set(Value: any)
-		Variable = Value
-		for _, Callback in Callbacks do
-			Callback(Value)
+	function actions:Set(value: any)
+		variable = value
+		for _, callback in callbacks do
+			callback(value)
 		end
 	end
 
-	function Actions:Connect(Function: (any) -> ())
-		table.insert(Callbacks, Function)
+	function actions:Connect(callbackFunction: (any) -> ())
+		table.insert(callbacks, callbackFunction)
 		return {Disconnect = function()
-			table.remove(Callbacks, table.find(Callbacks, Function))
+			table.remove(callbacks, table.find(callbacks, callbackFunction))
 		end}
 	end
 
-	function Actions:ConnectOnce(Function: (any) -> ())
-		local Callback; Callback = function(Value: any)
-			Function(Value)
-			table.remove(Callbacks, table.find(Callbacks, Callback))
+	function actions:ConnectOnce(callbackFunction: (any) -> ())
+		local callback; callback = function(value: any)
+			callbackFunction(value)
+			table.remove(callbacks, table.find(callbacks, callback))
 		end
-		table.insert(Callbacks, Callback)
+		table.insert(callbacks, callback)
 		return {Disconnect = function()
-			table.remove(Callbacks, table.find(Callbacks, Callback))
+			table.remove(callbacks, table.find(callbacks, callback))
 		end}
 	end
 
-	function Actions:Wait()
-		local Coroutine = coroutine.running()
-		local Callback; Callback = function(Value: any)
-			coroutine.resume(Coroutine, Value)
-			table.remove(Callbacks, table.find(Callbacks, Callback))
+	function actions:Wait()
+		local co = coroutine.running()
+		local callback; callback = function(value: any)
+			coroutine.resume(co, value)
+			table.remove(callbacks, table.find(callbacks, callback))
 		end
-		table.insert(Callbacks, Callback)
+		table.insert(callbacks, callback)
 		return coroutine.yield()
 	end
 
-	table.freeze(Actions)
+	table.freeze(actions)
 
-	return Actions
+	return actions
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
