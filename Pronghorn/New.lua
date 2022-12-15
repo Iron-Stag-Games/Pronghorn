@@ -5,7 +5,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local New = {} local Global, Modules, Remotes, Print, Warn, Trace -- Core Module boilerplate only. Do not use!
+local New = shared.New
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -46,7 +46,7 @@ end
 function New.Event(): {
 	Fire: (any) -> ();
 	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	ConnectOnce: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
+	Once: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
 	Wait: () -> (any);
 }
 
@@ -66,7 +66,7 @@ function New.Event(): {
 		end}
 	end
 
-	function actions:ConnectOnce(callbackFunction: (any) -> ())
+	function actions:Once(callbackFunction: (any) -> ())
 		local callback; callback = function(value: any)
 			callbackFunction(value)
 			table.remove(callbacks, table.find(callbacks, callback))
@@ -96,7 +96,7 @@ function New.TrackedVariable(variable: any): {
 	Get: () -> (any);
 	Set: (value: any) -> ();
 	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	ConnectOnce: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
+	Once: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
 	Wait: () -> (any);
 }
 
@@ -121,7 +121,7 @@ function New.TrackedVariable(variable: any): {
 		end}
 	end
 
-	function actions:ConnectOnce(callbackFunction: (any) -> ())
+	function actions:Once(callbackFunction: (any) -> ())
 		local callback; callback = function(value: any)
 			callbackFunction(value)
 			table.remove(callbacks, table.find(callbacks, callback))
@@ -149,4 +149,4 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return function(A, B, C, D, E, F, _) Global, Modules, Remotes, Print, Warn, Trace = A, B, C, D, E, F return New end -- Core Module boilerplate only. Do not use!
+return New

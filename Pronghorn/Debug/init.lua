@@ -5,8 +5,6 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local Debug = {} local Global, Modules, Remotes, New -- Core Module boilerplate only. Do not use!
-
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -17,7 +15,7 @@ local ENABLED_CHANNELS = require(script.EnabledChannels) :: {[string]: boolean}
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function Debug.Print(...)
+function shared.Print(...)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(("'%s' is not a valid debug channel"):format(channel)) end
@@ -27,7 +25,7 @@ function Debug.Print(...)
 	end
 end
 
-function Debug.Warn(...)
+function shared.Warn(...)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(("'%s' is not a valid debug channel"):format(channel)) end
@@ -37,7 +35,7 @@ function Debug.Warn(...)
 	end
 end
 
-function Debug.Trace(...)
+function shared.Trace(...)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(("'%s' is not a valid debug channel"):format(channel)) end
@@ -49,4 +47,4 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return function(A, B, C, _, _, _, G) Global, Modules, Remotes, New = A, B, C, G return Debug end -- Core Module boilerplate only. Do not use!
+return true

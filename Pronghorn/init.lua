@@ -28,7 +28,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                     Pronghorn Framework  Rev. B8                     ║
+║                    Pronghorn Framework  Rev. B10                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -50,11 +50,6 @@
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]
 
-local Pronghorn = {
-	Global = {};
-	Modules = {};
-}
-
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Services
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -63,15 +58,23 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Helper Variables
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-local coreModules: any = {}
-local coreModuleFunctions = {}
-
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+local function createModulesMetatable(path: string)
+	local data = {}
+	return setmetatable(data, {
+		__index = function(_, key)
+			if rawget(data, key) == nil then
+				error(("'Modules%s/%s' does not exist or is unregistered"):format(path, key), 0)
+			end
+			return data[key]
+		end;
+		__newindex = function(_, key, value)
+			rawset(data, key, value)
+		end;
+	})
+end
 
 local function addModules(allModules: {}, object: Instance, currentPath: string?)
 	for _, child in object:GetChildren() do
@@ -85,58 +88,57 @@ local function addModules(allModules: {}, object: Instance, currentPath: string?
 	end
 end
 
-local function assignModule(path: string?, key: string, value: {[any]: any})
-	local newPath = Pronghorn.Modules
+local function assignModule(path: string?, object: ModuleScript, result: {[any]: any}?)
+	local newPath = shared.Modules
 
 	if path then
 		local subPaths = path:split("/")
 		if #subPaths > 1 then
 			for index = 2, #subPaths do
-				if index > 2 or subPaths[index] ~= "Common" then
-					if newPath[subPaths[index]] ~= nil and type(newPath[subPaths[index]]) ~= "table" then error(("'%s' is already assigned in the Modules table"):format(path)) end
-					if newPath[subPaths[index]] == nil then
-						newPath[subPaths[index]] = {}
-					end
-					newPath = newPath[subPaths[index]]
+				if rawget(newPath, subPaths[index]) ~= nil and type(newPath[subPaths[index]]) ~= "table" then error(("'%s' is already assigned in the Modules table"):format(path)) end
+				if rawget(newPath, subPaths[index]) == nil then
+					rawset(newPath, subPaths[index], createModulesMetatable(path))
 				end
+				newPath = rawget(newPath, subPaths[index])
 			end
 		end
 	end
 
-	if newPath[key] ~= nil then error(("'%s' is already assigned in the Modules table"):format((if path then path .. "/" else "") .. key)) end
-	newPath[key] = value
+	if rawget(newPath, object.Name) ~= nil and not result then error(("'%s' is already assigned in the Modules table"):format((if path then path .. "/" else "") .. object.Name)) end
+	newPath[object.Name] = result or {}
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function Pronghorn.Import(paths: {string})
+function shared.Import(paths: {string})
 	local allModules: {{["Object"]: ModuleScript, ["Path"]: string}} = {}
 
 	for _, path in paths do
 		addModules(allModules, path)
 	end
 
+	-- Create empty tables for early linking
 	for _, moduleTable in allModules do
-		local newModule = require(moduleTable.Object)
-		if type(newModule) == "function" then
-			newModule = newModule(Pronghorn.Global, Pronghorn.Modules, coreModules.Remotes, coreModules.Print, coreModules.Warn, coreModules.Trace, coreModules.New)
-		end
-		assignModule(moduleTable.Path, moduleTable.Object.Name, newModule)
-		moduleTable.Return = newModule
+		assignModule(moduleTable.Path, moduleTable.Object)
+	end
+
+	-- Fill module table with actual return values
+	for _, moduleTable in allModules do
+		moduleTable.Return = require(moduleTable.Object)
+		assignModule(moduleTable.Path, moduleTable.Object, moduleTable.Return)
 	end
 
 	-- Cleanup
-	table.freeze(Pronghorn.Modules)
+	table.freeze(shared.Modules)
 
 	-- Init
 	for _, moduleTable in allModules do
 		if type(moduleTable.Return) == "table" and moduleTable.Return.Init then
 			local didHeartbeat;
-			local heartbeatConnection; heartbeatConnection = RunService.Heartbeat:Connect(function()
+			RunService.Heartbeat:Once(function()
 				didHeartbeat = true
-				heartbeatConnection:Disconnect()
 			end)
 			moduleTable.Return:Init()
 			if didHeartbeat then
@@ -146,7 +148,7 @@ function Pronghorn.Import(paths: {string})
 	end
 
 	-- Deferred
-	local deferredComplete = coreModules.New.Event()
+	local deferredComplete = shared.New.Event()
 	local startWaits = 0
 	for _, moduleTable in allModules do
 		if type(moduleTable.Return) == "table" and moduleTable.Return.Deferred then
@@ -183,40 +185,43 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+shared.Global = {}
+shared.Modules = createModulesMetatable("")
+
 -- Import Core Modules --
+
+local coreModules = {}
 
 for _, child in script:GetChildren() do
 	if child:IsA("ModuleScript") then
-		coreModuleFunctions[child.Name] = require(child)
-		coreModules[child.Name] = coreModuleFunctions[child.Name]()
+		table.insert(coreModules, child)
+		shared[child.Name] = {}
 	end
 end
 
--- Unpack Debug Module
-coreModules.Print, coreModules.Warn, coreModules.Trace, coreModules.Debug = coreModules.Debug.Print, coreModules.Debug.Warn, coreModules.Debug.Trace, nil
-
--- Set globals
-for Name in coreModules do
-	if coreModuleFunctions[Name] then
-		coreModules[Name] = coreModuleFunctions[Name](Pronghorn.Global, Pronghorn.Modules, coreModules.Remotes, coreModules.Print, coreModules.Warn, coreModules.Trace, coreModules.New)
-	end
+-- Require
+for _, coreModuleObject in coreModules do
+	shared[coreModuleObject.Name] = require(coreModuleObject)
 end
-
--- Cleanup
-table.freeze(coreModules)
 
 -- Init
-for _, coreModule in coreModules do
+for _, coreModuleObject in coreModules do
+	local coreModule = shared[coreModuleObject.Name]
 	if type(coreModule) == "table" and coreModule.Init then
 		coreModule:Init()
 	end
 end
 
 -- Deferred
-for _, coreModule in coreModules do
+for _, coreModuleObject in coreModules do
+	local coreModule = shared[coreModuleObject.Name]
 	if type(coreModule) == "table" and coreModule.Deferred then
 		task.spawn(coreModule.Deferred, coreModule)
 	end
 end
 
-return {Pronghorn.Import, Pronghorn.Global, Pronghorn.Modules, coreModules.Remotes, coreModules.Print, coreModules.Warn, coreModules.Trace, coreModules.New}
+-- Cleanup
+shared.Debug = nil
+table.freeze(shared)
+
+return true

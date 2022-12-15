@@ -8,26 +8,25 @@ No Controllers or Services, just Modules and Remotes.
 
 ### Usage
 - The Import() Function is used in a Script to import your Modules.
-- Modules that access the framework require a header and footer. Otherwise, they must not return a Function.
+- Modules that access the framework may require a table reference in the header.
 - Modules as descendants of other Modules are not imported.
 - Subfolder structure is included when importing (e.g. Modules.Subfolder1.Subfolder2.ExampleModule)
 - Edit [Debug/EnabledChannels.lua](Pronghorn/Debug/EnabledChannels.lua) to toggle the output of Modules.
 
-# How does Pronghorn compare to Knit?
+# How does Pronghorn compare to others?
 
 ### Pros
 - Require() called only in the Script and not in every Module.
-- Immediate Module access with the Modules table.
+- Immediate framework access with the shared table.
 - Obvious Remote behavior in both creation and invocation.
 - Server-to-Client Remote batching.
 
 ### Cons
 - No automatic Remote creation using Services.
-- Larger Module boilerplate.
+- Use of the shared table may cause interference.
 
 ### Preference
 - No Controller or Service structure.
-- Boilerplate includes shortcuts to important objects.
 
 # Core Module Functions
 
@@ -60,14 +59,14 @@ New.Instance(className: string, parent: Instance?, name: string?, properties: {[
 New.Event(): {
 	Fire: (any) -> ();
 	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	ConnectOnce: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
+	Once: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
 	Wait: () -> (any);
 }
 New.TrackedVariable(Variable: any): {
 	Get: () -> (any);
 	Set: (value: any) -> ();
 	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	ConnectOnce: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
+	Once: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
 	Wait: () -> (any);
 }
 ```
@@ -76,23 +75,31 @@ New.TrackedVariable(Variable: any): {
 
 ## Script Boilerplate
 ```lua
-local Import, Global, Modules, Remotes, Print, Warn, Trace, New = unpack(require(game:GetService("ReplicatedStorage"):WaitForChild("Pronghorn")))
+require(game:GetService("ReplicatedStorage"):WaitForChild("Pronghorn"))
 
 -- Somewhere after assigning Global variables
-Import({
+shared.Import({
 	ExampleModuleDirectory;
 })
 ```
 
 ## Module Boilerplate
 ```lua
-local ExampleModule = {} local Global, Modules, Remotes, Print, Warn, Trace, New
+local ExampleModule = shared.Modules.ExampleModule
+
+-- Dependencies
+local Print = shared.Print
+local Warn = shared.Warn
+local Trace = shared.Trace
+local Remotes = shared.Remotes
+local New = shared.New
+local OtherExampleModule = shared.Modules.OtherExampleModule
 
 --[[
 	Module Body
 ]]
 
-return function(...) Global, Modules, Remotes, Print, Warn, Trace, New = ... return ExampleModule end
+return ExampleModule
 ```
 
 ## Automated Module Functions
