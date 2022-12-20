@@ -65,10 +65,7 @@ local function createModulesMetatable(path: string)
 	local data = {}
 	return setmetatable(data, {
 		__index = function(_, key)
-			if rawget(data, key) == nil then
-				error(("'Modules%s/%s' does not exist or is unregistered"):format(path, key), 0)
-			end
-			return data[key]
+			error(("'Modules%s/%s' does not exist or is unregistered"):format(path, key), 0)
 		end;
 		__newindex = function(_, key, value)
 			rawset(data, key, value)

@@ -53,22 +53,22 @@ end
 local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFunction)
 	local moduleName = remote.Parent and remote.Parent.Name
 	local actions = {}
-	local MetaTable = {}
+	local metaTable = {}
 
 	if remote:IsA("BindableEvent") then
 		-- BindableEvent: To Client.
 
-		function actions:Connect(Function: (any) -> (any))
-			return remote.Event:Connect(Function)
+		function actions:Connect(func: (any) -> (any))
+			return remote.Event:Connect(func)
 		end
 
 	elseif remote:IsA("RemoteEvent") then
 		-- RemoteEvent: To Server.
 
-		function MetaTable.__call(_, Context, ...)
-			if Context ~= Remotes[moduleName] then error(("Must call %s:%s() with a colon"):format(moduleName, remote.Name)) end
-			local Split = debug.info(2, "s"):split(".")
-			local environment = "[" .. Split[#Split] .. "]"
+		function metaTable.__call(_, context, ...)
+			if context ~= Remotes[moduleName] then error(("Must call %s:%s() with a colon"):format(moduleName, remote.Name)) end
+			local split = debug.info(2, "s"):split(".")
+			local environment = "[" .. split[#split] .. "]"
 			shared.Print(environment, remote, "Fire", ...)
 			remote:FireServer(...)
 		end
@@ -76,14 +76,14 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 	elseif remote:IsA("RemoteFunction") then
 		-- RemoteFunction: Bi-directional.
 
-		function actions:Connect(Function: (any) -> (any))
-			remote.OnClientInvoke = Function
+		function actions:Connect(func: (any) -> (any))
+			remote.OnClientInvoke = func
 		end
 
-		function MetaTable.__call(_, Context, ...)
-			if Context ~= Remotes[moduleName] then error(("Must call %s:%s() with a colon"):format(moduleName, remote.Name)) end
-			local Split = debug.info(2, "s"):split(".")
-			local environment = "[" .. Split[#Split] .. "]"
+		function metaTable.__call(_, context, ...)
+			if context ~= Remotes[moduleName] then error(("Must call %s:%s() with a colon"):format(moduleName, remote.Name)) end
+			local split = debug.info(2, "s"):split(".")
+			local environment = "[" .. split[#split] .. "]"
 			shared.Print(environment, remote, "Fire", ...)
 			return remote:InvokeServer(...)
 		end
@@ -92,7 +92,7 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 	if not Remotes[moduleName] then
 		Remotes[moduleName] = {}
 	end
-	Remotes[moduleName][remote.Name] = setmetatable(actions, MetaTable)
+	Remotes[moduleName][remote.Name] = setmetatable(actions, metaTable)
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -146,9 +146,9 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 	Remotes[moduleName][remote.Name] = actions
 end
 
-function Remotes:CreateToServer(name: string, returns: boolean?, Function: (any) -> (any))
+function Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> (any))
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
-	if not Function then error("ToServer remotes must bind a Function") end
+	if not func then error("ToServer remotes must bind a Function") end
 
 	local moduleName = tostring(getfenv(2).script)
 
@@ -160,12 +160,12 @@ function Remotes:CreateToServer(name: string, returns: boolean?, Function: (any)
 	local actions = {}
 
 	if returns then
-		remote.OnServerInvoke = Function
+		remote.OnServerInvoke = func
 	else
-		remote.OnServerEvent:Connect(Function)
+		remote.OnServerEvent:Connect(func)
 
-		function actions:AddListener(NewFunction: (any) -> (any))
-			remote.OnServerEvent:Connect(NewFunction)
+		function actions:AddListener(newFunction: (any) -> (any))
+			remote.OnServerEvent:Connect(newFunction)
 		end
 	end
 
