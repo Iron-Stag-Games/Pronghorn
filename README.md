@@ -88,11 +88,12 @@ shared.Import({
 local ExampleModule = shared.Modules.ExampleModule
 
 -- Dependencies
+local Global = shared.Global
 local Print = shared.Print
 local Warn = shared.Warn
 local Trace = shared.Trace
-local Remotes = shared.Remotes
 local New = shared.New
+local Remotes = shared.Remotes
 local OtherExampleModule = shared.Modules.OtherExampleModule
 
 --[[
