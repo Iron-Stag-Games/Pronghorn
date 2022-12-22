@@ -87,13 +87,15 @@ shared.Import({
 ```lua
 local ExampleModule = shared.Modules.ExampleModule
 
--- Dependencies
-local Global = shared.Global
+-- Core
 local Print = shared.Print
 local Warn = shared.Warn
 local Trace = shared.Trace
 local New = shared.New
 local Remotes = shared.Remotes
+local Global = shared.Global
+
+-- Modules
 local OtherExampleModule = shared.Modules.OtherExampleModule
 
 --[[
