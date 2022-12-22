@@ -42,16 +42,18 @@
 ╠═══════════════════════════════ Usage ════════════════════════════════╣
 ║                                                                      ║
 ║ - The Import() Function is used in a Script to import your Modules.  ║
-║ - Modules that access the framework require a header and footer.     ║
-║   Otherwise, they must not return a Function.                        ║
+║ - Modules that access the framework may require a table reference in ║
+║   the header.                                                        ║
 ║ - Modules as descendants of other Modules are not imported.          ║
+║ - Subfolder structure is included when importing                     ║
+║   (e.g. Modules.Subfolder1.Subfolder2.ExampleModule)                 ║
 ║ - Edit 'Debug\EnabledChannels.lua' to toggle the output of Modules.  ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Services
+-- Dependencies
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 local Players = game:GetService("Players")
