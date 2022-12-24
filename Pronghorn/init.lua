@@ -28,7 +28,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B10                     ║
+║                    Pronghorn Framework  Rev. B11                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -104,7 +104,8 @@ local function assignModule(path: string?, object: ModuleScript, result: {[any]:
 	end
 
 	if rawget(newPath, object.Name) ~= nil and not result then error(("'%s' is already assigned in the Modules table"):format((if path then path .. "/" else "") .. object.Name)) end
-	newPath[object.Name] = result or {}
+	if type(result) == "table" and rawget(newPath, object.Name) ~= result then error(("'%s' returned the wrong table"):format((if path then path .. "/" else "") .. object.Name)) end
+	rawset(newPath, object.Name, result or {})
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
