@@ -115,11 +115,11 @@ function ExampleModule:Deferred()
 	-- Runs after all modules have initialized.
 end
 
-function ExampleModule.PlayerAdded(Player: Player)
+function ExampleModule.PlayerAdded(player: Player)
 	-- Players.PlayerAdded shortcut.
 end
 
-function ExampleModule.PlayerRemoving(Player: Player)
+function ExampleModule.PlayerRemoving(player: Player)
 	-- Players.PlayerRemoving shortcut.
 end
 ```
