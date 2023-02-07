@@ -57,17 +57,17 @@ New.Instance(className: string, parent: Instance?, name: string?, properties: {[
 	-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
 	-- Ex. New.Instance("Part", {Properties})
 New.Event(): {
-	Fire: (any) -> ();
-	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	Once: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	Wait: () -> (any);
+	Fire: (self: any, value: any) -> ();
+	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Wait: (self: any) -> (any);
 }
 New.TrackedVariable(Variable: any): {
-	Get: () -> (any);
-	Set: (value: any) -> ();
-	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	Once: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	Wait: () -> (any);
+	Get: (self: any) -> (any);
+	Set: (self: any, value: any) -> ();
+	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Wait: (self: any) -> (any);
 }
 ```
 

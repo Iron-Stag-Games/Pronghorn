@@ -1,3 +1,4 @@
+--!strict
 --[[
 ╔═══════════════════════════════════════════════╗
 ║              Pronghorn Framework              ║
@@ -19,16 +20,15 @@ local RunService = game:GetService("RunService")
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-- Types
+type Queue = {Event: BindableEvent, Parameters: {any}}
+
+-- Defines
 local remotesFolder;
 local toClientBatchedRemotes: {
 	[Player]: {
 		Remote: RemoteEvent;
-		Queue: {
-			{
-				Event: BindableEvent;
-				Parameters: {any};
-			}
-		};
+		Queue: {Queue};
 	}
 } = {}
 
@@ -45,29 +45,29 @@ local function setupPlayer(player: Player)
 	end
 end
 
-local function addToBatchQueue(player: Player, data: {Event: BindableEvent, Parameters: {any}})
+local function addToBatchQueue(player: Player, data: Queue)
 	setupPlayer(player)
 	table.insert(toClientBatchedRemotes[player].Queue, data)
 end
 
 local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFunction)
 	local moduleName = remote.Parent and remote.Parent.Name
-	local actions = {}
-	local metaTable = {}
+	local actions: any = {}
+	local metaTable: any = {}
 
 	if remote:IsA("BindableEvent") then
 		-- BindableEvent: To Client.
 
-		function actions:Connect(func: (any) -> (any))
+		actions.Connect = function(_, func: (any) -> (any))
 			return remote.Event:Connect(func)
 		end
 
 	elseif remote:IsA("RemoteEvent") then
 		-- RemoteEvent: To Server.
 
-		function metaTable.__call(_, context, ...)
-			if context ~= Remotes[moduleName] then error(("Must call %s:%s() with a colon"):format(moduleName, remote.Name)) end
-			local split = debug.info(2, "s"):split(".")
+		metaTable.__call = function(_, context: any, ...)
+			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
+			local split: {string} = debug.info(2, "s"):split(".")
 			local environment = "[" .. split[#split] .. "]"
 			shared.Print(environment, remote, "Fire", ...)
 			remote:FireServer(...)
@@ -76,13 +76,13 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 	elseif remote:IsA("RemoteFunction") then
 		-- RemoteFunction: Bi-directional.
 
-		function actions:Connect(func: (any) -> (any))
+		actions.Connect = function(_, func: (any) -> (any))
 			remote.OnClientInvoke = func
 		end
 
-		function metaTable.__call(_, context, ...)
-			if context ~= Remotes[moduleName] then error(("Must call %s:%s() with a colon"):format(moduleName, remote.Name)) end
-			local split = debug.info(2, "s"):split(".")
+		metaTable.__call = function(_, context: any, ...)
+			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
+			local split: {string} = debug.info(2, "s"):split(".")
 			local environment = "[" .. split[#split] .. "]"
 			shared.Print(environment, remote, "Fire", ...)
 			return remote:InvokeServer(...)
@@ -104,33 +104,33 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 
 	local moduleName = tostring(getfenv(2).script)
 
-	if type(Remotes[moduleName]) == "function" then error(("Creating remotes under the ModuleScript name '%s' would overwrite a function"):format(moduleName)) end
-	if Remotes[moduleName] and Remotes[moduleName][name] then error(("Remote '%s' already created in '%s'"):format(name, moduleName)) end
+	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`) end
+	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`) end
 
 	local environment = "[" .. moduleName .. "]"
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or shared.New.Instance("Folder", remotesFolder, moduleName)
 	local remote = shared.New.Instance(returns and "RemoteFunction" or "BindableEvent", serverFolder, name)
-	local actions = {}
+	local actions: any = {}
 
 	if returns then
-		function actions:Fire(...)
+		actions.Fire = function(_, ...)
 			shared.Print(environment, name, "Fire", ...)
 			return remote:InvokeClient(...)
 		end
 	else
-		function actions:Fire(player, ...)
+		actions.Fire = function(_, player, ...)
 			shared.Print(environment, name, "Fire", player, ...)
 			addToBatchQueue(player, {Event = remote, Parameters = {...}})
 		end
 
-		function actions:FireAll(...)
+		actions.FireAll = function(_, ...)
 			shared.Print(environment, name, "FireAll", ...)
 			for _, player in Players:GetPlayers() do
 				addToBatchQueue(player, {Event = remote, Parameters = {...}})
 			end
 		end
 
-		function actions:FireAllExcept(ignorePlayer, ...)
+		actions.FireAllExcept = function(_, ignorePlayer, ...)
 			shared.Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
 				if player ~= ignorePlayer then
@@ -152,8 +152,8 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> 
 
 	local moduleName = tostring(getfenv(2).script)
 
-	if type(Remotes[moduleName]) == "function" then error(("Creating remotes under the ModuleScript name '%s' would overwrite a function"):format(moduleName)) end
-	if Remotes[moduleName] and Remotes[moduleName][name] then error(("Remote '%s' already created in '%s'"):format(name, moduleName)) end
+	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`) end
+	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`) end
 
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or shared.New.Instance("Folder", remotesFolder, moduleName)
 	local remote = shared.New.Instance(returns and "RemoteFunction" or "RemoteEvent", serverFolder, name)
@@ -209,7 +209,7 @@ end
 
 function Remotes:Deferred()
 	if RunService:IsClient() then
-		remotesFolder:WaitForChild(Players.LocalPlayer.UserId).OnClientEvent:Connect(function(batch: {{Event: BindableEvent, Parameters: {any}}})
+		remotesFolder:WaitForChild(Players.LocalPlayer.UserId).OnClientEvent:Connect(function(batch: {Queue})
 			for _, data in batch do
 				data.Event:Fire(unpack(data.Parameters))
 			end

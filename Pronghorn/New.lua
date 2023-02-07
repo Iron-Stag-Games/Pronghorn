@@ -1,3 +1,4 @@
+--!strict
 --[[
 ╔═══════════════════════════════════════════════╗
 ║              Pronghorn Framework              ║
@@ -6,6 +7,25 @@
 ]]
 
 local New = shared.New
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Helper Variables
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+type Callback = (any) -> ()
+type Event = {
+	Fire: (self: any, value: any) -> ();
+	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Wait: (self: any) -> (any);
+}
+type TrackedVariable = {
+	Get: (self: any) -> (any);
+	Set: (self: any, value: any) -> ();
+	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Wait: (self: any) -> (any);
+}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -43,104 +63,91 @@ function New.Instance(className: string, ...): Instance
 	return newInstance
 end
 
-function New.Event(): {
-	Fire: (any) -> ();
-	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	Once: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	Wait: () -> (any);
-}
+function New.Event(): Event
+	local callbacks: {Callback} = {}
+	local actions: Event = {
+		Fire = function(_, value: any)
+			for _, callback in callbacks do
+				callback(value)
+			end
+		end;
 
-	local callbacks: any = {}
-	local actions: any = {}
+		Connect = function(_, callback: Callback)
+			table.insert(callbacks, callback)
+			return {Disconnect = function()
+				table.remove(callbacks, table.find(callbacks, callback))
+			end}
+		end;
 
-	function actions:Fire(value: any)
-		for _, callback in callbacks do
-			callback(value)
-		end
-	end
+		Once = function(_, callback: Callback)
+			local wrappedCallback: Callback; wrappedCallback = function(value: any)
+				callback(value)
+				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+			end
+			table.insert(callbacks, wrappedCallback)
+			return {Disconnect = function()
+				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+			end}
+		end;
 
-	function actions:Connect(callbackFunction: (any) -> ())
-		table.insert(callbacks, callbackFunction)
-		return {Disconnect = function()
-			table.remove(callbacks, table.find(callbacks, callbackFunction))
-		end}
-	end
-
-	function actions:Once(callbackFunction: (any) -> ())
-		local callback; callback = function(value: any)
-			callbackFunction(value)
-			table.remove(callbacks, table.find(callbacks, callback))
-		end
-		table.insert(callbacks, callback)
-		return {Disconnect = function()
-			table.remove(callbacks, table.find(callbacks, callback))
-		end}
-	end
-
-	function actions:Wait()
-		local Coroutine = coroutine.running()
-		local callback; callback = function(value: any)
-			coroutine.resume(Coroutine, value)
-			table.remove(callbacks, table.find(callbacks, callback))
-		end
-		table.insert(callbacks, callback)
-		return coroutine.yield()
-	end
+		Wait = function(_)
+			local Coroutine = coroutine.running()
+			local callback; callback = function(value: any)
+				coroutine.resume(Coroutine, value)
+				table.remove(callbacks, table.find(callbacks, callback))
+			end
+			table.insert(callbacks, callback)
+			return coroutine.yield()
+		end;
+	}
 
 	table.freeze(actions)
 
 	return actions
 end
 
-function New.TrackedVariable(variable: any): {
-	Get: () -> (any);
-	Set: (value: any) -> ();
-	Connect: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	Once: ((any) -> ()) -> ({["Disconnect"]: () -> ()});
-	Wait: () -> (any);
-}
+function New.TrackedVariable(variable: any): TrackedVariable
+	local callbacks: {Callback} = {}
+	local actions: TrackedVariable = {
+		Get = function(_): any
+			return variable
+		end;
 
-	local callbacks: any = {}
-	local actions: any = {}
+		Set = function(_, value: any)
+			variable = value
+			for _, callback in callbacks do
+				callback(value)
+			end
+		end;
 
-	function actions:Get(): any
-		return variable
-	end
+		Connect = function(_, callback: Callback)
+			table.insert(callbacks, callback)
+			return {Disconnect = function()
+				table.remove(callbacks, table.find(callbacks, callback))
+			end}
+		end;
 
-	function actions:Set(value: any)
-		variable = value
-		for _, callback in callbacks do
-			callback(value)
-		end
-	end
+		Once = function(_, callback: Callback)
+			local wrappedCallback: Callback; wrappedCallback = function(value: any)
+				callback(value)
+				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+			end
+			table.insert(callbacks, wrappedCallback)
+			return {Disconnect = function()
+				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+			end}
+		end;
 
-	function actions:Connect(callbackFunction: (any) -> ())
-		table.insert(callbacks, callbackFunction)
-		return {Disconnect = function()
-			table.remove(callbacks, table.find(callbacks, callbackFunction))
-		end}
-	end
-
-	function actions:Once(callbackFunction: (any) -> ())
-		local callback; callback = function(value: any)
-			callbackFunction(value)
-			table.remove(callbacks, table.find(callbacks, callback))
-		end
-		table.insert(callbacks, callback)
-		return {Disconnect = function()
-			table.remove(callbacks, table.find(callbacks, callback))
-		end}
-	end
-
-	function actions:Wait()
-		local co = coroutine.running()
-		local callback; callback = function(value: any)
-			coroutine.resume(co, value)
-			table.remove(callbacks, table.find(callbacks, callback))
-		end
-		table.insert(callbacks, callback)
-		return coroutine.yield()
-	end
+		Wait = function(_)
+			local co = coroutine.running()
+			local callback; callback = function(value: any)
+				coroutine.resume(co, value)
+				table.remove(callbacks, table.find(callbacks, callback))
+			end
+			table.insert(callbacks, callback)
+			return coroutine.yield()
+		end;
+	}
 
 	table.freeze(actions)
 

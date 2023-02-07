@@ -1,3 +1,4 @@
+--!strict
 --[[
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
@@ -28,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B11                     ║
+║                    Pronghorn Framework  Rev. B12                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -59,6 +60,12 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
+type Module = {
+	Object: ModuleScript;
+	Path: string;
+	Return: any?;
+}
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,7 +74,7 @@ local function createModulesMetatable(path: string)
 	local data = {}
 	return setmetatable(data, {
 		__index = function(_, key)
-			error(("'Modules%s/%s' does not exist or is unregistered"):format(path, key), 0)
+			error(`'Modules{path}/{key}' does not exist or is unregistered`, 0)
 		end;
 		__newindex = function(_, key, value)
 			rawset(data, key, value)
@@ -75,11 +82,11 @@ local function createModulesMetatable(path: string)
 	})
 end
 
-local function addModules(allModules: {}, object: Instance, currentPath: string?)
+local function addModules(allModules: {Module}, object: Instance, currentPath: string?)
 	for _, child in object:GetChildren() do
 		if child:IsA("ModuleScript") then
 			if child ~= script then
-				table.insert(allModules, {Object = child, Path = currentPath})
+				table.insert(allModules, {Object = child, Path = currentPath or ""})
 			end
 		else
 			addModules(allModules, child, (currentPath or "") .. "/" .. child.Name:gsub("/", ""))
@@ -94,7 +101,7 @@ local function assignModule(path: string?, object: ModuleScript, result: {[any]:
 		local subPaths = path:split("/")
 		if #subPaths > 1 then
 			for index = 2, #subPaths do
-				if rawget(newPath, subPaths[index]) ~= nil and type(newPath[subPaths[index]]) ~= "table" then error(("'%s' is already assigned in the Modules table"):format(path)) end
+				if rawget(newPath, subPaths[index]) ~= nil and type(newPath[subPaths[index]]) ~= "table" then error(`'{path}' is already assigned in the Modules table`) end
 				if rawget(newPath, subPaths[index]) == nil then
 					rawset(newPath, subPaths[index], createModulesMetatable(path))
 				end
@@ -103,8 +110,8 @@ local function assignModule(path: string?, object: ModuleScript, result: {[any]:
 		end
 	end
 
-	if rawget(newPath, object.Name) ~= nil and not result then error(("'%s' is already assigned in the Modules table"):format((if path then path .. "/" else "") .. object.Name)) end
-	if type(result) == "table" and rawget(newPath, object.Name) ~= result then error(("'%s' returned the wrong table"):format((if path then path .. "/" else "") .. object.Name)) end
+	if rawget(newPath, object.Name) ~= nil and not result then error(`'{(if path then path .. "/" else "") .. object.Name}' is already assigned in the Modules table`) end
+	if type(result) == "table" and rawget(newPath, object.Name) ~= result then error(`'{(if path then path .. "/" else "") .. object.Name}' returned the wrong table`) end
 	rawset(newPath, object.Name, result or {})
 end
 
@@ -112,8 +119,8 @@ end
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function shared.Import(paths: {string})
-	local allModules: {{["Object"]: ModuleScript, ["Path"]: string}} = {}
+function shared.Import(paths: {Instance})
+	local allModules: {Module} = {}
 
 	for _, path in paths do
 		addModules(allModules, path)
@@ -126,7 +133,7 @@ function shared.Import(paths: {string})
 
 	-- Fill module table with actual return values
 	for _, moduleTable in allModules do
-		moduleTable.Return = require(moduleTable.Object)
+		moduleTable.Return = require(moduleTable.Object) :: any
 		assignModule(moduleTable.Path, moduleTable.Object, moduleTable.Return)
 	end
 
@@ -142,7 +149,7 @@ function shared.Import(paths: {string})
 			end)
 			moduleTable.Return:Init()
 			if didHeartbeat then
-				error(("%s yielded during Init"):format(moduleTable.Object:GetFullName()))
+				error(`{moduleTable.Object:GetFullName()} yielded during Init`)
 			end
 		end
 	end
@@ -201,7 +208,7 @@ end
 
 -- Require
 for _, coreModuleObject in coreModules do
-	shared[coreModuleObject.Name] = require(coreModuleObject)
+	shared[coreModuleObject.Name] = require(coreModuleObject) :: any
 end
 
 -- Init
