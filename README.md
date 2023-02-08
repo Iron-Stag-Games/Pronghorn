@@ -77,7 +77,10 @@ New.TrackedVariable(Variable: any): {
 ```lua
 require(game:GetService("ReplicatedStorage"):WaitForChild("Pronghorn"))
 
--- Somewhere after assigning Global variables
+-- Global Variables
+shared.Global.ExampleVariable = "Example"
+
+-- Somewhere after assigning Global Variables
 shared.Import({
 	ExampleModuleDirectory;
 })
