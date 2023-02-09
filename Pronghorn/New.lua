@@ -92,9 +92,9 @@ function New.Event(): Event
 		end;
 
 		Wait = function(_)
-			local Coroutine = coroutine.running()
+			local co = coroutine.running()
 			local callback; callback = function(value: any)
-				coroutine.resume(Coroutine, value)
+				coroutine.resume(co, value)
 				table.remove(callbacks, table.find(callbacks, callback))
 			end
 			table.insert(callbacks, callback)
