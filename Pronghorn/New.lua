@@ -13,17 +13,18 @@ local New = shared.New
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 type Callback = (any) -> ()
+type Connection = {Disconnect: () -> ()}
 type Event = {
 	Fire: (self: any, value: any) -> ();
-	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
-	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Connect: (self: any, callback: Callback) -> (Connection);
+	Once: (self: any, callback: Callback) -> (Connection);
 	Wait: (self: any) -> (any);
 }
 type TrackedVariable = {
 	Get: (self: any) -> (any);
 	Set: (self: any, value: any) -> ();
-	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
-	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Connect: (self: any, callback: Callback) -> (Connection);
+	Once: (self: any, callback: Callback) -> (Connection);
 	Wait: (self: any) -> (any);
 }
 
