@@ -33,12 +33,16 @@ No Controllers or Services, just Modules and Remotes.
 ## Remotes
 ```lua
 -- Creation
-Remotes:CreateToClient(name: string, returns: boolean?)
-Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> (any))
+local exampleRemote = Remotes:CreateToClient(name: string, returns: boolean?): any
+local exampleRemote = Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> (any)): any
 
--- Server Invocation
+-- Server Invocation Absolute
 Remotes.ExampleModule.ExampleRemote:Fire(player: Player, ...)
 Remotes.ExampleModule.ExampleRemote:FireAll(...)
+
+-- Server Invocation Shortcut
+exampleRemote:Fire(player: Player, ...)
+exampleRemote:FireAll(...)
 
 -- Client Invocation
 Remotes.ExampleModule:ExampleRemote(...)
@@ -130,23 +134,25 @@ end
 ## Creating and Invoking a Remote
 ```lua
 -- On Server
-function ExampleServerModule:Init()
-	Remotes:CreateToClient("TableCounted")
-	-- Second parameter is nil, so this Remote is non-returning.
 
-	Remotes:CreateToServer("CountTable", true, function(player: Player, tableToCount: {any})
-		Remotes.ExampleServerModule.TableCounted:FireAll(player.Name)
-		return #tableToCount
-	end)
-	-- Second parameter is true, so this Remote returns.
-end
+local tableCounted = Remotes:CreateToClient("TableCounted")
+-- Second parameter is nil, so this Remote is non-returning.
 
+Remotes:CreateToServer("CountTable", true, function(player: Player, tableToCount: {any})
+	Remotes.ExampleServerModule.TableCounted:FireAll(player.Name) -- Absolute method
+	tableCounted:FireAll(player.Name) -- Shortcut method
+	return #tableToCount
+end)
+-- Second parameter is true, so this Remote returns.
+```
+```lua
 -- On Client
-function ExampleClientModule:Init()
-	Remotes.ExampleServerModule.TableCounted:Connect(function(playerName: string)
-		Print(playerName, "requested a Table to be counted.")
-	end)
 
+Remotes.ExampleServerModule.TableCounted:Connect(function(playerName: string)
+	Print(playerName, "requested a Table to be counted.")
+end)
+
+function ExampleClientModule:Deferred()
 	Print(Remotes.ExampleServerModule:CountTable({"A", "B", "C"}))
 end
 ```

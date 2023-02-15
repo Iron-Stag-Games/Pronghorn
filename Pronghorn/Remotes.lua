@@ -99,7 +99,7 @@ end
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function Remotes:CreateToClient(name: string, returns: boolean?)
+function Remotes:CreateToClient(name: string, returns: boolean?): any
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 
 	local moduleName = tostring(getfenv(2).script)
@@ -144,9 +144,11 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 		Remotes[moduleName] = {}
 	end
 	Remotes[moduleName][remote.Name] = actions
+
+	return actions
 end
 
-function Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> (any))
+function Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> (any)): any
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 	if not func then error("ToServer remotes must bind a Function") end
 
@@ -173,6 +175,8 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> 
 		Remotes[moduleName] = {}
 	end
 	Remotes[moduleName][remote.Name] = actions
+
+	return actions
 end
 
 function Remotes:Init()
