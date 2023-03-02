@@ -77,7 +77,7 @@ New.TrackedVariable(Variable: any): {
 
 ## Script Boilerplate
 ```lua
-require(game:GetService("ReplicatedStorage"):WaitForChild("Pronghorn"))
+require(game:GetService("ReplicatedStorage").Pronghorn)
 
 -- Global Variables
 shared.Global.ExampleVariable = "Example"
