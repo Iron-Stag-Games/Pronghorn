@@ -29,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B13                     ║
+║                    Pronghorn Framework  Rev. B14                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -66,7 +66,6 @@ local RunService = game:GetService("RunService")
 
 type Module = {
 	Object: ModuleScript;
-	Path: string;
 	Return: any?;
 }
 
@@ -74,49 +73,16 @@ type Module = {
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function createModulesMetatable(path: string)
-	local data = {}
-	return setmetatable(data, {
-		__index = function(_, key)
-			error(`'Modules{path}/{key}' does not exist`, 0)
-		end;
-		__newindex = function(_, key, value)
-			rawset(data, key, value)
-		end;
-	})
-end
-
-local function addModules(allModules: {Module}, object: Instance, currentPath: string?)
+local function addModules(allModules: {Module}, object: Instance)
 	for _, child in object:GetChildren() do
 		if child:IsA("ModuleScript") then
 			if child ~= script then
-				table.insert(allModules, {Object = child, Path = currentPath or ""})
+				table.insert(allModules, {Object = child, Return = require(child) :: any})
 			end
 		else
-			addModules(allModules, child, (currentPath or "") .. "/" .. child.Name:gsub("/", ""))
+			addModules(allModules, child)
 		end
 	end
-end
-
-local function assignModule(path: string?, object: ModuleScript, result: {[any]: any}?)
-	local newPath = shared.Modules
-
-	if path then
-		local subPaths = path:split("/")
-		if #subPaths > 1 then
-			for index = 2, #subPaths do
-				if rawget(newPath, subPaths[index]) ~= nil and type(newPath[subPaths[index]]) ~= "table" then error(`'{path}' is already assigned in the Modules table`) end
-				if rawget(newPath, subPaths[index]) == nil then
-					rawset(newPath, subPaths[index], createModulesMetatable(path))
-				end
-				newPath = rawget(newPath, subPaths[index])
-			end
-		end
-	end
-
-	if rawget(newPath, object.Name) ~= nil and not result then error(`'{(if path then path .. "/" else "") .. object.Name}' is already assigned in the Modules table`) end
-	if type(result) == "table" and rawget(newPath, object.Name) ~= result then error(`'{(if path then path .. "/" else "") .. object.Name}' returned the wrong table`) end
-	rawset(newPath, object.Name, result or {})
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,23 +92,9 @@ end
 function shared.Import(paths: {Instance})
 	local allModules: {Module} = {}
 
-	for _, path in paths do
-		addModules(allModules, path)
+	for _, object in paths do
+		addModules(allModules, object)
 	end
-
-	-- Create empty tables for early linking
-	for _, moduleTable in allModules do
-		assignModule(moduleTable.Path, moduleTable.Object)
-	end
-
-	-- Fill module table with actual return values
-	for _, moduleTable in allModules do
-		moduleTable.Return = require(moduleTable.Object) :: any
-		assignModule(moduleTable.Path, moduleTable.Object, moduleTable.Return)
-	end
-
-	-- Cleanup
-	table.freeze(shared.Modules)
 
 	-- Init
 	for _, moduleTable in allModules do
@@ -197,7 +149,6 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 shared.Global = {}
-shared.Modules = createModulesMetatable("")
 
 -- Import Core Modules --
 

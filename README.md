@@ -8,16 +8,14 @@ No Controllers or Services, just Modules and Remotes.
 
 ### Usage
 - The Import() Function is used in a Script to import your Modules.
-- Modules that access the framework may require a table reference in the header.
 - Modules as descendants of other Modules are not imported.
-- Subfolder structure is included when importing (e.g. Modules.Subfolder1.Subfolder2.ExampleModule)
 - Edit [Debug/EnabledChannels.lua](Pronghorn/Debug/EnabledChannels.lua) to toggle the output of Modules.
 
 # How does Pronghorn compare to others?
 
 ### Pros
-- Require() called only in the Script and not in every Module.
-- Immediate framework access with the shared table.
+- Requiring Pronghorn only in the Script and not in every Module.
+- Access to Pronghorn content using the shared table.
 - Obvious Remote behavior in both creation and invocation.
 - Server-to-Client Remote batching.
 
@@ -92,7 +90,10 @@ shared.Import({
 
 ## Module Boilerplate
 ```lua
-local ExampleModule = shared.Modules.ExampleModule
+local ExampleModule = {}
+
+-- Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Core
 local Print = shared.Print
@@ -103,7 +104,7 @@ local Remotes = shared.Remotes
 local Global = shared.Global
 
 -- Modules
-local OtherExampleModule = shared.Modules.OtherExampleModule
+local OtherExampleModule = require(ReplicatedStorage.Modules.OtherExampleModule)
 
 --[[
 	Module Body
