@@ -77,13 +77,13 @@ New.TrackedVariable(Variable: any): {
 
 ## Script Boilerplate
 ```lua
-local import = require(game:GetService("ReplicatedStorage").Pronghorn)
+local Import = require(game:GetService("ReplicatedStorage").Pronghorn)
 
 -- Global Variables
 shared.ExampleVariable = "Example"
 
 -- Somewhere after assigning global variables
-import({
+Import({
 	ExampleModuleDirectory;
 })
 ```

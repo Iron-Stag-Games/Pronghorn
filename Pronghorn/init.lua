@@ -43,11 +43,7 @@
 ╠═══════════════════════════════ Usage ════════════════════════════════╣
 ║                                                                      ║
 ║ - The Import() Function is used in a Script to import your Modules.  ║
-║ - Modules that access the framework may require a table reference in ║
-║   the header.                                                        ║
 ║ - Modules as descendants of other Modules are not imported.          ║
-║ - Subfolder structure is included when importing                     ║
-║   (e.g. Modules.Subfolder1.Subfolder2.ExampleModule)                 ║
 ║ - Edit 'Debug\EnabledChannels.lua' to toggle the output of Modules.  ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
@@ -89,7 +85,33 @@ local function addModules(allModules: {Module}, object: Instance)
 	end
 end
 
-local function import(paths: {Instance})
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Import Core Modules --
+
+local coreModules = {}
+
+for _, child in script:GetChildren() do
+	if child:IsA("ModuleScript") then
+		table.insert(coreModules, require(child) :: any)
+	end
+end
+
+-- Init
+for _, coreModule in coreModules do
+	if type(coreModule) == "table" and coreModule.Init then
+		coreModule:Init()
+	end
+end
+
+-- Deferred
+for _, coreModule in coreModules do
+	if type(coreModule) == "table" and coreModule.Deferred then
+		task.spawn(coreModule.Deferred, coreModule)
+	end
+end
+
+return function(paths: {Instance})
 	local allModules: {Module} = {}
 
 	for _, object in paths do
@@ -145,31 +167,3 @@ local function import(paths: {Instance})
 		deferredComplete:Wait()
 	end
 end
-
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
--- Import Core Modules --
-
-local coreModules = {}
-
-for _, child in script:GetChildren() do
-	if child:IsA("ModuleScript") then
-		table.insert(coreModules, require(child) :: any)
-	end
-end
-
--- Init
-for _, coreModule in coreModules do
-	if type(coreModule) == "table" and coreModule.Init then
-		coreModule:Init()
-	end
-end
-
--- Deferred
-for _, coreModule in coreModules do
-	if type(coreModule) == "table" and coreModule.Deferred then
-		task.spawn(coreModule.Deferred, coreModule)
-	end
-end
-
-return import
