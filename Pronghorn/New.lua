@@ -6,7 +6,7 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local New = shared.New
+local New = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -32,7 +32,7 @@ type TrackedVariable = {
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function New.Instance(className: string, ...): Instance
+function New.Instance(className: string, ...): any
 	local parent: Instance?, name: string?, properties: {[string]: any}?
 	for _, parameter in {...} do
 		if typeof(parameter) == "Instance" then
@@ -48,6 +48,40 @@ function New.Instance(className: string, ...): Instance
 	end
 
 	local newInstance = Instance.new(className)
+
+	if name then
+		newInstance.Name = name
+	end
+	if properties then
+		for key, value in properties do
+			newInstance[key] = value
+		end
+	end
+	if parent then
+		newInstance.Parent = parent
+	end
+
+	return newInstance
+end
+
+function New.Clone<T>(instance: T, ...): T
+	assert(typeof(instance) == "Instance", "Attempt to clone non-Instance")
+
+	local parent: Instance?, name: string?, properties: {[string]: any}?
+	for _, parameter in {...} do
+		if typeof(parameter) == "Instance" then
+			if parent then error("Parent parameter used more than once") end
+			parent = parameter
+		elseif type(parameter) == "string" or type(parameter) == "number" then
+			if name then error("Name parameter used more than once") end
+			name = tostring(parameter)
+		elseif type(parameter) == "table" then
+			if properties then error("Properties parameter used more than once") end
+			properties = parameter
+		end
+	end
+
+	local newInstance = instance:Clone()
 
 	if name then
 		newInstance.Name = name

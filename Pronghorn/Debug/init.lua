@@ -6,6 +6,8 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
+local Debug = {}
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -16,7 +18,7 @@ local ENABLED_CHANNELS = require(script.EnabledChannels) :: {[string]: boolean}
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function shared.Print(...)
+function Debug.Print(...)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
@@ -26,7 +28,7 @@ function shared.Print(...)
 	end
 end
 
-function shared.Warn(...)
+function Debug.Warn(...)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
@@ -36,7 +38,7 @@ function shared.Warn(...)
 	end
 end
 
-function shared.Trace(...)
+function Debug.Trace(...)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
@@ -48,4 +50,4 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return true
+return Debug

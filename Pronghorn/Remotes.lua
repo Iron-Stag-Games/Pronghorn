@@ -6,15 +6,20 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local Remotes = shared.Remotes
+local Remotes = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Dependencies
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
+-- Core
+local Print = require(script.Parent.Debug).Print
+local New = require(script.Parent.New)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -39,7 +44,7 @@ local toClientBatchedRemotes: {
 local function setupPlayer(player: Player)
 	if not toClientBatchedRemotes[player] then
 		toClientBatchedRemotes[player] = {
-			Remote = shared.New.Instance("RemoteEvent", remotesFolder, player.UserId);
+			Remote = New.Instance("RemoteEvent", remotesFolder, player.UserId);
 			Queue = {};
 		}
 	end
@@ -69,7 +74,7 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
 			local split: {string} = debug.info(2, "s"):split(".")
 			local environment = "[" .. split[#split] .. "]"
-			shared.Print(environment, remote, "Fire", ...)
+			Print(environment, remote, "Fire", ...)
 			remote:FireServer(...)
 		end
 
@@ -84,7 +89,7 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
 			local split: {string} = debug.info(2, "s"):split(".")
 			local environment = "[" .. split[#split] .. "]"
-			shared.Print(environment, remote, "Fire", ...)
+			Print(environment, remote, "Fire", ...)
 			return remote:InvokeServer(...)
 		end
 	end
@@ -108,30 +113,30 @@ function Remotes:CreateToClient(name: string, returns: boolean?): any
 	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`) end
 
 	local environment = "[" .. moduleName .. "]"
-	local serverFolder = remotesFolder:FindFirstChild(moduleName) or shared.New.Instance("Folder", remotesFolder, moduleName)
-	local remote = shared.New.Instance(returns and "RemoteFunction" or "BindableEvent", serverFolder, name)
+	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
+	local remote = New.Instance(returns and "RemoteFunction" or "BindableEvent", serverFolder, name)
 	local actions: any = {}
 
 	if returns then
 		actions.Fire = function(_, ...)
-			shared.Print(environment, name, "Fire", ...)
+			Print(environment, name, "Fire", ...)
 			return remote:InvokeClient(...)
 		end
 	else
 		actions.Fire = function(_, player, ...)
-			shared.Print(environment, name, "Fire", player, ...)
+			Print(environment, name, "Fire", player, ...)
 			addToBatchQueue(player, {Event = remote, Parameters = {...}})
 		end
 
 		actions.FireAll = function(_, ...)
-			shared.Print(environment, name, "FireAll", ...)
+			Print(environment, name, "FireAll", ...)
 			for _, player in Players:GetPlayers() do
 				addToBatchQueue(player, {Event = remote, Parameters = {...}})
 			end
 		end
 
 		actions.FireAllExcept = function(_, ignorePlayer, ...)
-			shared.Print(environment, name, "FireAllExcept", ignorePlayer, ...)
+			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
 				if player ~= ignorePlayer then
 					addToBatchQueue(player, {Event = remote, Parameters = {...}})
@@ -148,25 +153,28 @@ function Remotes:CreateToClient(name: string, returns: boolean?): any
 	return actions
 end
 
-function Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> (any)): any
+function Remotes:CreateToServer(name: string, returns: boolean?, func: any?): any
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
-	if not func then error("ToServer remotes must bind a Function") end
 
 	local moduleName = tostring(getfenv(2).script)
 
 	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`) end
 	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`) end
 
-	local serverFolder = remotesFolder:FindFirstChild(moduleName) or shared.New.Instance("Folder", remotesFolder, moduleName)
-	local remote = shared.New.Instance(returns and "RemoteFunction" or "RemoteEvent", serverFolder, name)
+	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
+	local remote = New.Instance(returns and "RemoteFunction" or "RemoteEvent", serverFolder, name)
 	local actions = {}
 
 	if returns then
 		remote.OnServerInvoke = func
+
+		function actions:SetListener(newFunction: any)
+			remote.OnServerInvoke = newFunction
+		end
 	else
 		remote.OnServerEvent:Connect(func)
 
-		function actions:AddListener(newFunction: (any) -> (any))
+		function actions:AddListener(newFunction: any)
 			remote.OnServerEvent:Connect(newFunction)
 		end
 	end
@@ -181,7 +189,7 @@ end
 
 function Remotes:Init()
 	if RunService:IsServer() then
-		remotesFolder = shared.New.Instance("Folder", ReplicatedStorage, "__remotes")
+		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
 
 		Players.PlayerAdded:Connect(setupPlayer)
 

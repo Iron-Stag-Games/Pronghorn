@@ -29,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B14                     ║
+║                    Pronghorn Framework  Rev. B15                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -57,8 +57,12 @@
 -- Dependencies
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
+-- Core
+local New = require(script.New)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -85,11 +89,7 @@ local function addModules(allModules: {Module}, object: Instance)
 	end
 end
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Module Functions
---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-function shared.Import(paths: {Instance})
+local function import(paths: {Instance})
 	local allModules: {Module} = {}
 
 	for _, object in paths do
@@ -111,7 +111,7 @@ function shared.Import(paths: {Instance})
 	end
 
 	-- Deferred
-	local deferredComplete = shared.New.Event()
+	local deferredComplete = New.Event()
 	local startWaits = 0
 	for _, moduleTable in allModules do
 		if type(moduleTable.Return) == "table" and moduleTable.Return.Deferred then
@@ -148,42 +148,28 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-shared.Global = {}
-
 -- Import Core Modules --
 
 local coreModules = {}
 
 for _, child in script:GetChildren() do
 	if child:IsA("ModuleScript") then
-		table.insert(coreModules, child)
-		shared[child.Name] = {}
+		table.insert(coreModules, require(child) :: any)
 	end
 end
 
--- Require
-for _, coreModuleObject in coreModules do
-	shared[coreModuleObject.Name] = require(coreModuleObject) :: any
-end
-
 -- Init
-for _, coreModuleObject in coreModules do
-	local coreModule = shared[coreModuleObject.Name]
+for _, coreModule in coreModules do
 	if type(coreModule) == "table" and coreModule.Init then
 		coreModule:Init()
 	end
 end
 
 -- Deferred
-for _, coreModuleObject in coreModules do
-	local coreModule = shared[coreModuleObject.Name]
+for _, coreModule in coreModules do
 	if type(coreModule) == "table" and coreModule.Deferred then
 		task.spawn(coreModule.Deferred, coreModule)
 	end
 end
 
--- Cleanup
-shared.Debug = nil
-table.freeze(shared)
-
-return true
+return import

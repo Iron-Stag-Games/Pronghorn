@@ -15,13 +15,11 @@ No Controllers or Services, just Modules and Remotes.
 
 ### Pros
 - Requiring Pronghorn only in the Script and not in every Module.
-- Access to Pronghorn content using the shared table.
 - Obvious Remote behavior in both creation and invocation.
 - Server-to-Client Remote batching.
 
 ### Cons
 - No automatic Remote creation using Services.
-- Use of the shared table may cause interference.
 
 ### Preference
 - No Controller or Service structure.
@@ -58,6 +56,8 @@ Trace(...)
 New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any}?): Instance
 	-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
 	-- Ex. New.Instance("Part", {Properties})
+New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[string]: any}?): Instance
+	-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
 New.Event(): {
 	Fire: (self: any, value: any) -> ();
 	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
@@ -77,13 +77,13 @@ New.TrackedVariable(Variable: any): {
 
 ## Script Boilerplate
 ```lua
-require(game:GetService("ReplicatedStorage").Pronghorn)
+local import = require(game:GetService("ReplicatedStorage").Pronghorn)
 
 -- Global Variables
-shared.Global.ExampleVariable = "Example"
+shared.ExampleVariable = "Example"
 
--- Somewhere after assigning Global Variables
-shared.Import({
+-- Somewhere after assigning global variables
+import({
 	ExampleModuleDirectory;
 })
 ```
@@ -96,12 +96,11 @@ local ExampleModule = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Core
-local Print = shared.Print
-local Warn = shared.Warn
-local Trace = shared.Trace
-local New = shared.New
-local Remotes = shared.Remotes
-local Global = shared.Global
+local Print = require(ReplicatedStorage.Modules.Pronghorn.Debug).Print
+local Warn = require(ReplicatedStorage.Modules.Pronghorn.Debug).Warn
+local Trace = require(ReplicatedStorage.Modules.Pronghorn.Debug).Trace
+local New = require(ReplicatedStorage.Modules.Pronghorn.New)
+local Remotes = require(ReplicatedStorage.Modules.Pronghorn.Remotes)
 
 -- Modules
 local OtherExampleModule = require(ReplicatedStorage.Modules.OtherExampleModule)
