@@ -166,13 +166,17 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: any?): an
 	local actions = {}
 
 	if returns then
-		remote.OnServerInvoke = func
+		if func then
+			remote.OnServerInvoke = func
+		end
 
 		function actions:SetListener(newFunction: any)
 			remote.OnServerInvoke = newFunction
 		end
 	else
-		remote.OnServerEvent:Connect(func)
+		if func then
+			remote.OnServerEvent:Connect(func)
+		end
 
 		function actions:AddListener(newFunction: any)
 			remote.OnServerEvent:Connect(newFunction)
