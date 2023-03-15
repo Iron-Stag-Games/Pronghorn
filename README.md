@@ -14,6 +14,7 @@ No Controllers or Services, just Modules and Remotes.
 # How does Pronghorn compare to others?
 
 ### Pros
+- Luau typechecking.
 - Requiring Pronghorn only in the Script and not in every Module.
 - Obvious Remote behavior in both creation and invocation.
 - Server-to-Client Remote batching.
