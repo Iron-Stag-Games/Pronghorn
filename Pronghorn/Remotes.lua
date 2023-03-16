@@ -29,7 +29,7 @@ local New = require(script.Parent.New)
 type Queue = {Event: BindableEvent, Parameters: {any}}
 
 -- Defines
-local remotesFolder;
+local remotesFolder: Folder;
 local toClientBatchedRemotes: {
 	[Player]: {
 		Remote: RemoteEvent;
@@ -60,6 +60,11 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 	local actions: any = {}
 	local metaTable: any = {}
 
+	if not Remotes[moduleName] then
+		Remotes[moduleName] = {}
+	end
+	Remotes[moduleName][remote.Name] = setmetatable(actions, metaTable)
+
 	if remote:IsA("BindableEvent") then
 		-- BindableEvent: To Client.
 
@@ -70,7 +75,7 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 	elseif remote:IsA("RemoteEvent") then
 		-- RemoteEvent: To Server.
 
-		metaTable.__call = function(_, context: any, ...)
+		metaTable.__call = function(_, context: any, ...: any?)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
 			local split: {string} = debug.info(2, "s"):split(".")
 			local environment = "[" .. split[#split] .. "]"
@@ -85,7 +90,7 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 			remote.OnClientInvoke = func
 		end
 
-		metaTable.__call = function(_, context: any, ...)
+		metaTable.__call = function(_, context: any, ...: any?)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
 			local split: {string} = debug.info(2, "s"):split(".")
 			local environment = "[" .. split[#split] .. "]"
@@ -93,18 +98,13 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 			return remote:InvokeServer(...)
 		end
 	end
-
-	if not Remotes[moduleName] then
-		Remotes[moduleName] = {}
-	end
-	Remotes[moduleName][remote.Name] = setmetatable(actions, metaTable)
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function Remotes:CreateToClient(name: string, returns: boolean?): any
+function Remotes:CreateToClient(name: string, returns: boolean?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 
 	local moduleName = tostring(getfenv(2).script)
@@ -115,27 +115,32 @@ function Remotes:CreateToClient(name: string, returns: boolean?): any
 	local environment = "[" .. moduleName .. "]"
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
 	local remote = New.Instance(returns and "RemoteFunction" or "BindableEvent", serverFolder, name)
-	local actions: any = {}
+	local actions = {}
+
+	if not Remotes[moduleName] then
+		Remotes[moduleName] = {}
+	end
+	Remotes[moduleName][remote.Name] = actions
 
 	if returns then
-		actions.Fire = function(_, ...)
+		actions.Fire = function(_, player: Player, ...: any?)
 			Print(environment, name, "Fire", ...)
-			return remote:InvokeClient(...)
+			return remote:InvokeClient(player, ...)
 		end
 	else
-		actions.Fire = function(_, player, ...)
+		actions.Fire = function(_, player: Player, ...: any?)
 			Print(environment, name, "Fire", player, ...)
 			addToBatchQueue(player, {Event = remote, Parameters = {...}})
 		end
 
-		actions.FireAll = function(_, ...)
+		actions.FireAll = function(_, ...: any?)
 			Print(environment, name, "FireAll", ...)
 			for _, player in Players:GetPlayers() do
 				addToBatchQueue(player, {Event = remote, Parameters = {...}})
 			end
 		end
 
-		actions.FireAllExcept = function(_, ignorePlayer, ...)
+		actions.FireAllExcept = function(_, ignorePlayer: Player, ...: any?)
 			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
 				if player ~= ignorePlayer then
@@ -145,15 +150,10 @@ function Remotes:CreateToClient(name: string, returns: boolean?): any
 		end
 	end
 
-	if not Remotes[moduleName] then
-		Remotes[moduleName] = {}
-	end
-	Remotes[moduleName][remote.Name] = actions
-
 	return actions
 end
 
-function Remotes:CreateToServer(name: string, returns: boolean?, func: any?): any
+function Remotes:CreateToServer(name: string, returns: boolean?, func: any?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 
 	local moduleName = tostring(getfenv(2).script)
@@ -165,12 +165,17 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: any?): an
 	local remote = New.Instance(returns and "RemoteFunction" or "RemoteEvent", serverFolder, name)
 	local actions = {}
 
+	if not Remotes[moduleName] then
+		Remotes[moduleName] = {}
+	end
+	Remotes[moduleName][remote.Name] = actions
+
 	if returns then
 		if func then
 			remote.OnServerInvoke = func
 		end
 
-		function actions:SetListener(newFunction: any)
+		actions.SetListener = function(_, newFunction: any)
 			remote.OnServerInvoke = newFunction
 		end
 	else
@@ -178,15 +183,10 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: any?): an
 			remote.OnServerEvent:Connect(func)
 		end
 
-		function actions:AddListener(newFunction: any)
+		actions.AddListener = function(_, newFunction: any)
 			remote.OnServerEvent:Connect(newFunction)
 		end
 	end
-
-	if not Remotes[moduleName] then
-		Remotes[moduleName] = {}
-	end
-	Remotes[moduleName][remote.Name] = actions
 
 	return actions
 end
@@ -218,14 +218,14 @@ function Remotes:Init()
 		end
 
 		remotesFolder.DescendantAdded:Connect(function(remote)
-			connectEventClient(remote)
+			connectEventClient(remote :: any)
 		end)
 	end
 end
 
 function Remotes:Deferred()
 	if RunService:IsClient() then
-		remotesFolder:WaitForChild(Players.LocalPlayer.UserId).OnClientEvent:Connect(function(batch: {Queue})
+		(remotesFolder:WaitForChild(Players.LocalPlayer.UserId) :: RemoteEvent).OnClientEvent:Connect(function(batch: {Queue})
 			for _, data in batch do
 				data.Event:Fire(unpack(data.Parameters))
 			end

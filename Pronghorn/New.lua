@@ -32,7 +32,7 @@ type TrackedVariable = {
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function New.Instance(className: string, ...): any
+function New.Instance(className: string, ...: any?): any
 	local parent: Instance?, name: string?, properties: {[string]: any}?
 	for _, parameter in {...} do
 		if typeof(parameter) == "Instance" then
@@ -64,7 +64,7 @@ function New.Instance(className: string, ...): any
 	return newInstance
 end
 
-function New.Clone<T>(instance: T, ...): T
+function New.Clone<T>(instance: T, ...: any?): T
 	assert(typeof(instance) == "Instance", "Attempt to clone non-Instance")
 
 	local parent: Instance?, name: string?, properties: {[string]: any}?

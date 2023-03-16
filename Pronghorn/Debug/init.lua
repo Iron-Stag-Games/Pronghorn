@@ -18,7 +18,7 @@ local ENABLED_CHANNELS = require(script.EnabledChannels) :: {[string]: boolean}
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function Debug.Print(...)
+function Debug.Print(...: any?)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
@@ -28,7 +28,7 @@ function Debug.Print(...)
 	end
 end
 
-function Debug.Warn(...)
+function Debug.Warn(...: any?)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
@@ -38,7 +38,7 @@ function Debug.Warn(...)
 	end
 end
 
-function Debug.Trace(...)
+function Debug.Trace(...: any?)
 	local channel = tostring(getfenv(2).script)
 
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
