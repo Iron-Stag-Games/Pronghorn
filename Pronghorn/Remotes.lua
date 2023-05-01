@@ -41,6 +41,15 @@ local toClientBatchedRemotes: {
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+local function deepCopy(data: {[any]: any})
+	for key, value in data do
+		if type(value) == "table" then
+			data[key] = table.clone(value)
+			deepCopy(data[key])
+		end
+	end
+end
+
 local function setupPlayer(player: Player)
 	if not toClientBatchedRemotes[player] then
 		toClientBatchedRemotes[player] = {
@@ -52,6 +61,7 @@ end
 
 local function addToBatchQueue(player: Player, data: Queue)
 	setupPlayer(player)
+	deepCopy(data.Parameters)
 	table.insert(toClientBatchedRemotes[player].Queue, data)
 end
 
