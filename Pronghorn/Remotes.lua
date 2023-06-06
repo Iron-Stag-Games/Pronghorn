@@ -85,6 +85,13 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 	elseif remote:IsA("RemoteEvent") then
 		-- RemoteEvent: To Server.
 
+		actions.Fire = function(_, ...: any?)
+			local split: {string} = debug.info(2, "s"):split(".")
+			local environment = "[" .. split[#split] .. "]"
+			Print(environment, remote, "Fire", ...)
+			return remote:FireServer(...)
+		end
+
 		metaTable.__call = function(_, context: any, ...: any?)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
 			local split: {string} = debug.info(2, "s"):split(".")
@@ -98,6 +105,13 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 
 		actions.Connect = function(_, func: (any) -> (any))
 			remote.OnClientInvoke = func
+		end
+
+		actions.Fire = function(_, ...: any?)
+			local split: {string} = debug.info(2, "s"):split(".")
+			local environment = "[" .. split[#split] .. "]"
+			Print(environment, remote, "Fire", ...)
+			return remote:InvokeServer(...)
 		end
 
 		metaTable.__call = function(_, context: any, ...: any?)
