@@ -43,6 +43,7 @@ exampleRemote:FireAll(...)
 
 -- Client Invocation Absolute
 Remotes.ExampleModule:ExampleRemote(...)
+Remotes.ExampleModule.ExampleRemote:Fire(...)
 
 -- Client Invocation Shortcut
 exampleRemote:Fire(...)
