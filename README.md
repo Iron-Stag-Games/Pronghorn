@@ -41,8 +41,11 @@ Remotes.ExampleModule.ExampleRemote:FireAll(...)
 exampleRemote:Fire(player: Player, ...)
 exampleRemote:FireAll(...)
 
--- Client Invocation
+-- Client Invocation Absolute
 Remotes.ExampleModule:ExampleRemote(...)
+
+-- Client Invocation Shortcut
+exampleRemote:Fire(...)
 ```
 
 ## Debug
