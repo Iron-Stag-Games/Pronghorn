@@ -222,6 +222,8 @@ function Remotes:Init()
 		Players.PlayerAdded:Connect(setupPlayer)
 
 		Players.PlayerRemoving:Connect(function(player)
+			player.Destroying:Wait()
+
 			toClientBatchedRemotes[player].Remote:Destroy()
 			toClientBatchedRemotes[player] = nil
 		end)
