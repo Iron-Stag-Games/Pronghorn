@@ -222,7 +222,7 @@ function Remotes:Init()
 		Players.PlayerAdded:Connect(setupPlayer)
 
 		Players.PlayerRemoving:Connect(function(player)
-			player.Destroying:Wait()
+			player.AncestryChanged:Wait()
 
 			toClientBatchedRemotes[player].Remote:Destroy()
 			toClientBatchedRemotes[player] = nil
