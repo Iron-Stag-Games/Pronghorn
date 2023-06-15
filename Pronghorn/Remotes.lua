@@ -25,47 +25,13 @@ local New = require(script.Parent.New)
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
--- Types
-type Queue = {Event: BindableEvent, Parameters: {any}}
-
--- Defines
 local remotesFolder: Folder;
-local toClientBatchedRemotes: {
-	[Player]: {
-		Remote: RemoteEvent;
-		Queue: {Queue};
-	}
-} = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function deepCopy(data: {[any]: any})
-	for key, value in data do
-		if type(value) == "table" then
-			data[key] = table.clone(value)
-			deepCopy(data[key])
-		end
-	end
-end
-
-local function setupPlayer(player: Player)
-	if not toClientBatchedRemotes[player] then
-		toClientBatchedRemotes[player] = {
-			Remote = New.Instance("RemoteEvent", remotesFolder, player.UserId);
-			Queue = {};
-		}
-	end
-end
-
-local function addToBatchQueue(player: Player, data: Queue)
-	setupPlayer(player)
-	deepCopy(data.Parameters)
-	table.insert(toClientBatchedRemotes[player].Queue, data)
-end
-
-local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFunction)
+local function connectEventClient(remote: RemoteEvent|RemoteFunction)
 	local moduleName = remote.Parent and remote.Parent.Name
 	local actions: any = {}
 	local metaTable: any = {}
@@ -75,20 +41,11 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 	end
 	Remotes[moduleName][remote.Name] = setmetatable(actions, metaTable)
 
-	if remote:IsA("BindableEvent") then
-		-- BindableEvent: To Client.
-		-- This is just a dummy object; we will need to create a QueuedEvent.
+	if remote:IsA("RemoteEvent") then
 
-		local event = New.QueuedEvent(moduleName)
-
-		remote.Event:Connect(function(...)
-			event:Fire(...)
-		end)
-
-		actions.Connect = event.Connect
-
-	elseif remote:IsA("RemoteEvent") then
-		-- RemoteEvent: To Server.
+		actions.Connect = function(_, func: (...any) -> (...any)): RBXScriptConnection
+			return remote.OnClientEvent:Connect(func)
+		end
 
 		actions.Fire = function(_, ...: any?)
 			local split: {string} = debug.info(2, "s"):split(".")
@@ -106,7 +63,6 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 		end
 
 	elseif remote:IsA("RemoteFunction") then
-		-- RemoteFunction: Bi-directional.
 
 		actions.Connect = function(_, func: (...any) -> (...any))
 			remote.OnClientInvoke = func
@@ -143,7 +99,7 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 
 	local environment = "[" .. moduleName .. "]"
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
-	local remote = New.Instance(returns and "RemoteFunction" or "BindableEvent", serverFolder, name)
+	local remote = New.Instance(returns and "RemoteFunction" or "RemoteEvent", serverFolder, name)
 	local actions = {}
 
 	if not Remotes[moduleName] then
@@ -159,21 +115,19 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 	else
 		actions.Fire = function(_, player: Player, ...: any?)
 			Print(environment, name, "Fire", player, ...)
-			addToBatchQueue(player, {Event = remote, Parameters = {...}})
+			remote:FireClient(player, ...)
 		end
 
 		actions.FireAll = function(_, ...: any?)
 			Print(environment, name, "FireAll", ...)
-			for _, player in Players:GetPlayers() do
-				addToBatchQueue(player, {Event = remote, Parameters = {...}})
-			end
+			remote:FireAllClients(...)
 		end
 
 		actions.FireAllExcept = function(_, ignorePlayer: Player, ...: any?)
 			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
 				if player ~= ignorePlayer then
-					addToBatchQueue(player, {Event = remote, Parameters = {...}})
+					remote:FireClient(player, ...)
 				end
 			end
 		end
@@ -223,24 +177,6 @@ end
 function Remotes:Init()
 	if RunService:IsServer() then
 		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
-
-		Players.PlayerAdded:Connect(setupPlayer)
-
-		Players.PlayerRemoving:Connect(function(player)
-			player.AncestryChanged:Wait()
-
-			toClientBatchedRemotes[player].Remote:Destroy()
-			toClientBatchedRemotes[player] = nil
-		end)
-
-		RunService.Heartbeat:Connect(function()
-			for player, data in toClientBatchedRemotes do
-				if next(data.Queue) then
-					data.Remote:FireClient(player, data.Queue)
-				end
-				table.clear(data.Queue)
-			end
-		end)
 	else
 		remotesFolder = ReplicatedStorage:WaitForChild("__remotes")
 
@@ -250,16 +186,6 @@ function Remotes:Init()
 
 		remotesFolder.DescendantAdded:Connect(function(remote)
 			connectEventClient(remote :: any)
-		end)
-	end
-end
-
-function Remotes:Deferred()
-	if RunService:IsClient() then
-		(remotesFolder:WaitForChild(Players.LocalPlayer.UserId) :: RemoteEvent).OnClientEvent:Connect(function(batch: {Queue})
-			for _, data in batch do
-				data.Event:Fire(unpack(data.Parameters))
-			end
 		end)
 	end
 end
