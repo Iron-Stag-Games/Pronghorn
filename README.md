@@ -70,6 +70,12 @@ New.Event(): {
 	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
 	Wait: (self: any) -> (any);
 }
+New.QueuedEvent(): {
+	Fire: (self: any, value: any) -> ();
+	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Wait: (self: any) -> (any);
+}
 New.TrackedVariable(Variable: any): {
 	Get: (self: any) -> (any);
 	Set: (self: any, value: any) -> ();

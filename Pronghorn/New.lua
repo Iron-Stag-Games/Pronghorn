@@ -12,21 +12,23 @@ local New = {}
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-type Callback = (any) -> ()
+type Callback = (...any) -> ()
 type Connection = {Disconnect: () -> ()}
-type Event = {
+export type Event = {
 	Fire: (self: any, value: any) -> ();
 	Connect: (self: any, callback: Callback) -> (Connection);
 	Once: (self: any, callback: Callback) -> (Connection);
 	Wait: (self: any) -> (any);
 }
-type TrackedVariable = {
+export type TrackedVariable = {
 	Get: (self: any) -> (any);
 	Set: (self: any, value: any) -> ();
 	Connect: (self: any, callback: Callback) -> (Connection);
 	Once: (self: any, callback: Callback) -> (Connection);
 	Wait: (self: any) -> (any);
 }
+
+local QUEUED_EVENT_QUEUE_SIZE = 256
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -100,10 +102,11 @@ end
 
 function New.Event(): Event
 	local callbacks: {Callback} = {}
+
 	local actions: Event = {
-		Fire = function(_, value: any)
+		Fire = function(_, ...: any)
 			for _, callback in callbacks do
-				callback(value)
+				callback(...)
 			end
 		end;
 
@@ -115,8 +118,8 @@ function New.Event(): Event
 		end;
 
 		Once = function(_, callback: Callback)
-			local wrappedCallback: Callback; wrappedCallback = function(value: any)
-				callback(value)
+			local wrappedCallback: Callback; wrappedCallback = function(...: any)
+				callback(...)
 				table.remove(callbacks, table.find(callbacks, wrappedCallback))
 			end
 			table.insert(callbacks, wrappedCallback)
@@ -127,8 +130,73 @@ function New.Event(): Event
 
 		Wait = function(_)
 			local co = coroutine.running()
-			local callback; callback = function(value: any)
-				coroutine.resume(co, value)
+			local callback; callback = function(...: any)
+				coroutine.resume(co, ...)
+				table.remove(callbacks, table.find(callbacks, callback))
+			end
+			table.insert(callbacks, callback)
+			return coroutine.yield()
+		end;
+	}
+
+	table.freeze(actions)
+
+	return actions
+end
+
+function New.QueuedEvent(nameHint: string?): Event
+	local callbacks: {Callback} = {}
+	local queueCount = 0
+	local queuedEventCoroutines: {thread} = {}
+
+	local function resumeQueuedEventCoroutines()
+		for _, co in queuedEventCoroutines do
+			coroutine.resume(co)
+		end
+		table.clear(queuedEventCoroutines)
+		queueCount = 0
+	end
+
+	local actions: Event = {
+		Fire = function(_, ...: any)
+			if not next(callbacks) then
+				if queueCount >= QUEUED_EVENT_QUEUE_SIZE then
+					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for '{nameHint}'` else ""}; did you forget to connect to it?`, 0)
+				end
+				queueCount += 1
+				table.insert(queuedEventCoroutines, coroutine.running())
+				coroutine.yield()
+			end
+			for _, callback in callbacks do
+				callback(...)
+			end
+		end;
+
+		Connect = function(_, callback: Callback)
+			resumeQueuedEventCoroutines()
+			table.insert(callbacks, callback)
+			return {Disconnect = function()
+				table.remove(callbacks, table.find(callbacks, callback))
+			end}
+		end;
+
+		Once = function(_, callback: Callback)
+			resumeQueuedEventCoroutines()
+			local wrappedCallback: Callback; wrappedCallback = function(...: any)
+				callback(...)
+				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+			end
+			table.insert(callbacks, wrappedCallback)
+			return {Disconnect = function()
+				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+			end}
+		end;
+
+		Wait = function(_)
+			resumeQueuedEventCoroutines()
+			local co = coroutine.running()
+			local callback; callback = function(...: any)
+				coroutine.resume(co, ...)
 				table.remove(callbacks, table.find(callbacks, callback))
 			end
 			table.insert(callbacks, callback)
@@ -143,6 +211,7 @@ end
 
 function New.TrackedVariable(variable: any): TrackedVariable
 	local callbacks: {Callback} = {}
+
 	local actions: TrackedVariable = {
 		Get = function(_): any
 			return variable

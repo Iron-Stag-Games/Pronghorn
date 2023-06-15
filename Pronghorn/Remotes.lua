@@ -77,10 +77,15 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 
 	if remote:IsA("BindableEvent") then
 		-- BindableEvent: To Client.
+		-- This is just a dummy object; we will need to create a QueuedEvent.
 
-		actions.Connect = function(_, func: (any) -> (any))
-			return remote.Event:Connect(func)
-		end
+		local event = New.QueuedEvent(moduleName)
+
+		remote.Event:Connect(function(...)
+			event:Fire(...)
+		end)
+
+		actions.Connect = event.Connect
 
 	elseif remote:IsA("RemoteEvent") then
 		-- RemoteEvent: To Server.
@@ -103,7 +108,7 @@ local function connectEventClient(remote: BindableEvent|RemoteEvent|RemoteFuncti
 	elseif remote:IsA("RemoteFunction") then
 		-- RemoteFunction: Bi-directional.
 
-		actions.Connect = function(_, func: (any) -> (any))
+		actions.Connect = function(_, func: (...any) -> (...any))
 			remote.OnClientInvoke = func
 		end
 
@@ -222,7 +227,7 @@ function Remotes:Init()
 		Players.PlayerAdded:Connect(setupPlayer)
 
 		Players.PlayerRemoving:Connect(function(player)
-			player.Destroying:Wait()
+			player.AncestryChanged:Wait()
 
 			toClientBatchedRemotes[player].Remote:Destroy()
 			toClientBatchedRemotes[player] = nil
