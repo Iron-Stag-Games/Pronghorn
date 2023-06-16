@@ -66,13 +66,13 @@ New.Instance(className: string, parent: Instance?, name: string?, properties: {[
 New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[string]: any}?): Instance
 	-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
 New.Event(): {
-	Fire: (self: any, value: any) -> ();
+	Fire: (self: any, ...any?) -> ();
 	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
 	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
 	Wait: (self: any) -> (any);
 }
 New.QueuedEvent(): {
-	Fire: (self: any, value: any) -> ();
+	Fire: (self: any, ...any?) -> ();
 	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
 	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
 	Wait: (self: any) -> (any);
@@ -172,7 +172,8 @@ end
 
 # Games made with Pronghorn
 
-- [NDA title #1](https://www.roblox.com/games/8875360163) - Fund For Games
-- NDA title #2 - Fund For Games
-- NDA title #3 - Fund For Games
 - [ExoTech](https://www.roblox.com/games/7634484468) - Iron Stag Games
+- [Mansion Tycoon](https://www.roblox.com/games/12912731475) - Capybara's Productions
+- NDA title - RB Battles PVP
+- NDA title #1 - Fund For Games
+- NDA title #2 - Fund For Games
