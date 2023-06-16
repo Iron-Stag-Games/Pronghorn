@@ -136,7 +136,7 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 	return actions
 end
 
-function Remotes:CreateToServer(name: string, returns: boolean?, func: any?)
+function Remotes:CreateToServer(name: string, returns: boolean?, func: (...any?) -> (...any?))
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 
 	local moduleName = tostring(getfenv(2).script)
@@ -158,7 +158,7 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: any?)
 			remote.OnServerInvoke = func
 		end
 
-		actions.SetListener = function(_, newFunction: any)
+		actions.SetListener = function(_, newFunction: (...any?) -> (...any?))
 			remote.OnServerInvoke = newFunction
 		end
 	else
@@ -166,7 +166,7 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: any?)
 			remote.OnServerEvent:Connect(func)
 		end
 
-		actions.AddListener = function(_, newFunction: any): RBXScriptConnection
+		actions.AddListener = function(_, newFunction: (...any?) -> ()): RBXScriptConnection
 			return remote.OnServerEvent:Connect(newFunction)
 		end
 	end
