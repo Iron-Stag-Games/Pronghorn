@@ -17,7 +17,8 @@ No Controllers or Services, just Modules and Remotes.
 - Luau typechecking.
 - Requiring Pronghorn only in the Script and not in every Module.
 - Obvious Remote behavior in both creation and invocation.
-- Several types of custom scriptable events.
+- Server-to-Client Remote batching.
+- Addition of Event, QueuedEvent, and TrackedVariable.
 
 ### Cons
 - No automatic Remote creation using Services.

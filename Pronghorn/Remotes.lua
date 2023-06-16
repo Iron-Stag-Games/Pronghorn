@@ -26,12 +26,41 @@ local New = require(script.Parent.New)
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 local remotesFolder: Folder;
+local toClientBatchedRemotes: {
+	[Player]: {
+		[RemoteEvent]: {{any}}
+	};
+} = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function connectEventClient(remote: RemoteEvent|RemoteFunction)
+local function deepCopy(data: {[any]: any})
+	for key, value in data do
+		if type(value) == "table" then
+			data[key] = table.clone(value)
+			deepCopy(data[key])
+		end
+	end
+end
+
+local function setupPlayer(player: Player)
+	if not toClientBatchedRemotes[player] then
+		toClientBatchedRemotes[player] = {}
+	end
+end
+
+local function addToBatchQueue(player: Player, remote: RemoteEvent, parameters: {any})
+	setupPlayer(player)
+	deepCopy(parameters)
+	if not toClientBatchedRemotes[player][remote] then
+		toClientBatchedRemotes[player][remote] = {}
+	end
+	table.insert(toClientBatchedRemotes[player][remote], parameters)
+end
+
+local function connectEventClient(remote: RemoteFunction|RemoteEvent)
 	local moduleName = remote.Parent and remote.Parent.Name
 	local actions: any = {}
 	local metaTable: any = {}
@@ -41,30 +70,9 @@ local function connectEventClient(remote: RemoteEvent|RemoteFunction)
 	end
 	Remotes[moduleName][remote.Name] = setmetatable(actions, metaTable)
 
-	if remote:IsA("RemoteEvent") then
+	if remote:IsA("RemoteFunction") then
 
-		actions.Connect = function(_, func: (...any) -> (...any)): RBXScriptConnection
-			return remote.OnClientEvent:Connect(func)
-		end
-
-		actions.Fire = function(_, ...: any?)
-			local split: {string} = debug.info(2, "s"):split(".")
-			local environment = "[" .. split[#split] .. "]"
-			Print(environment, remote, "Fire", ...)
-			return remote:FireServer(...)
-		end
-
-		metaTable.__call = function(_, context: any, ...: any?)
-			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
-			local split: {string} = debug.info(2, "s"):split(".")
-			local environment = "[" .. split[#split] .. "]"
-			Print(environment, remote, "Fire", ...)
-			remote:FireServer(...)
-		end
-
-	elseif remote:IsA("RemoteFunction") then
-
-		actions.Connect = function(_, func: (...any) -> (...any))
+		actions.Connect = function(_, func: (...any?) -> (...any?))
 			remote.OnClientInvoke = func
 		end
 
@@ -81,6 +89,31 @@ local function connectEventClient(remote: RemoteEvent|RemoteFunction)
 			local environment = "[" .. split[#split] .. "]"
 			Print(environment, remote, "Fire", ...)
 			return remote:InvokeServer(...)
+		end
+
+	elseif remote:IsA("RemoteEvent") then
+
+		actions.Connect = function(_, func: (...any?) -> ()): RBXScriptConnection
+			return remote.OnClientEvent:Connect(function(queue: {{any}})
+				for _, parameters in queue do
+					func(unpack(parameters))
+				end
+			end)
+		end
+
+		actions.Fire = function(_, ...: any?)
+			local split: {string} = debug.info(2, "s"):split(".")
+			local environment = "[" .. split[#split] .. "]"
+			Print(environment, remote, "Fire", ...)
+			return remote:FireServer(...)
+		end
+
+		metaTable.__call = function(_, context: any, ...: any?)
+			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
+			local split: {string} = debug.info(2, "s"):split(".")
+			local environment = "[" .. split[#split] .. "]"
+			Print(environment, remote, "Fire", ...)
+			remote:FireServer(...)
 		end
 	end
 end
@@ -115,19 +148,21 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 	else
 		actions.Fire = function(_, player: Player, ...: any?)
 			Print(environment, name, "Fire", player, ...)
-			remote:FireClient(player, ...)
+			addToBatchQueue(player, remote, {...})
 		end
 
 		actions.FireAll = function(_, ...: any?)
 			Print(environment, name, "FireAll", ...)
-			remote:FireAllClients(...)
+			for _, player in Players:GetPlayers() do
+				addToBatchQueue(player, remote, {...})
+			end
 		end
 
 		actions.FireAllExcept = function(_, ignorePlayer: Player, ...: any?)
 			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
 				if player ~= ignorePlayer then
-					remote:FireClient(player, ...)
+					addToBatchQueue(player, remote, {...})
 				end
 			end
 		end
@@ -166,8 +201,8 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: any?)
 			remote.OnServerEvent:Connect(func)
 		end
 
-		actions.AddListener = function(_, newFunction: any)
-			remote.OnServerEvent:Connect(newFunction)
+		actions.AddListener = function(_, newFunction: any): RBXScriptConnection
+			return remote.OnServerEvent:Connect(newFunction)
 		end
 	end
 
@@ -177,6 +212,25 @@ end
 function Remotes:Init()
 	if RunService:IsServer() then
 		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
+
+		Players.PlayerAdded:Connect(setupPlayer)
+
+		Players.PlayerRemoving:Connect(function(player)
+			player.AncestryChanged:Wait()
+
+			toClientBatchedRemotes[player] = nil
+		end)
+
+		RunService.Heartbeat:Connect(function()
+			for player, queue in toClientBatchedRemotes do
+				if next(queue) then
+					for remote, parameters in queue do
+						remote:FireClient(player, parameters)
+					end
+					table.clear(queue)
+				end
+			end
+		end)
 	else
 		remotesFolder = ReplicatedStorage:WaitForChild("__remotes")
 

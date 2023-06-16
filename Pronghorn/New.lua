@@ -12,15 +12,16 @@ local New = {}
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-type Callback = (...any) -> ()
+-- Types
+type Callback = (...any?) -> ()
 type Connection = {Disconnect: () -> ()}
-export type Event = {
-	Fire: (self: any, value: any) -> ();
+type Event = {
+	Fire: (self: any, ...any?) -> ();
 	Connect: (self: any, callback: Callback) -> (Connection);
 	Once: (self: any, callback: Callback) -> (Connection);
 	Wait: (self: any) -> (any);
 }
-export type TrackedVariable = {
+type TrackedVariable = {
 	Get: (self: any) -> (any);
 	Set: (self: any, value: any) -> ();
 	Connect: (self: any, callback: Callback) -> (Connection);
@@ -28,6 +29,7 @@ export type TrackedVariable = {
 	Wait: (self: any) -> (any);
 }
 
+-- Constants
 local QUEUED_EVENT_QUEUE_SIZE = 256
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -104,7 +106,7 @@ function New.Event(): Event
 	local callbacks: {Callback} = {}
 
 	local actions: Event = {
-		Fire = function(_, ...: any)
+		Fire = function(_, ...: any?)
 			for _, callback in callbacks do
 				callback(...)
 			end
@@ -118,7 +120,7 @@ function New.Event(): Event
 		end;
 
 		Once = function(_, callback: Callback)
-			local wrappedCallback: Callback; wrappedCallback = function(...: any)
+			local wrappedCallback: Callback; wrappedCallback = function(...: any?)
 				callback(...)
 				table.remove(callbacks, table.find(callbacks, wrappedCallback))
 			end
@@ -130,7 +132,7 @@ function New.Event(): Event
 
 		Wait = function(_)
 			local co = coroutine.running()
-			local callback; callback = function(...: any)
+			local callback; callback = function(...: any?)
 				coroutine.resume(co, ...)
 				table.remove(callbacks, table.find(callbacks, callback))
 			end
@@ -158,7 +160,7 @@ function New.QueuedEvent(nameHint: string?): Event
 	end
 
 	local actions: Event = {
-		Fire = function(_, ...: any)
+		Fire = function(_, ...: any?)
 			if not next(callbacks) then
 				if queueCount >= QUEUED_EVENT_QUEUE_SIZE then
 					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for '{nameHint}'` else ""}; did you forget to connect to it?`, 0)
@@ -182,7 +184,7 @@ function New.QueuedEvent(nameHint: string?): Event
 
 		Once = function(_, callback: Callback)
 			resumeQueuedEventCoroutines()
-			local wrappedCallback: Callback; wrappedCallback = function(...: any)
+			local wrappedCallback: Callback; wrappedCallback = function(...: any?)
 				callback(...)
 				table.remove(callbacks, table.find(callbacks, wrappedCallback))
 			end
@@ -195,7 +197,7 @@ function New.QueuedEvent(nameHint: string?): Event
 		Wait = function(_)
 			resumeQueuedEventCoroutines()
 			local co = coroutine.running()
-			local callback; callback = function(...: any)
+			local callback; callback = function(...: any?)
 				coroutine.resume(co, ...)
 				table.remove(callbacks, table.find(callbacks, callback))
 			end
