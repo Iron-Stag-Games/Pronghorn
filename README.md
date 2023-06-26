@@ -1,8 +1,6 @@
-<p align="center"><a href="https://discord.gg/n33vdDr">Join the Iron Stag Games Discord!</a></p>
-
 # What is Pronghorn Framework?
 
-Pronghorn is a direct approach to Module scripting that facilitates rapid development.
+Pronghorn is a Roblox framework with a direct approach to Module scripting that facilitates rapid development.
 
 No Controllers or Services, just Modules and Remotes.
 
@@ -14,16 +12,19 @@ No Controllers or Services, just Modules and Remotes.
 # How does Pronghorn compare to others?
 
 ### Pros
-- Luau typechecking.
+- Luau typechecking and autocomplete.
+- Obvious and concise error stack traces.
 - Requiring Pronghorn only in the Script and not in every Module.
 - Obvious Remote behavior in both creation and invocation.
 - Addition of Event, QueuedEvent, and TrackedVariable.
 
 ### Cons
 - No automatic Remote creation using Services.
+- No Remote packing optimization techniques (due to [ordering breakage](https://en.wikipedia.org/wiki/Out-of-order_delivery).)
 
 ### Preference
 - No Controller or Service structure.
+- Not Promise based.
 
 # Core Module Functions
 
@@ -171,6 +172,7 @@ end
 
 # Games made with Pronghorn
 
+- [Touch Grass Simulator](https://www.roblox.com/games/13796132659) - Iron Stag Games
 - [ExoTech](https://www.roblox.com/games/7634484468) - Iron Stag Games
 - [Mansion Tycoon](https://www.roblox.com/games/12912731475) - Capybara's Productions
 - NDA title - RB Battles PVP

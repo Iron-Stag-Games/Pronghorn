@@ -13,10 +13,10 @@ local New = {}
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Types
-type Callback = (...any?) -> ()
+type Callback = (...any) -> ()
 type Connection = {Disconnect: () -> ()}
 type Event = {
-	Fire: (self: any, ...any?) -> ();
+	Fire: (self: any, ...any) -> ();
 	Connect: (self: any, callback: Callback) -> (Connection);
 	Once: (self: any, callback: Callback) -> (Connection);
 	Wait: (self: any) -> (any);
@@ -58,7 +58,7 @@ function New.Instance(className: string, ...: any?): any
 	end
 	if properties then
 		for key, value in properties do
-			newInstance[key] = value
+			(newInstance :: any)[key] = value
 		end
 	end
 	if parent then

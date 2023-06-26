@@ -1,0 +1,42 @@
+{
+	"name": "Pronghorn",
+	"className": "ModuleScript",
+	"filePaths": [
+        "Pronghorn/init.lua"
+    ],
+	"children": [
+		{
+			"name": "Debug",
+			"className": "ModuleScript",
+			"filePaths": [
+				"Pronghorn/Debug/init.lua"
+            ],
+			"children": [
+				{
+					"name": "EnabledChannels",
+					"className": "ModuleScript",
+					"filePaths": [
+						"Pronghorn/Debug/EnabledChannels.lua"
+					],
+					"children": []
+				}
+			]
+		},
+		{
+			"name": "New",
+			"className": "ModuleScript",
+			"filePaths": [
+				"Pronghorn/New.lua"
+            ],
+			"children": []
+		},
+		{
+			"name": "Remotes",
+			"className": "ModuleScript",
+			"filePaths": [
+				"Pronghorn/Remotes.lua"
+            ],
+			"children": []
+		}
+	]
+}

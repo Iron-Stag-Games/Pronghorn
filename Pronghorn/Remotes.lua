@@ -31,7 +31,7 @@ local remotesFolder: Folder;
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function connectEventClient(remote: RemoteFunction|RemoteEvent)
+local function connectEventClient(remote: RemoteFunction | RemoteEvent)
 	local moduleName = remote.Parent and remote.Parent.Name
 	local actions: any = {}
 	local metaTable: any = {}
@@ -43,7 +43,7 @@ local function connectEventClient(remote: RemoteFunction|RemoteEvent)
 
 	if remote:IsA("RemoteFunction") then
 
-		actions.Connect = function(_, func: (...any?) -> (...any?))
+		actions.Connect = function(_, func: (...any) -> (...any))
 			remote.OnClientInvoke = func
 		end
 
@@ -64,7 +64,7 @@ local function connectEventClient(remote: RemoteFunction|RemoteEvent)
 
 	elseif remote:IsA("RemoteEvent") then
 
-		actions.Connect = function(_, func: (...any?) -> ()): RBXScriptConnection
+		actions.Connect = function(_, func: (...any) -> ()): RBXScriptConnection
 			return remote.OnClientEvent:Connect(func)
 		end
 
@@ -136,7 +136,7 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 	return actions
 end
 
-function Remotes:CreateToServer(name: string, returns: boolean?, func: (...any?) -> (...any?))
+function Remotes:CreateToServer(name: string, returns: boolean?, func: (Player, ...any) -> (...any)?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 
 	local moduleName = tostring(getfenv(2).script)
@@ -158,7 +158,7 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: (...any?)
 			remote.OnServerInvoke = func
 		end
 
-		actions.SetListener = function(_, newFunction: (...any?) -> (...any?))
+		actions.SetListener = function(_, newFunction: (...any) -> (...any))
 			remote.OnServerInvoke = newFunction
 		end
 	else
@@ -166,7 +166,7 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: (...any?)
 			remote.OnServerEvent:Connect(func)
 		end
 
-		actions.AddListener = function(_, newFunction: (...any?) -> ()): RBXScriptConnection
+		actions.AddListener = function(_, newFunction: (...any) -> ()): RBXScriptConnection
 			return remote.OnServerEvent:Connect(newFunction)
 		end
 	end
@@ -181,7 +181,7 @@ function Remotes:Init()
 		remotesFolder = ReplicatedStorage:WaitForChild("__remotes")
 
 		for _, remote in remotesFolder:GetDescendants() do
-			connectEventClient(remote)
+			connectEventClient(remote :: any)
 		end
 
 		remotesFolder.DescendantAdded:Connect(function(remote)
