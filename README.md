@@ -172,8 +172,8 @@ end
 
 # Games made with Pronghorn
 
-- [Traitor Town](https://www.roblox.com/games/255236425) - Traitor Town
 - [ExoTech](https://www.roblox.com/games/7634484468) - Iron Stag Games
+- [Traitor Town](https://www.roblox.com/games/255236425) - Traitor Town
 - [Mansion Tycoon](https://www.roblox.com/games/12912731475) - Capybara's Productions
 - NDA title - RB Battles PVP
 - NDA title #1 - Fund For Games
