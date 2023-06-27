@@ -172,7 +172,7 @@ end
 
 # Games made with Pronghorn
 
-- [Touch Grass Simulator](https://www.roblox.com/games/13796132659) - Iron Stag Games
+- [Traitor Town](https://www.roblox.com/games/255236425) - Traitor Town
 - [ExoTech](https://www.roblox.com/games/7634484468) - Iron Stag Games
 - [Mansion Tycoon](https://www.roblox.com/games/12912731475) - Capybara's Productions
 - NDA title - RB Battles PVP
