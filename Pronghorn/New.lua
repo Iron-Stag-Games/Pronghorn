@@ -36,6 +36,12 @@ local QUEUED_EVENT_QUEUE_SIZE = 256
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+--- Creates and returns a new Instance.
+--- @param className -- The ClassName for the Instance being created.
+--- @param parent? -- The Parent for the Instance after creation.
+--- @param name? -- The Name for the Instance.
+--- @param properties? -- A table of properties to apply to the Instance.
+--- @return Instance -- The new Instance.
 function New.Instance(className: string, ...: any?): any
 	local parent: Instance?, name: string?, properties: {[string]: any}?
 	for _, parameter in {...} do
@@ -68,6 +74,12 @@ function New.Instance(className: string, ...: any?): any
 	return newInstance
 end
 
+--- Clones and returns and Instance.
+--- @param instance -- The Instance to clone from.
+--- @param parent? -- The Parent for the cloned Instance after creation.
+--- @param name? -- The Name for the cloned Instance.
+--- @param properties? -- A table of properties to apply to the cloned Instance.
+--- @return Instance -- The cloned Instance.
 function New.Clone<T>(instance: T, ...: any?): T
 	assert(typeof(instance) == "Instance", "Attempt to clone non-Instance")
 
@@ -102,6 +114,8 @@ function New.Clone<T>(instance: T, ...: any?): T
 	return newInstance
 end
 
+--- Creates and returns an Event.
+--- @return Event -- The new Event.
 function New.Event(): Event
 	local callbacks: {Callback} = {}
 
@@ -146,6 +160,9 @@ function New.Event(): Event
 	return actions
 end
 
+--- Creates and returns a QueuedEvent.
+--- @param nameHint? -- The name of the QueuedEvent for debugging.
+--- @return QueuedEvent -- The new QueuedEvent.
 function New.QueuedEvent(nameHint: string?): Event
 	local callbacks: {Callback} = {}
 	local queueCount = 0
@@ -211,6 +228,9 @@ function New.QueuedEvent(nameHint: string?): Event
 	return actions
 end
 
+--- Creates and returns a TrackedVariable.
+--- @param variable -- The initial value of the TrackedVariable.
+--- @return QueuedEvent -- The new TrackedVariable.
 function New.TrackedVariable(variable: any): TrackedVariable
 	local callbacks: {Callback} = {}
 

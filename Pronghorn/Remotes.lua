@@ -89,6 +89,9 @@ end
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+--- Creates a Remote that sends information to Clients.
+--- @param name -- The name of the Remote.
+--- @param returns -- Whether or not the Remote yields and returns a value.
 function Remotes:CreateToClient(name: string, returns: boolean?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 
@@ -136,6 +139,10 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 	return actions
 end
 
+--- Creates a Remote that receives information from Clients.
+--- @param name -- The name of the Remote.
+--- @param returns -- Whether or not the Remote yields and returns a value.
+--- @param func -- The listener function to be invoked.
 function Remotes:CreateToServer(name: string, returns: boolean?, func: (Player, ...any) -> (...any)?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client") end
 
@@ -174,6 +181,7 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: (Player, 
 	return actions
 end
 
+--- @ignore
 function Remotes:Init()
 	if RunService:IsServer() then
 		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
