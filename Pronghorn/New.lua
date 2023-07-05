@@ -147,7 +147,7 @@ function New.Event(): Event
 		Wait = function(_)
 			local co = coroutine.running()
 			local callback; callback = function(...: any?)
-				coroutine.resume(co, ...)
+				task.spawn(co, ...)
 				table.remove(callbacks, table.find(callbacks, callback))
 			end
 			table.insert(callbacks, callback)
@@ -170,7 +170,7 @@ function New.QueuedEvent(nameHint: string?): Event
 
 	local function resumeQueuedEventCoroutines()
 		for _, co in queuedEventCoroutines do
-			coroutine.resume(co)
+			task.spawn(co)
 		end
 		table.clear(queuedEventCoroutines)
 		queueCount = 0
@@ -215,7 +215,7 @@ function New.QueuedEvent(nameHint: string?): Event
 			resumeQueuedEventCoroutines()
 			local co = coroutine.running()
 			local callback; callback = function(...: any?)
-				coroutine.resume(co, ...)
+				task.spawn(co, ...)
 				table.remove(callbacks, table.find(callbacks, callback))
 			end
 			table.insert(callbacks, callback)
@@ -267,7 +267,7 @@ function New.TrackedVariable(variable: any): TrackedVariable
 		Wait = function(_)
 			local co = coroutine.running()
 			local callback; callback = function(value: any)
-				coroutine.resume(co, value)
+				task.spawn(co, value)
 				table.remove(callbacks, table.find(callbacks, callback))
 			end
 			table.insert(callbacks, callback)
