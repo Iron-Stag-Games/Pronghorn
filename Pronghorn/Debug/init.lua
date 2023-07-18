@@ -26,7 +26,7 @@ function Debug.Print(...: any?)
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
 	if ENABLED_CHANNELS[channel] then
-		print("[" .. channel .. "]", ...)
+		print(`[{channel}]`, ...)
 	end
 end
 
@@ -38,7 +38,7 @@ function Debug.Warn(...: any?)
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
 	if ENABLED_CHANNELS[channel] then
-		warn("[" .. channel .. "]", ...)
+		warn(`[{channel}]`, ...)
 	end
 end
 
@@ -50,7 +50,7 @@ function Debug.Trace(...: any?)
 	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
 	if ENABLED_CHANNELS[channel] then
-		warn(debug.traceback("[" .. channel .. "]"), ...)
+		warn(`[{channel}] {table.concat({...}, " ")}\n{debug.traceback()}`)
 	end
 end
 

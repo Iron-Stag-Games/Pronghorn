@@ -15,13 +15,13 @@ local New = {}
 -- Types
 type Callback = (...any) -> ()
 type Connection = {Disconnect: () -> ()}
-type Event = {
+export type Event = {
 	Fire: (self: any, ...any) -> ();
 	Connect: (self: any, callback: Callback) -> (Connection);
 	Once: (self: any, callback: Callback) -> (Connection);
 	Wait: (self: any) -> (any);
 }
-type TrackedVariable = {
+export type TrackedVariable = {
 	Get: (self: any) -> (any);
 	Set: (self: any, value: any) -> ();
 	Connect: (self: any, callback: Callback) -> (Connection);

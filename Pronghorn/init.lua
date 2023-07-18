@@ -29,14 +29,14 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B25                     ║
+║                    Pronghorn Framework  Rev. B26                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
 ╠══════════════════════════════════════════════════════════════════════╣
 ║                                                                      ║
-║          Pronghorn is a direct approach to Module scripting          ║
-║                 that facilitates rapid development.                  ║
+║      Pronghorn is a Roblox framework with a direct approach to       ║
+║         Module scripting that facilitates rapid development.         ║
 ║                                                                      ║
 ║        No Controllers or Services, just Modules and Remotes.         ║
 ║                                                                      ║
@@ -44,7 +44,7 @@
 ║                                                                      ║
 ║ - The Import() Function is used in a Script to import your Modules.  ║
 ║ - Modules as descendants of other Modules are not imported.          ║
-║ - Edit 'Debug\EnabledChannels.lua' to toggle the output of Modules.  ║
+║ - Edit 'Debug/EnabledChannels.lua' to toggle the output of Modules.  ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]

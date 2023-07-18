@@ -23,18 +23,27 @@
 			]
 		},
 		{
+			"name": "Remotes",
+			"className": "ModuleScript",
+			"filePaths": [
+				"Pronghorn/Remotes/init.lua"
+            ],
+			"children": [
+				{
+					"name": "TypeChecker",
+					"className": "ModuleScript",
+					"filePaths": [
+						"Pronghorn/Remotes/TypeChecker.lua"
+					],
+					"children": []
+				}
+			]
+		},
+		{
 			"name": "New",
 			"className": "ModuleScript",
 			"filePaths": [
 				"Pronghorn/New.lua"
-            ],
-			"children": []
-		},
-		{
-			"name": "Remotes",
-			"className": "ModuleScript",
-			"filePaths": [
-				"Pronghorn/Remotes.lua"
             ],
 			"children": []
 		}

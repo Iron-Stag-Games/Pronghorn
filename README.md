@@ -31,8 +31,8 @@ No Controllers or Services, just Modules and Remotes.
 ## Remotes
 ```lua
 -- Creation
-local exampleRemote = Remotes:CreateToClient(name: string, returns: boolean?): any
-local exampleRemote = Remotes:CreateToServer(name: string, returns: boolean?, func: (any) -> (any)): any
+local exampleRemote = Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, returns: boolean?): any
+local exampleRemote = Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, returns: boolean?, func: (any) -> (any)): any
 
 -- Server Invocation Absolute
 Remotes.ExampleModule.ExampleRemote:Fire(player: Player, ...)
@@ -148,10 +148,10 @@ end
 ```lua
 -- On Server
 
-local tableCounted = Remotes:CreateToClient("TableCounted")
+local tableCounted = Remotes:CreateToClient("TableCounted", {"string"})
 -- Second parameter is nil, so this Remote is non-returning.
 
-Remotes:CreateToServer("CountTable", true, function(player: Player, tableToCount: {any})
+Remotes:CreateToServer("CountTable", {"table"}, true, function(player: Player, tableToCount: {any})
 	Remotes.ExampleServerModule.TableCounted:FireAll(player.Name) -- Absolute method
 	tableCounted:FireAll(player.Name) -- Shortcut method
 	return #tableToCount

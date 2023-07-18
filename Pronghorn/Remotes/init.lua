@@ -21,6 +21,9 @@ local RunService = game:GetService("RunService")
 local Print = require(script.Parent.Debug).Print
 local New = require(script.Parent.New)
 
+-- Child Modules
+local TypeChecker = require(script.TypeChecker)
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -31,8 +34,28 @@ local remotesFolder: Folder;
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+local function getEnvironment(): string
+	local split = (debug.info(3, "s") :: string):split(".")
+	return "[" .. split[#split] .. "]"
+end
+
+local function getDebugPrintItems(debugPrintText: string, ...): ...any
+	local items = {debugPrintText .. "("}
+	for _, parameter in {...} do
+		table.insert(items, "\n\t")
+		table.insert(items, parameter)
+	end
+	if #items > 1 then
+		table.insert(items, "\n)")
+	else
+		items[1] ..= ")"
+	end
+	return table.unpack(items)
+end
+
 local function connectEventClient(remote: RemoteFunction | RemoteEvent)
-	local moduleName = remote.Parent and remote.Parent.Name
+	local moduleName: string = (remote :: any).Parent.Name
+	local debugPrintText = `{moduleName}:{remote.Name}`
 	local actions: any = {}
 	local metaTable: any = {}
 
@@ -48,17 +71,13 @@ local function connectEventClient(remote: RemoteFunction | RemoteEvent)
 		end
 
 		actions.Fire = function(_, ...: any?)
-			local split: {string} = debug.info(2, "s"):split(".")
-			local environment = "[" .. split[#split] .. "]"
-			Print(environment, remote, "Fire", ...)
+			Print(getEnvironment(), getDebugPrintItems(debugPrintText, ...))
 			return remote:InvokeServer(...)
 		end
 
 		metaTable.__call = function(_, context: any, ...: any?)
-			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
-			local split: {string} = debug.info(2, "s"):split(".")
-			local environment = "[" .. split[#split] .. "]"
-			Print(environment, remote, "Fire", ...)
+			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
+			Print(getEnvironment(), getDebugPrintItems(debugPrintText, ...))
 			return remote:InvokeServer(...)
 		end
 
@@ -69,17 +88,13 @@ local function connectEventClient(remote: RemoteFunction | RemoteEvent)
 		end
 
 		actions.Fire = function(_, ...: any?)
-			local split: {string} = debug.info(2, "s"):split(".")
-			local environment = "[" .. split[#split] .. "]"
-			Print(environment, remote, "Fire", ...)
+			Print(getEnvironment(), getDebugPrintItems(debugPrintText, ...))
 			return remote:FireServer(...)
 		end
 
 		metaTable.__call = function(_, context: any, ...: any?)
-			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`) end
-			local split: {string} = debug.info(2, "s"):split(".")
-			local environment = "[" .. split[#split] .. "]"
-			Print(environment, remote, "Fire", ...)
+			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
+			Print(getEnvironment(), getDebugPrintItems(debugPrintText, ...))
 			remote:FireServer(...)
 		end
 	end
@@ -91,14 +106,17 @@ end
 
 --- Creates a Remote that sends information to Clients.
 --- @param name -- The name of the Remote.
+--- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
 --- @param returns -- Whether or not the Remote yields and returns a value.
-function Remotes:CreateToClient(name: string, returns: boolean?)
-	if RunService:IsClient() then error("Remotes cannot be created on the client") end
+function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, returns: boolean?)
+	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
+	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
+	if returns ~= nil and type(returns) ~= "boolean" then error(`Remotes.CreateToClient: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}'`, 0) end
 
 	local moduleName = tostring(getfenv(2).script)
 
-	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`) end
-	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`) end
+	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`, 0) end
+	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`, 0) end
 
 	local environment = "[" .. moduleName .. "]"
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
@@ -112,21 +130,25 @@ function Remotes:CreateToClient(name: string, returns: boolean?)
 
 	if returns then
 		actions.Fire = function(_, player: Player, ...: any?)
+			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", ...)
 			return remote:InvokeClient(player, ...)
 		end
 	else
 		actions.Fire = function(_, player: Player, ...: any?)
+			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", player, ...)
 			remote:FireClient(player, ...)
 		end
 
 		actions.FireAll = function(_, ...: any?)
+			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "FireAll", ...)
 			remote:FireAllClients(...)
 		end
 
 		actions.FireAllExcept = function(_, ignorePlayer: Player, ...: any?)
+			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
 				if player ~= ignorePlayer then
@@ -141,15 +163,19 @@ end
 
 --- Creates a Remote that receives information from Clients.
 --- @param name -- The name of the Remote.
+--- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
 --- @param returns -- Whether or not the Remote yields and returns a value.
 --- @param func -- The listener function to be invoked.
-function Remotes:CreateToServer(name: string, returns: boolean?, func: (Player, ...any) -> (...any)?)
-	if RunService:IsClient() then error("Remotes cannot be created on the client") end
+function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, returns: boolean?, func: (Player, ...any) -> (...any)?)
+	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
+	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToServer: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
+	if returns ~= nil and type(returns) ~= "boolean" then error(`Remotes.CreateToServer: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}'`, 0) end
+	if func ~= nil and type(func) ~= "function" then error(`Remotes.CreateToServer: Parameter 'func' expected type '(Player, ...any) -> (...any)?', got '{typeof(func)}'`, 0) end
 
 	local moduleName = tostring(getfenv(2).script)
 
-	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`) end
-	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`) end
+	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`, 0) end
+	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`, 0) end
 
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
 	local remote = New.Instance(returns and "RemoteFunction" or "RemoteEvent", serverFolder, name)
@@ -160,21 +186,28 @@ function Remotes:CreateToServer(name: string, returns: boolean?, func: (Player, 
 	end
 	Remotes[moduleName][remote.Name] = actions
 
+	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> (...any))
+		return function(player: Player, ...: any)
+			TypeChecker(remote, requiredParameterTypes, ...)
+			return newFunction(player, ...)
+		end
+	end
+
 	if returns then
 		if func then
-			remote.OnServerInvoke = func
+			remote.OnServerInvoke = getTypeCheckedFunction(func)
 		end
 
-		actions.SetListener = function(_, newFunction: (...any) -> (...any))
-			remote.OnServerInvoke = newFunction
+		actions.SetListener = function(_, newFunction: (Player, ...any) -> (...any))
+			remote.OnServerInvoke = getTypeCheckedFunction(newFunction)
 		end
 	else
 		if func then
-			remote.OnServerEvent:Connect(func)
+			remote.OnServerEvent:Connect(getTypeCheckedFunction(func))
 		end
 
-		actions.AddListener = function(_, newFunction: (...any) -> ()): RBXScriptConnection
-			return remote.OnServerEvent:Connect(newFunction)
+		actions.AddListener = function(_, newFunction: (Player, ...any) -> ()): RBXScriptConnection
+			return remote.OnServerEvent:Connect(getTypeCheckedFunction(newFunction))
 		end
 	end
 
