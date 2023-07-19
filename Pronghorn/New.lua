@@ -16,17 +16,17 @@ local New = {}
 type Callback = (...any) -> ()
 type Connection = {Disconnect: () -> ()}
 export type Event = {
-	Fire: (self: any, ...any) -> ();
-	Connect: (self: any, callback: Callback) -> (Connection);
-	Once: (self: any, callback: Callback) -> (Connection);
-	Wait: (self: any) -> (any);
+	Fire: (self: Event, ...any) -> ();
+	Connect: (self: Event, callback: Callback) -> (Connection);
+	Once: (self: Event, callback: Callback) -> (Connection);
+	Wait: (self: Event) -> (any);
 }
 export type TrackedVariable = {
-	Get: (self: any) -> (any);
-	Set: (self: any, value: any) -> ();
-	Connect: (self: any, callback: Callback) -> (Connection);
-	Once: (self: any, callback: Callback) -> (Connection);
-	Wait: (self: any) -> (any);
+	Get: (self: TrackedVariable) -> (any);
+	Set: (self: TrackedVariable, value: any) -> ();
+	Connect: (self: TrackedVariable, callback: Callback) -> (Connection);
+	Once: (self: TrackedVariable, callback: Callback) -> (Connection);
+	Wait: (self: TrackedVariable) -> (any);
 }
 
 -- Constants
