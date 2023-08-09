@@ -62,9 +62,11 @@ Trace(...)
 ```lua
 New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any}?): Instance
 	-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
-	-- Ex. New.Instance("Part", {Properties})
+		-- Ex. New.Instance("Part", {Properties})
+	-- The Properties parameter can contain a Children key with type {Instance}.
 New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[string]: any}?): Instance
 	-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
+	-- The Properties parameter can contain a Children key with type {Instance}.
 New.Event(): {
 	Fire: (self: any, ...any?) -> ();
 	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});

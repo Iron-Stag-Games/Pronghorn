@@ -43,7 +43,7 @@ local QUEUED_EVENT_QUEUE_SIZE = 256
 --- @param properties? -- A table of properties to apply to the Instance.
 --- @return Instance -- The new Instance.
 function New.Instance(className: string, ...: any?): any
-	local parent: Instance?, name: string?, properties: {[string]: any}?
+	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?}?
 	for _, parameter in {...} do
 		if typeof(parameter) == "Instance" then
 			if parent then error("Parent parameter used more than once") end
@@ -64,7 +64,14 @@ function New.Instance(className: string, ...: any?): any
 	end
 	if properties then
 		for key, value in properties do
-			(newInstance :: any)[key] = value
+			if key ~= "Children" then
+				(newInstance :: any)[key] = value
+			end
+		end
+		if properties.Children then
+			for _, child in properties.Children do
+				child.Parent = newInstance
+			end
 		end
 	end
 	if parent then
@@ -83,7 +90,7 @@ end
 function New.Clone<T>(instance: T, ...: any?): T
 	assert(typeof(instance) == "Instance", "Attempt to clone non-Instance")
 
-	local parent: Instance?, name: string?, properties: {[string]: any}?
+	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?}?
 	for _, parameter in {...} do
 		if typeof(parameter) == "Instance" then
 			if parent then error("Parent parameter used more than once") end
@@ -104,7 +111,14 @@ function New.Clone<T>(instance: T, ...: any?): T
 	end
 	if properties then
 		for key, value in properties do
-			newInstance[key] = value
+			if key ~= "Children" then
+				(newInstance :: any)[key] = value
+			end
+		end
+		if properties.Children then
+			for _, child in properties.Children do
+				child.Parent = newInstance
+			end
 		end
 	end
 	if parent then
