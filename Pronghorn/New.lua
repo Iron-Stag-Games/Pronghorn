@@ -64,13 +64,14 @@ function New.Instance(className: string, ...: any?): any
 	end
 	if properties then
 		for key, value in properties do
-			if key ~= "Children" then
+			if key == "Children" then
+				for _, child in value do
+					child.Parent = newInstance
+				end
+			elseif typeof((newInstance :: any)[key]) == "RBXScriptSignal" then
+				(newInstance :: any)[key]:Connect(value)
+			else
 				(newInstance :: any)[key] = value
-			end
-		end
-		if properties.Children then
-			for _, child in properties.Children do
-				child.Parent = newInstance
 			end
 		end
 	end
@@ -111,13 +112,14 @@ function New.Clone<T>(instance: T, ...: any?): T
 	end
 	if properties then
 		for key, value in properties do
-			if key ~= "Children" then
+			if key == "Children" then
+				for _, child in value do
+					child.Parent = newInstance
+				end
+			elseif typeof((newInstance :: any)[key]) == "RBXScriptSignal" then
+				(newInstance :: any)[key]:Connect(value)
+			else
 				(newInstance :: any)[key] = value
-			end
-		end
-		if properties.Children then
-			for _, child in properties.Children do
-				child.Parent = newInstance
 			end
 		end
 	end
