@@ -24,6 +24,8 @@ return function(remote: any, requiredParameterTypes: {string}, ...: any)
 	local parameters = {...}
 
 	for index = 1, math.max(#requiredParameterTypes, #parameters) do
+		requiredParameterTypes[index] = requiredParameterTypes[index] or "nil"
+
 		local parameter = parameters[index]
 		local parameterType = typeof(parameter)
 		local requiredParameterType = requiredParameterTypes[index]:gsub(" ", ""):gsub("?", "")
@@ -51,7 +53,7 @@ return function(remote: any, requiredParameterTypes: {string}, ...: any)
 		end
 
 		if not pass then
-			local errorMessage = `{remote.Parent.Name}.{remote.Name}: Expected type '{requiredParameterType:gsub("|", " | ")}', got '{parameterType}'`
+			local errorMessage = `{remote.Parent.Name}.{remote.Name}: Parameter {index} expected type '{requiredParameterType:gsub("|", " | ")}', got '{parameterType}'`
 
 			if IS_STUDIO then
 				error(errorMessage, 0)
