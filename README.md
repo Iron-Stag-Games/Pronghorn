@@ -177,6 +177,7 @@ end
 
 - [ExoTech](https://www.roblox.com/games/7634484468) - Iron Stag Games
 - [Traitor Town](https://www.roblox.com/games/255236425) - Traitor Town
+- [RB Battles](https://www.roblox.com/games/5036207802) - RB Battles Games
 - [Mansion Tycoon](https://www.roblox.com/games/12912731475) - Capybara's Productions
 - NDA title - RB Battles PVP
 - NDA title #1 - Fund For Games
