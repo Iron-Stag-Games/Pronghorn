@@ -144,7 +144,7 @@ function New.Event(): Event
 	local actions: Event = {
 		Fire = function(_, ...: any?)
 			for _, callback in callbacks do
-				callback(...)
+				task.spawn(callback, ...)
 			end
 		end;
 
@@ -157,7 +157,7 @@ function New.Event(): Event
 
 		Once = function(_, callback: Callback)
 			local wrappedCallback: Callback; wrappedCallback = function(...: any?)
-				callback(...)
+				task.spawn(callback, ...)
 				table.remove(callbacks, table.find(callbacks, wrappedCallback))
 			end
 			table.insert(callbacks, wrappedCallback)
@@ -209,7 +209,7 @@ function New.QueuedEvent(nameHint: string?): Event
 				coroutine.yield()
 			end
 			for _, callback in callbacks do
-				callback(...)
+				task.spawn(callback, ...)
 			end
 		end;
 
@@ -224,7 +224,7 @@ function New.QueuedEvent(nameHint: string?): Event
 		Once = function(_, callback: Callback)
 			resumeQueuedEventCoroutines()
 			local wrappedCallback: Callback; wrappedCallback = function(...: any?)
-				callback(...)
+				task.spawn(callback, ...)
 				table.remove(callbacks, table.find(callbacks, wrappedCallback))
 			end
 			table.insert(callbacks, wrappedCallback)
@@ -264,7 +264,7 @@ function New.TrackedVariable(variable: any): TrackedVariable
 		Set = function(_, value: any)
 			variable = value
 			for _, callback in callbacks do
-				callback(value)
+				task.spawn(callback, value)
 			end
 		end;
 
@@ -277,7 +277,7 @@ function New.TrackedVariable(variable: any): TrackedVariable
 
 		Once = function(_, callback: Callback)
 			local wrappedCallback: Callback; wrappedCallback = function(value: any)
-				callback(value)
+				task.spawn(callback, value)
 				table.remove(callbacks, table.find(callbacks, wrappedCallback))
 			end
 			table.insert(callbacks, wrappedCallback)
