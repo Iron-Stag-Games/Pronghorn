@@ -22,6 +22,7 @@ local B93_ENCODE = " !#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]
 --- @param int -- The integer to convert.
 --- @param length -- The length of the returned string.
 --- @return string -- The converted Base 93 string.
+--- @error {int} exceeds maximum value of {93 ^ length - 1} -- Incorrect usage.
 function Base93.IntToB93(int: number, length: number): string
 	if int >= 93 ^ length then error(`{int} exceeds maximum value of {93 ^ length - 1}`) end
 

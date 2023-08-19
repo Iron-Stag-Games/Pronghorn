@@ -23,6 +23,17 @@ function Table.DeepCopy(tableToCopy: {[any]: any}): {[any]: any}
 	return copy
 end
 
+--- Returns the number of keys in a Table.
+--- @param tab -- The Table to measure.
+--- @return number -- The number of keys in the Table.
+function Table.SizeOf(tab: {[any]: any}): number
+	local size = 0
+	for _ in tab do
+		size += 1
+	end
+	return size
+end
+
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 return Table

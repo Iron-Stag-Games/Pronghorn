@@ -20,6 +20,7 @@ local ENABLED_CHANNELS = require(script.EnabledChannels) :: {[string]: boolean}
 
 --- Prints content to the output.
 --- @param ... -- The content to print.
+--- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Print(...: any?)
 	local channel = tostring(getfenv(2).script)
 
@@ -32,6 +33,7 @@ end
 
 --- Prints content to the output as a warning.
 --- @param ... -- The content to print.
+--- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Warn(...: any?)
 	local channel = tostring(getfenv(2).script)
 
@@ -44,6 +46,7 @@ end
 
 --- Prints content to the output as a warning with a call stack.
 --- @param ... -- The content to print.
+--- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Trace(...: any?)
 	local channel = tostring(getfenv(2).script)
 

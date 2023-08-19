@@ -42,6 +42,9 @@ local QUEUED_EVENT_QUEUE_SIZE = 256
 --- @param name? -- The Name for the Instance.
 --- @param properties? -- A table of properties to apply to the Instance.
 --- @return Instance -- The new Instance.
+--- @error Parent parameter used more than once -- Incorrect usage.
+--- @error Name parameter used more than once -- Incorrect usage.
+--- @error Properties parameter used more than once -- Incorrect usage.
 function New.Instance(className: string, ...: any?): any
 	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?}?
 	for _, parameter in {...} do
@@ -88,6 +91,9 @@ end
 --- @param name? -- The Name for the cloned Instance.
 --- @param properties? -- A table of properties to apply to the cloned Instance.
 --- @return Instance -- The cloned Instance.
+--- @error Parent parameter used more than once -- Incorrect usage.
+--- @error Name parameter used more than once -- Incorrect usage.
+--- @error Properties parameter used more than once -- Incorrect usage.
 function New.Clone<T>(instance: T, ...: any?): T
 	assert(typeof(instance) == "Instance", "Attempt to clone non-Instance")
 

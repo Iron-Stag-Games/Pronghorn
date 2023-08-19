@@ -39,20 +39,6 @@ local function getEnvironment(): string
 	return "[" .. split[#split] .. "]"
 end
 
-local function getDebugPrintItems(debugPrintText: string, ...): ...any
-	local items = {debugPrintText .. "("}
-	for _, parameter in {...} do
-		table.insert(items, "\n\t")
-		table.insert(items, parameter)
-	end
-	if #items > 1 then
-		table.insert(items, "\n)")
-	else
-		items[1] ..= ")"
-	end
-	return table.unpack(items)
-end
-
 local function connectEventClient(remote: RemoteFunction | RemoteEvent)
 	local moduleName: string = (remote :: any).Parent.Name
 	local debugPrintText = `{moduleName}:{remote.Name}`
@@ -71,13 +57,13 @@ local function connectEventClient(remote: RemoteFunction | RemoteEvent)
 		end
 
 		actions.Fire = function(_, ...: any?)
-			Print(getEnvironment(), getDebugPrintItems(debugPrintText, ...))
+			Print(getEnvironment(), debugPrintText, {...})
 			return remote:InvokeServer(...)
 		end
 
 		metaTable.__call = function(_, context: any, ...: any?)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
-			Print(getEnvironment(), getDebugPrintItems(debugPrintText, ...))
+			Print(getEnvironment(), debugPrintText, {...})
 			return remote:InvokeServer(...)
 		end
 
@@ -88,13 +74,13 @@ local function connectEventClient(remote: RemoteFunction | RemoteEvent)
 		end
 
 		actions.Fire = function(_, ...: any?)
-			Print(getEnvironment(), getDebugPrintItems(debugPrintText, ...))
+			Print(getEnvironment(), debugPrintText, {...})
 			return remote:FireServer(...)
 		end
 
 		metaTable.__call = function(_, context: any, ...: any?)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
-			Print(getEnvironment(), getDebugPrintItems(debugPrintText, ...))
+			Print(getEnvironment(), debugPrintText, {...})
 			remote:FireServer(...)
 		end
 	end
@@ -108,6 +94,11 @@ end
 --- @param name -- The name of the Remote.
 --- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
 --- @param returns -- Whether or not the Remote yields and returns a value.
+--- @error Remotes cannot be created on the client -- Incorrect usage.
+--- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
+--- @error Remotes.CreateToClient: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}' -- Incorrect usage.
+--- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
+--- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
 function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, returns: boolean?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
@@ -166,6 +157,11 @@ end
 --- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
 --- @param returns -- Whether or not the Remote yields and returns a value.
 --- @param func -- The listener function to be invoked.
+--- @error Remotes cannot be created on the client -- Incorrect usage.
+--- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
+--- @error Remotes.CreateToClient: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}' -- Incorrect usage.
+--- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
+--- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
 function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, returns: boolean?, func: (Player, ...any) -> (...any)?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToServer: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
