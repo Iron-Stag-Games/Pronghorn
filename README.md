@@ -4,7 +4,7 @@ Pronghorn is a Roblox framework with a direct approach to Module scripting that 
 
 No Controllers or Services, just Modules and Remotes.
 
-### Usage
+## Usage
 - The Import() Function is used in a Script to import your Modules.
 - Modules as descendants of other Modules are not imported.
 - Edit [Debug/EnabledChannels.lua](Pronghorn/Debug/EnabledChannels.lua) to toggle the output of Modules.
