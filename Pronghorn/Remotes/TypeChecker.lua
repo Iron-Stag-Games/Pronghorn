@@ -19,6 +19,20 @@ local RunService = game:GetService("RunService")
 local IS_STUDIO = RunService:IsStudio()
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Helper Functions
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+local function abort(errorMessage: string)
+	if IS_STUDIO then
+		error(errorMessage, 0)
+	else
+		warn(errorMessage)
+		task.defer(coroutine.close, coroutine.running())
+		coroutine.yield()
+	end
+end
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 return function(remote: any, requiredParameterTypes: {string}, ...: any)
 	local parameters = {...}
@@ -53,15 +67,11 @@ return function(remote: any, requiredParameterTypes: {string}, ...: any)
 		end
 
 		if not pass then
-			local errorMessage = `{remote.Parent.Name}.{remote.Name}: Parameter {index} expected type '{requiredParameterType:gsub("|", " | ")}', got '{parameterType}'`
+			abort(`{remote.Parent.Name}.{remote.Name}: Parameter {index} expected type '{requiredParameterType:gsub("|", " | ")}', got '{parameterType}'`)
+		end
 
-			if IS_STUDIO then
-				error(errorMessage, 0)
-			else
-				warn(errorMessage)
-				task.defer(coroutine.close, coroutine.running())
-				coroutine.yield()
-			end
+		if parameterType == "number" and (parameter == math.huge or parameter == -math.huge or parameter ~= parameter) then
+			abort(`{remote.Parent.Name}.{remote.Name}: Parameter {index} was inf or nan`)
 		end
 	end
 end

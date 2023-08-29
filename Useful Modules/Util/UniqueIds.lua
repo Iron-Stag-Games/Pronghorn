@@ -16,7 +16,7 @@ local UniqueIds = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- Shared Modules
-local Base93 = require(ReplicatedStorage.SharedModules.Util.Base93)
+local Base93 = require(ReplicatedStorage.UsefulModules.Util.Base93)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
