@@ -142,8 +142,16 @@ function ExampleModule.PlayerAdded(player: Player)
 	-- Players.PlayerAdded shortcut.
 end
 
+function ExampleModule.PlayerAddedDeferred(player: Player)
+	-- Players.PlayerAdded shortcut. Runs after all PlayerAdded functions.
+end
+
 function ExampleModule.PlayerRemoving(player: Player)
 	-- Players.PlayerRemoving shortcut.
+end
+
+function ExampleModule.PlayerRemovingDeferred(player: Player)
+	-- Players.PlayerRemoving shortcut. Runs after all PlayerRemoving functions.
 end
 ```
 

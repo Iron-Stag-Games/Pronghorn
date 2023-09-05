@@ -29,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B32                     ║
+║                    Pronghorn Framework  Rev. B33                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -127,7 +127,7 @@ return function(paths: {Instance})
 			end)
 			moduleTable.Return:Init()
 			if didHeartbeat then
-				error(`{moduleTable.Object:GetFullName()} yielded during Init`)
+				error(`{moduleTable.Object:GetFullName()} yielded during Init`, 0)
 			end
 		end
 	end
@@ -149,18 +149,32 @@ return function(paths: {Instance})
 	end
 
 	-- PlayerAdded
-	for _, moduleTable in allModules do
-		if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
-			Players.PlayerAdded:Connect(moduleTable.Return.PlayerAdded)
+	Players.PlayerAdded:Connect(function(player: Player)
+		for _, moduleTable in allModules do
+			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
+				task.spawn(moduleTable.Return.PlayerAdded, player)
+			end
 		end
-	end
+		for _, moduleTable in allModules do
+			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAddedDeferred then
+				task.spawn(moduleTable.Return.PlayerAddedDeferred, player)
+			end
+		end
+	end)
 
 	-- PlayerRemoving
-	for _, moduleTable in allModules do
-		if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoving then
-			Players.PlayerRemoving:Connect(moduleTable.Return.PlayerRemoving)
+	Players.PlayerRemoving:Connect(function(player: Player)
+		for _, moduleTable in allModules do
+			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoving then
+				task.spawn(moduleTable.Return.PlayerRemoving, player)
+			end
 		end
-	end
+		for _, moduleTable in allModules do
+			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemovingDeferred then
+				task.spawn(moduleTable.Return.PlayerRemovingDeferred, player)
+			end
+		end
+	end)
 
 	-- Wait for Deferred Functions to complete
 	while startWaits > 0 do
