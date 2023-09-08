@@ -18,7 +18,7 @@ local Table = {}
 function Table.DeepCopy(tableToCopy: {[any]: any}): {[any]: any}
 	local copy = {}
 	for key, value in tableToCopy do
-		copy[key] = if type(value) == "table" then tableToCopy.DeepCopy(value) else value
+		copy[key] = if type(value) == "table" then Table.DeepCopy(value) else value
 	end
 	return copy
 end
