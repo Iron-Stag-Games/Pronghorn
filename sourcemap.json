@@ -19,18 +19,9 @@
 							"name": "Debug",
 							"className": "ModuleScript",
 							"filePaths": [
-								"Pronghorn/Debug/init.lua"
+								"Pronghorn/Debug.lua"
 							],
-							"children": [
-								{
-									"name": "EnabledChannels",
-									"className": "ModuleScript",
-									"filePaths": [
-										"Pronghorn/Debug/EnabledChannels.lua"
-									],
-									"children": []
-								}
-							]
+							"children": []
 						},
 						{
 							"name": "Remotes",

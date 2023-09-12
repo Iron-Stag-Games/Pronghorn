@@ -12,7 +12,7 @@ local Debug = {}
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local ENABLED_CHANNELS = require(script.EnabledChannels) :: {[string]: boolean}
+local enabledChannels: {[string]: boolean} = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -24,9 +24,9 @@ local ENABLED_CHANNELS = require(script.EnabledChannels) :: {[string]: boolean}
 function Debug.Print(...: any?)
 	local channel = tostring(getfenv(2).script)
 
-	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
+	if enabledChannels[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
-	if ENABLED_CHANNELS[channel] then
+	if enabledChannels[channel] then
 		print(`[{channel}]`, ...)
 	end
 end
@@ -37,9 +37,9 @@ end
 function Debug.Warn(...: any?)
 	local channel = tostring(getfenv(2).script)
 
-	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
+	if enabledChannels[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
-	if ENABLED_CHANNELS[channel] then
+	if enabledChannels[channel] then
 		warn(`[{channel}]`, ...)
 	end
 end
@@ -50,11 +50,19 @@ end
 function Debug.Trace(...: any?)
 	local channel = tostring(getfenv(2).script)
 
-	if ENABLED_CHANNELS[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
+	if enabledChannels[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
-	if ENABLED_CHANNELS[channel] then
+	if enabledChannels[channel] then
 		warn(`[{channel}] {table.concat({...}, " ")}\n{debug.traceback()}`)
 	end
+end
+
+--- Sets the list of enabled channels.
+--- @param newEnabledChannels -- The list of enabled channels.
+function Debug:SetEnabledChannels(newEnabledChannels: {[string]: boolean})
+	if type(newEnabledChannels) ~= "table" then error(`Debug.SetEnabledChannels: Parameter 'newEnabledChannels' expected type '\{[string]: boolean}', got {typeof(newEnabledChannels)}`, 0) end
+
+	enabledChannels = newEnabledChannels
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
