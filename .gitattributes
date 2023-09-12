@@ -1,6 +1,5 @@
 .github export-ignore
 .vscode export-ignore
-"Useful Modules" export-ignore
 .gitattributes export-ignore
 foreman.toml export-ignore
 selene.toml export-ignore
