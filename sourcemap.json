@@ -1,56 +1,42 @@
 {
-	"name": "game",
-	"className": "DataModel",
-	"filePaths": [],
+	"name": "Pronghorn",
+	"className": "ModuleScript",
+	"filePaths": [
+		"Pronghorn/init.lua"
+	],
 	"children": [
 		{
-			"name": "ReplicatedStorage",
-			"className": "ReplicatedStorage",
-			"filePaths": [],
+			"name": "Debug",
+			"className": "ModuleScript",
+			"filePaths": [
+				"Pronghorn/Debug.lua"
+			],
+			"children": []
+		},
+		{
+			"name": "Remotes",
+			"className": "ModuleScript",
+			"filePaths": [
+				"Pronghorn/Remotes/init.lua"
+			],
 			"children": [
 				{
-					"name": "Pronghorn",
+					"name": "TypeChecker",
 					"className": "ModuleScript",
 					"filePaths": [
-						"Pronghorn/init.lua"
+						"Pronghorn/Remotes/TypeChecker.lua"
 					],
-					"children": [
-						{
-							"name": "Debug",
-							"className": "ModuleScript",
-							"filePaths": [
-								"Pronghorn/Debug.lua"
-							],
-							"children": []
-						},
-						{
-							"name": "Remotes",
-							"className": "ModuleScript",
-							"filePaths": [
-								"Pronghorn/Remotes/init.lua"
-							],
-							"children": [
-								{
-									"name": "TypeChecker",
-									"className": "ModuleScript",
-									"filePaths": [
-										"Pronghorn/Remotes/TypeChecker.lua"
-									],
-									"children": []
-								}
-							]
-						},
-						{
-							"name": "New",
-							"className": "ModuleScript",
-							"filePaths": [
-								"Pronghorn/New.lua"
-							],
-							"children": []
-						}
-					]
+					"children": []
 				}
 			]
+		},
+		{
+			"name": "New",
+			"className": "ModuleScript",
+			"filePaths": [
+				"Pronghorn/New.lua"
+			],
+			"children": []
 		}
 	]
 }
