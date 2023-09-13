@@ -181,6 +181,12 @@ function ExampleClientModule:Deferred()
 end
 ```
 
+# Useful Modules
+
+https://github.com/Iron-Stag-Games/Useful-Modules
+
+A collection of useful modules compatible with the Pronghorn Framework.
+
 # Games made with Pronghorn
 
 - **[ExoTech](https://www.roblox.com/games/7634484468)** - Iron Stag Games
