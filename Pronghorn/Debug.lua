@@ -57,8 +57,7 @@ function Debug.Trace(...: any?)
 	end
 end
 
---- Sets the list of enabled channels.
---- @param newEnabledChannels -- The list of enabled channels.
+--- @private
 function Debug:SetEnabledChannels(newEnabledChannels: {[string]: boolean})
 	if type(newEnabledChannels) ~= "table" then error(`Debug.SetEnabledChannels: Parameter 'newEnabledChannels' expected type '\{[string]: boolean}', got {typeof(newEnabledChannels)}`, 0) end
 

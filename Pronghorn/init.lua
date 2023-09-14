@@ -29,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B34                     ║
+║                    Pronghorn Framework  Rev. B35                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -42,9 +42,9 @@
 ║                                                                      ║
 ╠═══════════════════════════════ Usage ════════════════════════════════╣
 ║                                                                      ║
-║ - The Import() Function is used in a Script to import your Modules.  ║
+║ - Pronghorn:Import() is used in a Script to import your Modules.     ║
 ║ - Modules as descendants of other Modules are not imported.          ║
-║ - Edit 'Debug/EnabledChannels.lua' to toggle the output of Modules.  ║
+║ - Pronghorn:SetEnabledChannels() controls the output of Modules.     ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]
@@ -93,7 +93,7 @@ local coreModules = {}
 
 for _, child in script:GetChildren() do
 	if child:IsA("ModuleScript") then
-		table.insert(coreModules, require(child) :: any)
+		coreModules[child.Name] = require(child) :: any
 	end
 end
 
@@ -111,73 +111,77 @@ for _, coreModule in coreModules do
 	end
 end
 
-return function(paths: {Instance})
-	local allModules: {Module} = {}
+return {
+	SetEnabledChannels = coreModules.Debug.SetEnabledChannels;
 
-	for _, object in paths do
-		addModules(allModules, object)
-	end
+	Import = function(_, paths: {Instance})
+		local allModules: {Module} = {}
 
-	-- Init
-	for _, moduleTable in allModules do
-		if type(moduleTable.Return) == "table" and moduleTable.Return.Init then
-			local didHeartbeat;
-			RunService.Heartbeat:Once(function()
-				didHeartbeat = true
-			end)
-			moduleTable.Return:Init()
-			if didHeartbeat then
-				error(`{moduleTable.Object:GetFullName()} yielded during Init`, 0)
-			end
+		for _, object in paths do
+			addModules(allModules, object)
 		end
-	end
 
-	-- Deferred
-	local deferredComplete = New.Event()
-	local startWaits = 0
-	for _, moduleTable in allModules do
-		if type(moduleTable.Return) == "table" and moduleTable.Return.Deferred then
-			startWaits += 1
-			task.spawn(function()
-				moduleTable.Return:Deferred()
-				startWaits -= 1
-				if startWaits == 0 then
-					deferredComplete:Fire()
+		-- Init
+		for _, moduleTable in allModules do
+			if type(moduleTable.Return) == "table" and moduleTable.Return.Init then
+				local didHeartbeat;
+				RunService.Heartbeat:Once(function()
+					didHeartbeat = true
+				end)
+				moduleTable.Return:Init()
+				if didHeartbeat then
+					error(`{moduleTable.Object:GetFullName()} yielded during Init`, 0)
 				end
-			end)
+			end
 		end
-	end
 
-	-- PlayerAdded
-	Players.PlayerAdded:Connect(function(player: Player)
+		-- Deferred
+		local deferredComplete = New.Event()
+		local startWaits = 0
 		for _, moduleTable in allModules do
-			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
-				task.spawn(moduleTable.Return.PlayerAdded, player)
+			if type(moduleTable.Return) == "table" and moduleTable.Return.Deferred then
+				startWaits += 1
+				task.spawn(function()
+					moduleTable.Return:Deferred()
+					startWaits -= 1
+					if startWaits == 0 then
+						deferredComplete:Fire()
+					end
+				end)
 			end
 		end
-		for _, moduleTable in allModules do
-			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAddedDeferred then
-				task.spawn(moduleTable.Return.PlayerAddedDeferred, player)
-			end
-		end
-	end)
 
-	-- PlayerRemoving
-	Players.PlayerRemoving:Connect(function(player: Player)
-		for _, moduleTable in allModules do
-			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoving then
-				task.spawn(moduleTable.Return.PlayerRemoving, player)
+		-- PlayerAdded
+		Players.PlayerAdded:Connect(function(player: Player)
+			for _, moduleTable in allModules do
+				if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
+					task.spawn(moduleTable.Return.PlayerAdded, player)
+				end
 			end
-		end
-		for _, moduleTable in allModules do
-			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemovingDeferred then
-				task.spawn(moduleTable.Return.PlayerRemovingDeferred, player)
+			for _, moduleTable in allModules do
+				if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAddedDeferred then
+					task.spawn(moduleTable.Return.PlayerAddedDeferred, player)
+				end
 			end
-		end
-	end)
+		end)
 
-	-- Wait for Deferred Functions to complete
-	while startWaits > 0 do
-		deferredComplete:Wait()
-	end
-end
+		-- PlayerRemoving
+		Players.PlayerRemoving:Connect(function(player: Player)
+			for _, moduleTable in allModules do
+				if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoving then
+					task.spawn(moduleTable.Return.PlayerRemoving, player)
+				end
+			end
+			for _, moduleTable in allModules do
+				if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemovingDeferred then
+					task.spawn(moduleTable.Return.PlayerRemovingDeferred, player)
+				end
+			end
+		end)
+
+		-- Wait for Deferred Functions to complete
+		while startWaits > 0 do
+			deferredComplete:Wait()
+		end
+	end;
+}

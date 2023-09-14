@@ -5,9 +5,9 @@ Pronghorn is a Roblox framework with a direct approach to Module scripting that 
 No Controllers or Services, just Modules and Remotes.
 
 ## Usage
-- The Import() Function is used in a Script to import your Modules.
+- Pronghorn:Import() is used in a Script to import your Modules.
 - Modules as descendants of other Modules are not imported.
-- Edit [Debug/EnabledChannels.lua](Pronghorn/Debug/EnabledChannels.lua) to toggle the output of Modules.
+- Pronghorn:SetEnabledChannels() controls the output of Modules.
 
 # How does Pronghorn compare to others?
 
@@ -93,13 +93,16 @@ New.TrackedVariable(Variable: any): {
 
 ## Script Boilerplate
 ```lua
-local Import = require(game:GetService("ReplicatedStorage").Pronghorn)
+local Pronghorn = require(game:GetService("ReplicatedStorage").Pronghorn)
+Pronghorn:SetEnabledChannels({
+	ExampleModule = true;
+})
 
 -- Global Variables
 shared.ExampleVariable = "Example"
 
 -- Somewhere after assigning global variables
-Import({
+Pronghorn:Import({
 	ExampleModuleDirectory;
 })
 ```
