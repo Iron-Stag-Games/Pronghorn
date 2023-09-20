@@ -143,7 +143,7 @@ function New.Event(): Event
 
 	local actions: Event = {
 		Fire = function(_, ...: any?)
-			for _, callback in callbacks do
+			for _, callback in table.clone(callbacks) do
 				task.spawn(callback, ...)
 			end
 		end;
@@ -208,7 +208,7 @@ function New.QueuedEvent(nameHint: string?): Event
 				table.insert(queuedEventCoroutines, coroutine.running())
 				coroutine.yield()
 			end
-			for _, callback in callbacks do
+			for _, callback in table.clone(callbacks) do
 				task.spawn(callback, ...)
 			end
 		end;
