@@ -53,7 +53,9 @@ function Debug.Trace(...: any?)
 	if enabledChannels[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
 	if enabledChannels[channel] then
-		warn(`[{channel}] {table.concat({...}, " ")}\n{debug.traceback()}`)
+		local args = {...}
+		table.insert(args, `\n{debug.traceback()}`)
+		warn(`[{channel}]`, table.unpack(args))
 	end
 end
 
