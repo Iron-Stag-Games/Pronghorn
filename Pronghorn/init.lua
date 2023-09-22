@@ -29,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B37                     ║
+║                    Pronghorn Framework  Rev. B39                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -152,7 +152,7 @@ return {
 		end
 
 		-- PlayerAdded
-		Players.PlayerAdded:Connect(function(player: Player)
+		local function playerAdded(player: Player)
 			for _, moduleTable in allModules do
 				if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
 					task.spawn(moduleTable.Return.PlayerAdded, player)
@@ -163,7 +163,11 @@ return {
 					task.spawn(moduleTable.Return.PlayerAddedDeferred, player)
 				end
 			end
-		end)
+		end
+		Players.PlayerAdded:Connect(playerAdded)
+		for _, player in Players:GetPlayers() do
+			playerAdded(player)
+		end
 
 		-- PlayerRemoving
 		Players.PlayerRemoving:Connect(function(player: Player)
