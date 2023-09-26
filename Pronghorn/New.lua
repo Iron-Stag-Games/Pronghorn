@@ -262,9 +262,11 @@ function New.TrackedVariable(variable: any): TrackedVariable
 		end;
 
 		Set = function(_, value: any)
-			variable = value
-			for _, callback in callbacks do
-				task.spawn(callback, value)
+			if variable ~= value then
+				variable = value
+				for _, callback in table.clone(callbacks) do
+					task.spawn(callback, value)
+				end
 			end
 		end;
 
