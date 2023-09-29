@@ -35,12 +35,14 @@ local exampleRemote = Remotes:CreateToClient(name: string, requiredParameterType
 local exampleRemote = Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, returns: boolean?, func: (any) -> (any)): any
 
 -- Server Invocation Absolute
-Remotes.ExampleModule.ExampleRemote:Fire(player: Player, ...)
+Remotes.ExampleModule.ExampleRemote:Fire(players: Player | {Player}, ...)
 Remotes.ExampleModule.ExampleRemote:FireAll(...)
+Remotes.ExampleModule.ExampleRemote:FireAllExcept(ignorePlayer: Player, ....)
 
 -- Server Invocation Shortcut
-exampleRemote:Fire(player: Player, ...)
+exampleRemote:Fire(players: Player | {Player}, ...)
 exampleRemote:FireAll(...)
+exampleRemote:FireAllExcept(ignorePlayer: Player, ....)
 
 -- Client Invocation Absolute
 Remotes.ExampleModule:ExampleRemote(...)
@@ -70,22 +72,25 @@ New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[s
 			-- RBXScriptSignal properties (e.g. "Changed") can be assigned a function.
 New.Event(): {
 	Fire: (self: any, ...any?) -> ();
-	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
-	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Connect: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
+	Once: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
 	Wait: (self: any) -> (any);
+	DisconnectAll: (self: any) -> ();
 }
 New.QueuedEvent(): {
 	Fire: (self: any, ...any?) -> ();
-	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
-	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Connect: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
+	Once: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
 	Wait: (self: any) -> (any);
+	DisconnectAll: (self: any) -> ();
 }
 New.TrackedVariable(Variable: any): {
 	Get: (self: any) -> (any);
 	Set: (self: any, value: any) -> ();
-	Connect: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
-	Once: (self: any, callback: Callback) -> ({Disconnect: () -> ()});
+	Connect: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
+	Once: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
 	Wait: (self: any) -> (any);
+	DisconnectAll: (self: any) -> ();
 }
 ```
 

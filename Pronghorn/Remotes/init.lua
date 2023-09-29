@@ -126,10 +126,16 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 			return remote:InvokeClient(player, ...)
 		end
 	else
-		actions.Fire = function(_, player: Player, ...: any?)
+		actions.Fire = function(_, players: Player | {Player}, ...: any?)
 			TypeChecker(remote, requiredParameterTypes, ...)
-			Print(environment, name, "Fire", player, ...)
-			remote:FireClient(player, ...)
+			Print(environment, name, "Fire", players, ...)
+			if type(players) == "table" then
+				for _, player in players do
+					remote:FireClient(player, ...)
+				end
+			else
+				remote:FireClient(players, ...)
+			end
 		end
 
 		actions.FireAll = function(_, ...: any?)

@@ -140,12 +140,17 @@ end
 --- @return Event -- The new Event.
 function New.Event(): Event
 	local callbacks: {Callback} = {}
+	local waiting: {Callback | thread} = {}
 
 	local actions: Event = {
 		Fire = function(_, ...: any?)
-			for _, callback in table.clone(callbacks) do
+			for _, callback in callbacks do
 				task.spawn(callback, ...)
 			end
+			for _, callback in waiting do
+				task.spawn(callback, ...)
+			end
+			table.clear(waiting)
 		end;
 
 		Connect = function(_, callback: Callback)
@@ -156,24 +161,23 @@ function New.Event(): Event
 		end;
 
 		Once = function(_, callback: Callback)
-			local wrappedCallback: Callback; wrappedCallback = function(...: any?)
-				task.spawn(callback, ...)
-				table.remove(callbacks, table.find(callbacks, wrappedCallback))
-			end
-			table.insert(callbacks, wrappedCallback)
+			table.insert(waiting, callback)
 			return {Disconnect = function()
-				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
 
 		Wait = function(_)
-			local co = coroutine.running()
-			local callback; callback = function(...: any?)
-				task.spawn(co, ...)
-				table.remove(callbacks, table.find(callbacks, callback))
-			end
-			table.insert(callbacks, callback)
+			table.insert(waiting, coroutine.running())
 			return coroutine.yield()
+		end;
+
+		DisconnectAll = function(_)
+			table.clear(callbacks)
+			for _, callback in waiting do
+				task.spawn(callback)
+			end
+			table.clear(waiting)
 		end;
 	}
 
@@ -187,6 +191,7 @@ end
 --- @return QueuedEvent -- The new QueuedEvent.
 function New.QueuedEvent(nameHint: string?): Event
 	local callbacks: {Callback} = {}
+	local waiting: {Callback | thread} = {}
 	local queueCount = 0
 	local queuedEventCoroutines: {thread} = {}
 
@@ -200,7 +205,7 @@ function New.QueuedEvent(nameHint: string?): Event
 
 	local actions: Event = {
 		Fire = function(_, ...: any?)
-			if not next(callbacks) then
+			if not next(callbacks) and not next(waiting) then
 				if queueCount >= QUEUED_EVENT_QUEUE_SIZE then
 					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for '{nameHint}'` else ""}; did you forget to connect to it?`, 0)
 				end
@@ -208,9 +213,13 @@ function New.QueuedEvent(nameHint: string?): Event
 				table.insert(queuedEventCoroutines, coroutine.running())
 				coroutine.yield()
 			end
-			for _, callback in table.clone(callbacks) do
+			for _, callback in callbacks do
 				task.spawn(callback, ...)
 			end
+			for _, callback in waiting do
+				task.spawn(callback, ...)
+			end
+			table.clear(waiting)
 		end;
 
 		Connect = function(_, callback: Callback)
@@ -223,25 +232,24 @@ function New.QueuedEvent(nameHint: string?): Event
 
 		Once = function(_, callback: Callback)
 			resumeQueuedEventCoroutines()
-			local wrappedCallback: Callback; wrappedCallback = function(...: any?)
-				task.spawn(callback, ...)
-				table.remove(callbacks, table.find(callbacks, wrappedCallback))
-			end
-			table.insert(callbacks, wrappedCallback)
+			table.insert(waiting, callback)
 			return {Disconnect = function()
-				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
 
 		Wait = function(_)
 			resumeQueuedEventCoroutines()
-			local co = coroutine.running()
-			local callback; callback = function(...: any?)
-				task.spawn(co, ...)
-				table.remove(callbacks, table.find(callbacks, callback))
-			end
-			table.insert(callbacks, callback)
+			table.insert(waiting, coroutine.running())
 			return coroutine.yield()
+		end;
+
+		DisconnectAll = function(_)
+			table.clear(callbacks)
+			for _, callback in waiting do
+				task.spawn(callback)
+			end
+			table.clear(waiting)
 		end;
 	}
 
@@ -255,6 +263,7 @@ end
 --- @return QueuedEvent -- The new TrackedVariable.
 function New.TrackedVariable(variable: any): TrackedVariable
 	local callbacks: {Callback} = {}
+	local waiting: {Callback | thread} = {}
 
 	local actions: TrackedVariable = {
 		Get = function(_): any
@@ -264,9 +273,13 @@ function New.TrackedVariable(variable: any): TrackedVariable
 		Set = function(_, value: any)
 			if variable ~= value then
 				variable = value
-				for _, callback in table.clone(callbacks) do
+				for _, callback in callbacks do
 					task.spawn(callback, value)
 				end
+				for _, callback in waiting do
+					task.spawn(callback, value)
+				end
+				table.clear(waiting)
 			end
 		end;
 
@@ -278,24 +291,23 @@ function New.TrackedVariable(variable: any): TrackedVariable
 		end;
 
 		Once = function(_, callback: Callback)
-			local wrappedCallback: Callback; wrappedCallback = function(value: any)
-				task.spawn(callback, value)
-				table.remove(callbacks, table.find(callbacks, wrappedCallback))
-			end
-			table.insert(callbacks, wrappedCallback)
+			table.insert(waiting, callback)
 			return {Disconnect = function()
-				table.remove(callbacks, table.find(callbacks, wrappedCallback))
+				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
 
 		Wait = function(_)
-			local co = coroutine.running()
-			local callback; callback = function(value: any)
-				task.spawn(co, value)
-				table.remove(callbacks, table.find(callbacks, callback))
-			end
-			table.insert(callbacks, callback)
+			table.insert(waiting, coroutine.running())
 			return coroutine.yield()
+		end;
+
+		DisconnectAll = function(_)
+			table.clear(callbacks)
+			for _, callback in waiting do
+				task.spawn(callback)
+			end
+			table.clear(waiting)
 		end;
 	}
 
