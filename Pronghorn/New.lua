@@ -19,14 +19,14 @@ export type Event = {
 	Fire: (self: Event, ...any) -> ();
 	Connect: (self: Event, callback: Callback) -> (Connection);
 	Once: (self: Event, callback: Callback) -> (Connection);
-	Wait: (self: Event) -> (any);
+	Wait: (self: Event, timeout: number?) -> (any);
 }
 export type TrackedVariable = {
 	Get: (self: TrackedVariable) -> (any);
 	Set: (self: TrackedVariable, value: any) -> ();
 	Connect: (self: TrackedVariable, callback: Callback) -> (Connection);
 	Once: (self: TrackedVariable, callback: Callback) -> (Connection);
-	Wait: (self: TrackedVariable) -> (any);
+	Wait: (self: TrackedVariable, timeout: number?) -> (any);
 }
 
 -- Constants
@@ -167,8 +167,18 @@ function New.Event(): Event
 			end}
 		end;
 
-		Wait = function(_)
-			table.insert(waiting, coroutine.running())
+		Wait = function(_, timeout: number?)
+			local co = coroutine.running()
+			table.insert(waiting, co)
+			if timeout then
+				task.delay(timeout, function()
+					local index = table.find(waiting, co)
+					if index then
+						table.remove(waiting, index)
+					end
+					task.spawn(co)
+				end)
+			end
 			return coroutine.yield()
 		end;
 
@@ -238,9 +248,19 @@ function New.QueuedEvent(nameHint: string?): Event
 			end}
 		end;
 
-		Wait = function(_)
+		Wait = function(_, timeout: number?)
 			resumeQueuedEventCoroutines()
-			table.insert(waiting, coroutine.running())
+			local co = coroutine.running()
+			table.insert(waiting, co)
+			if timeout then
+				task.delay(timeout, function()
+					local index = table.find(waiting, co)
+					if index then
+						table.remove(waiting, index)
+					end
+					task.spawn(co)
+				end)
+			end
 			return coroutine.yield()
 		end;
 
@@ -297,8 +317,18 @@ function New.TrackedVariable(variable: any): TrackedVariable
 			end}
 		end;
 
-		Wait = function(_)
-			table.insert(waiting, coroutine.running())
+		Wait = function(_, timeout: number?)
+			local co = coroutine.running()
+			table.insert(waiting, co)
+			if timeout then
+				task.delay(timeout, function()
+					local index = table.find(waiting, co)
+					if index then
+						table.remove(waiting, index)
+					end
+					task.spawn(co)
+				end)
+			end
 			return coroutine.yield()
 		end;
 
