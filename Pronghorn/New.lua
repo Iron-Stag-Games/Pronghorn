@@ -147,10 +147,11 @@ function New.Event(): Event
 			for _, callback in callbacks do
 				task.spawn(callback, ...)
 			end
-			for _, callback in waiting do
+			local currentlyWaiting = table.clone(waiting)
+			table.clear(waiting)
+			for _, callback in currentlyWaiting do
 				task.spawn(callback, ...)
 			end
-			table.clear(waiting)
 		end;
 
 		Connect = function(_, callback: Callback)
@@ -226,10 +227,11 @@ function New.QueuedEvent(nameHint: string?): Event
 			for _, callback in callbacks do
 				task.spawn(callback, ...)
 			end
-			for _, callback in waiting do
+			local currentlyWaiting = table.clone(waiting)
+			table.clear(waiting)
+			for _, callback in currentlyWaiting do
 				task.spawn(callback, ...)
 			end
-			table.clear(waiting)
 		end;
 
 		Connect = function(_, callback: Callback)
@@ -296,10 +298,11 @@ function New.TrackedVariable(variable: any): TrackedVariable
 				for _, callback in callbacks do
 					task.spawn(callback, value)
 				end
-				for _, callback in waiting do
+				local currentlyWaiting = table.clone(waiting)
+				table.clear(waiting)
+				for _, callback in currentlyWaiting do
 					task.spawn(callback, value)
 				end
-				table.clear(waiting)
 			end
 		end;
 
