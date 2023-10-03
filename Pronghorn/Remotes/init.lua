@@ -221,7 +221,7 @@ function Remotes:Init()
 	if RunService:IsServer() then
 		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
 	else
-		remotesFolder = ReplicatedStorage:WaitForChild("__remotes")
+		remotesFolder = ReplicatedStorage:WaitForChild("__remotes") :: Folder
 
 		for _, remote in remotesFolder:GetDescendants() do
 			connectEventClient(remote :: any)
