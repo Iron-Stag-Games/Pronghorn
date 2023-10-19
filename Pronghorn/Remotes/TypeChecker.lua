@@ -36,8 +36,19 @@ end
 
 return function(remote: any, requiredParameterTypes: {string}, ...: any)
 	local parameters = {...}
+	local numRequiredParameterTypes = #requiredParameterTypes
 
-	for index = 1, math.max(#requiredParameterTypes, #parameters) do
+	if numRequiredParameterTypes > 0 and requiredParameterTypes[numRequiredParameterTypes]:sub(1, 3) == "..." then
+		local variadicRequiredParameterType = requiredParameterTypes[numRequiredParameterTypes]:sub(4)
+
+		for index = 1, #parameters do
+			if index >= numRequiredParameterTypes then
+				requiredParameterTypes[index] = variadicRequiredParameterType
+			end
+		end
+	end
+
+	for index = 1, math.max(numRequiredParameterTypes, #parameters) do
 		requiredParameterTypes[index] = requiredParameterTypes[index] or "nil"
 
 		local parameter = parameters[index]
