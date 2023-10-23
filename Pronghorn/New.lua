@@ -186,7 +186,9 @@ function New.Event(): Event
 		DisconnectAll = function(_)
 			table.clear(callbacks)
 			for _, callback in waiting do
-				task.spawn(callback)
+				if type(callback) == "thread" then
+					task.cancel(callback)
+				end
 			end
 			table.clear(waiting)
 		end;
@@ -269,7 +271,9 @@ function New.QueuedEvent(nameHint: string?): Event
 		DisconnectAll = function(_)
 			table.clear(callbacks)
 			for _, callback in waiting do
-				task.spawn(callback)
+				if type(callback) == "thread" then
+					task.cancel(callback)
+				end
 			end
 			table.clear(waiting)
 		end;
@@ -338,7 +342,9 @@ function New.TrackedVariable(variable: any): TrackedVariable
 		DisconnectAll = function(_)
 			table.clear(callbacks)
 			for _, callback in waiting do
-				task.spawn(callback)
+				if type(callback) == "thread" then
+					task.cancel(callback)
+				end
 			end
 			table.clear(waiting)
 		end;
