@@ -35,25 +35,26 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 return function(remote: any, requiredParameterTypes: {string}, ...: any)
+	local requiredParameterTypesTemp = table.clone(requiredParameterTypes)
 	local parameters = {...}
-	local numRequiredParameterTypes = #requiredParameterTypes
+	local numRequiredParameterTypes = #requiredParameterTypesTemp
 
-	if numRequiredParameterTypes > 0 and requiredParameterTypes[numRequiredParameterTypes]:sub(1, 3) == "..." then
-		local variadicRequiredParameterType = requiredParameterTypes[numRequiredParameterTypes]:sub(4)
+	if numRequiredParameterTypes > 0 and requiredParameterTypesTemp[numRequiredParameterTypes]:sub(1, 3) == "..." then
+		local variadicRequiredParameterType = requiredParameterTypesTemp[numRequiredParameterTypes]:sub(4)
 
 		for index = 1, #parameters do
 			if index >= numRequiredParameterTypes then
-				requiredParameterTypes[index] = variadicRequiredParameterType
+				requiredParameterTypesTemp[index] = variadicRequiredParameterType
 			end
 		end
 	end
 
 	for index = 1, math.max(numRequiredParameterTypes, #parameters) do
-		requiredParameterTypes[index] = requiredParameterTypes[index] or "nil"
+		requiredParameterTypesTemp[index] = requiredParameterTypesTemp[index] or "nil"
 
 		local parameter = parameters[index]
 		local parameterType = typeof(parameter)
-		local requiredParameterType = requiredParameterTypes[index]:gsub(" ", ""):gsub("?", "")
+		local requiredParameterType = requiredParameterTypesTemp[index]:gsub(" ", ""):gsub("?", "")
 
 		if requiredParameterType == "..." then break end
 
@@ -61,7 +62,7 @@ return function(remote: any, requiredParameterTypes: {string}, ...: any)
 		local pass = false
 
 		if
-			requiredParameterTypes[index]:find("?", 1, true) and parameter == nil
+			requiredParameterTypesTemp[index]:find("?", 1, true) and parameter == nil
 			or requiredParameterType == "any" and parameter ~= nil
 		then
 			pass = true
