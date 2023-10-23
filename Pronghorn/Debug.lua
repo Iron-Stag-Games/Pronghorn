@@ -22,7 +22,8 @@ local enabledChannels: {[string]: boolean} = {}
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Print(...: any?)
-	local channel = tostring(getfenv(2).script)
+	local split = (debug.info(2, "s") :: string):split(".")
+	local channel = split[#split]
 
 	if enabledChannels[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
@@ -35,7 +36,8 @@ end
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Warn(...: any?)
-	local channel = tostring(getfenv(2).script)
+	local split = (debug.info(2, "s") :: string):split(".")
+	local channel = split[#split]
 
 	if enabledChannels[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 
@@ -48,7 +50,8 @@ end
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Trace(...: any?)
-	local channel = tostring(getfenv(2).script)
+	local split = (debug.info(2, "s") :: string):split(".")
+	local channel = split[#split]
 
 	if enabledChannels[channel] == nil then error(`'{channel}' is not a valid debug channel`) end
 

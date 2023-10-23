@@ -104,7 +104,8 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
 	if returns ~= nil and type(returns) ~= "boolean" then error(`Remotes.CreateToClient: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}'`, 0) end
 
-	local moduleName = tostring(getfenv(2).script)
+	local split = (debug.info(2, "s") :: string):split(".")
+	local moduleName = split[#split]
 
 	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`, 0) end
 	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`, 0) end
@@ -174,7 +175,8 @@ function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, 
 	if returns ~= nil and type(returns) ~= "boolean" then error(`Remotes.CreateToServer: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}'`, 0) end
 	if func ~= nil and type(func) ~= "function" then error(`Remotes.CreateToServer: Parameter 'func' expected type '(Player, ...any) -> (...any)?', got '{typeof(func)}'`, 0) end
 
-	local moduleName = tostring(getfenv(2).script)
+	local split = (debug.info(2, "s") :: string):split(".")
+	local moduleName = split[#split]
 
 	if type(Remotes[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`, 0) end
 	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`, 0) end
