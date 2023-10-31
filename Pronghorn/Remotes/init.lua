@@ -35,7 +35,8 @@ local remotesFolder: Folder;
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 local function getEnvironment(): string
-	local split = (debug.info(2, "s") :: string):split(".")
+	local info = debug.info(2, "s") or "ERR_DEBUG.INFO_RETURNED_NIL"
+	local split = info:split(".")
 	return "[" .. split[#split] .. "]"
 end
 
