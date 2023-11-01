@@ -70,7 +70,7 @@ New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[s
 		-- Properties parameter special cases
 			-- Can contain a "Children" key with type {Instance}.
 			-- Can contain an "Attributes" key with type {[string]: any}.
-			-- Can contain an "Tags" key with type {string}.
+			-- Can contain a "Tags" key with type {string}.
 			-- RBXScriptSignal properties (e.g. "Changed") can be assigned a function.
 New.Event(): {
 	Fire: (self: any, ...any?) -> ();
