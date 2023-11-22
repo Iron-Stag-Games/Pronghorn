@@ -45,8 +45,8 @@ local QUEUED_EVENT_QUEUE_SIZE = 256
 --- @error Parent parameter used more than once -- Incorrect usage.
 --- @error Name parameter used more than once -- Incorrect usage.
 --- @error Properties parameter used more than once -- Incorrect usage.
-function New.Instance(className: string, ...: any?): any
-	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?}?
+function New.Instance(className: string, ...: (Instance | string | {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?})?): any
+	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}?;
 	for _, parameter in {...} do
 		if typeof(parameter) == "Instance" then
 			if parent then error("Parent parameter used more than once") end
@@ -93,19 +93,20 @@ function New.Instance(className: string, ...: any?): any
 	return newInstance
 end
 
---- Clones and returns and Instance.
+--- Clones and returns an Instance.
 --- @param instance -- The Instance to clone from.
 --- @param parent? -- The Parent for the cloned Instance after creation.
 --- @param name? -- The Name for the cloned Instance.
 --- @param properties? -- A table of properties to apply to the cloned Instance.
 --- @return Instance -- The cloned Instance.
+--- @error Attempt to clone non-Instance -- Incorrect usage.
 --- @error Parent parameter used more than once -- Incorrect usage.
 --- @error Name parameter used more than once -- Incorrect usage.
 --- @error Properties parameter used more than once -- Incorrect usage.
-function New.Clone<T>(instance: T, ...: any?): T
+function New.Clone<T>(instance: T, ...: (Instance | string | {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?})?): T
 	assert(typeof(instance) == "Instance", "Attempt to clone non-Instance")
 
-	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?}?
+	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}?;
 	for _, parameter in {...} do
 		if typeof(parameter) == "Instance" then
 			if parent then error("Parent parameter used more than once") end
