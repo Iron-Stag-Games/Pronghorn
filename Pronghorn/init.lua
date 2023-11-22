@@ -29,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B51                     ║
+║                    Pronghorn Framework  Rev. B52                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -55,7 +55,6 @@
 
 -- Services
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 -- Core
 local New = require(script.New)
@@ -124,12 +123,8 @@ return {
 		-- Init
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.Init then
-				local didHeartbeat;
-				RunService.Heartbeat:Once(function()
-					didHeartbeat = true
-				end)
-				moduleTable.Return:Init()
-				if didHeartbeat then
+				local thread = task.spawn(moduleTable.Return.Init, moduleTable.Return)
+				if coroutine.status(thread) ~= "dead" then
 					error(`{moduleTable.Object:GetFullName()}: Yielded during Init function`, 0)
 				end
 			end
