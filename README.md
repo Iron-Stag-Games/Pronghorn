@@ -62,8 +62,8 @@ Trace(...)
 
 ## New
 ```lua
-New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any}?): Instance
-New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[string]: any}?): 
+New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}?): Instance
+New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}?): 
 	-- New.Instance / New.Clone
 		-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
 			-- Ex. New.Instance("Part", {Properties})
