@@ -40,7 +40,7 @@ local function getEnvironment(): string
 	return "[" .. split[#split] .. "]"
 end
 
-local function connectEventClient(remote: RemoteFunction | RemoteEvent)
+local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent | RemoteEvent)
 	local moduleName: string = (remote :: any).Parent.Name
 	local debugPrintText = `{moduleName}:{remote.Name}`
 	local actions: any = {}
@@ -68,21 +68,21 @@ local function connectEventClient(remote: RemoteFunction | RemoteEvent)
 			return remote:InvokeServer(...)
 		end
 
-	elseif remote:IsA("RemoteEvent") then
+	elseif remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent") then
 
 		actions.Connect = function(_, func: (...any) -> ()): RBXScriptConnection
-			return remote.OnClientEvent:Connect(func)
+			return (remote :: RemoteEvent).OnClientEvent:Connect(func)
 		end
 
 		actions.Fire = function(_, ...: any?)
 			Print(getEnvironment(), debugPrintText, {...})
-			return remote:FireServer(...)
+			return (remote :: RemoteEvent):FireServer(...)
 		end
 
 		metaTable.__call = function(_, context: any, ...: any?)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
-			Print(getEnvironment(), debugPrintText, {...})
-			remote:FireServer(...)
+			Print(getEnvironment(), debugPrintText, {...});
+			(remote :: RemoteEvent):FireServer(...)
 		end
 	end
 end
@@ -94,16 +94,16 @@ end
 --- Creates a Remote that sends information to Clients.
 --- @param name -- The name of the Remote.
 --- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
---- @param returns -- Whether or not the Remote yields and returns a value.
+--- @param remoteType? -- Whether the Remote is unreliable, reliable, or yields and returns a value.
 --- @error Remotes cannot be created on the client -- Incorrect usage.
---- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
---- @error Remotes.CreateToClient: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}' -- Incorrect usage.
+--- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
+--- @error Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | Unreliable" | "Reliable" | "Returns"', got '{remoteType}' -- Incorrect usage.
 --- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
 --- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
-function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, returns: boolean?)
+function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
-	if returns ~= nil and type(returns) ~= "boolean" then error(`Remotes.CreateToClient: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}'`, 0) end
+	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | "Unreliable" | "Reliable" | "Returns"', got '{remoteType}'`, 0) end
 
 	local split = (debug.info(2, "s") :: string):split(".")
 	local moduleName = split[#split]
@@ -113,7 +113,7 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 
 	local environment = "[" .. moduleName .. "]"
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
-	local remote = New.Instance(returns and "RemoteFunction" or "RemoteEvent", serverFolder, name)
+	local remote = New.Instance(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent", serverFolder, name)
 	local actions = {}
 
 	if not Remotes[moduleName] then
@@ -121,7 +121,7 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 	end
 	Remotes[moduleName][remote.Name] = actions
 
-	if returns then
+	if remoteType == "Returns" then
 		actions.Fire = function(_, player: Player, ...: any?)
 			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", ...)
@@ -163,17 +163,17 @@ end
 --- Creates a Remote that receives information from Clients.
 --- @param name -- The name of the Remote.
 --- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
---- @param returns -- Whether or not the Remote yields and returns a value.
+--- @param remoteType? -- Whether the Remote is unreliable, reliable, or yields and returns a value.
 --- @param func -- The listener function to be invoked.
 --- @error Remotes cannot be created on the client -- Incorrect usage.
---- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
---- @error Remotes.CreateToClient: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}' -- Incorrect usage.
+--- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
+--- @error Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | Unreliable" | "Reliable" | "Returns"', got '{remoteType}' -- Incorrect usage.
 --- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
 --- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
-function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, returns: boolean?, func: (Player, ...any) -> (...any)?)
+function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?)
 	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToServer: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
-	if returns ~= nil and type(returns) ~= "boolean" then error(`Remotes.CreateToServer: Parameter 'returns' expected type 'boolean', got '{typeof(returns)}'`, 0) end
+	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | "Unreliable" | "Reliable" | "Returns"', got '{remoteType}'`, 0) end
 	if func ~= nil and type(func) ~= "function" then error(`Remotes.CreateToServer: Parameter 'func' expected type '(Player, ...any) -> (...any)?', got '{typeof(func)}'`, 0) end
 
 	local split = (debug.info(2, "s") :: string):split(".")
@@ -183,7 +183,7 @@ function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, 
 	if Remotes[moduleName] and Remotes[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`, 0) end
 
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
-	local remote = New.Instance(returns and "RemoteFunction" or "RemoteEvent", serverFolder, name)
+	local remote = New.Instance(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent", serverFolder, name)
 	local actions = {}
 
 	if not Remotes[moduleName] then
@@ -198,7 +198,7 @@ function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, 
 		end
 	end
 
-	if returns then
+	if remoteType == "Returns" then
 		if func then
 			remote.OnServerInvoke = getTypeCheckedFunction(func)
 		end
