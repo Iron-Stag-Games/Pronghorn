@@ -31,8 +31,8 @@ No Controllers or Services, just Modules and Remotes.
 ## Remotes
 ```lua
 -- Creation
-local exampleRemote = Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, returns: boolean?): any
-local exampleRemote = Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, returns: boolean?, func: (any) -> (any)): any
+local exampleRemote = Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?): any
+local exampleRemote = Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?): any
 
 -- Server Invocation Absolute
 Remotes.ExampleModule.ExampleRemote:Fire(players: Player | {Player}, ...)
@@ -62,8 +62,8 @@ Trace(...)
 
 ## New
 ```lua
-New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}?): Instance
-New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}?): 
+New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): Instance
+New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): 
 	-- New.Instance / New.Clone
 		-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
 			-- Ex. New.Instance("Part", {Properties})
@@ -172,7 +172,7 @@ end
 local tableCounted = Remotes:CreateToClient("TableCounted", {"string"})
 -- Second parameter is nil, so this Remote is non-returning.
 
-Remotes:CreateToServer("CountTable", {"table"}, true, function(player: Player, tableToCount: {any})
+Remotes:CreateToServer("CountTable", {"table"}, "Returns", function(player: Player, tableToCount: {any})
 	Remotes.ExampleServerModule.TableCounted:FireAll(player.Name) -- Absolute method
 	tableCounted:FireAll(player.Name) -- Shortcut method
 	return #tableToCount
