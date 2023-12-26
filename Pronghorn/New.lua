@@ -13,6 +13,7 @@ local New = {}
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Types
+type Properties = {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}
 type Callback = (...any) -> ()
 type Connection = {Disconnect: () -> ()}
 export type Event = {
@@ -36,6 +37,31 @@ local QUEUED_EVENT_QUEUE_SIZE = 256
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+--- Applies properties, attributes, tags, callbacks, and children to an Instance.
+--- @param instance -- The Instance to apply to.
+--- @param properties -- A table of properties to apply to the Instance.
+function New.Properties<T>(instance: T & Instance, properties: Properties)
+	for key, value in properties do
+		if key == "Children" then
+			for _, child in value do
+				child.Parent = instance
+			end
+		elseif key == "Attributes" then
+			for attributeName, attribute in value do
+				instance:SetAttribute(attributeName, attribute)
+			end
+		elseif key == "Tags" then
+			for _, tag in value do
+				instance:AddTag(tag)
+			end
+		elseif typeof((instance :: any)[key]) == "RBXScriptSignal" then
+			(instance :: any)[key]:Connect(value)
+		else
+			(instance :: any)[key] = value
+		end
+	end
+end
+
 --- Creates and returns a new Instance.
 --- @param className -- The ClassName for the Instance being created.
 --- @param parent? -- The Parent for the Instance after creation.
@@ -45,8 +71,8 @@ local QUEUED_EVENT_QUEUE_SIZE = 256
 --- @error Parent parameter used more than once -- Incorrect usage.
 --- @error Name parameter used more than once -- Incorrect usage.
 --- @error Properties parameter used more than once -- Incorrect usage.
-function New.Instance(className: string, ...: (Instance | string | {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?})?): any
-	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}?;
+function New.Instance(className: string, ...: (Instance | string | Properties)?): any
+	local parent: Instance?, name: string?, properties: Properties?;
 	for _, parameter in {...} do
 		if typeof(parameter) == "Instance" then
 			if parent then error("Parent parameter used more than once") end
@@ -66,25 +92,7 @@ function New.Instance(className: string, ...: (Instance | string | {[string]: an
 		newInstance.Name = name
 	end
 	if properties then
-		for key, value in properties do
-			if key == "Children" then
-				for _, child in value do
-					child.Parent = newInstance
-				end
-			elseif key == "Attributes" then
-				for attributeName, attribute in value do
-					newInstance:SetAttribute(attributeName, attribute)
-				end
-			elseif key == "Tags" then
-				for _, tag in value do
-					newInstance:AddTag(tag)
-				end
-			elseif typeof((newInstance :: any)[key]) == "RBXScriptSignal" then
-				(newInstance :: any)[key]:Connect(value)
-			else
-				(newInstance :: any)[key] = value
-			end
-		end
+		New.Properties(newInstance, properties)
 	end
 	if parent then
 		newInstance.Parent = parent
@@ -103,10 +111,10 @@ end
 --- @error Parent parameter used more than once -- Incorrect usage.
 --- @error Name parameter used more than once -- Incorrect usage.
 --- @error Properties parameter used more than once -- Incorrect usage.
-function New.Clone<T>(instance: T, ...: (Instance | string | {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?})?): T
+function New.Clone<T>(instance: T & Instance, ...: (Instance | string | Properties)?): T
 	assert(typeof(instance) == "Instance", "Attempt to clone non-Instance")
 
-	local parent: Instance?, name: string?, properties: {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}?;
+	local parent: Instance?, name: string?, properties: Properties?;
 	for _, parameter in {...} do
 		if typeof(parameter) == "Instance" then
 			if parent then error("Parent parameter used more than once") end
@@ -126,25 +134,7 @@ function New.Clone<T>(instance: T, ...: (Instance | string | {[string]: any, Chi
 		newInstance.Name = name
 	end
 	if properties then
-		for key, value in properties do
-			if key == "Children" then
-				for _, child in value do
-					child.Parent = newInstance
-				end
-			elseif key == "Attributes" then
-				for attributeName, attribute in value do
-					newInstance:SetAttribute(attributeName, attribute)
-				end
-			elseif key == "Tags" then
-				for _, tag in value do
-					newInstance:AddTag(tag)
-				end
-			elseif typeof((newInstance :: any)[key]) == "RBXScriptSignal" then
-				(newInstance :: any)[key]:Connect(value)
-			else
-				(newInstance :: any)[key] = value
-			end
-		end
+		New.Properties(newInstance, properties)
 	end
 	if parent then
 		newInstance.Parent = parent
