@@ -82,8 +82,8 @@ return function(remote: any, requiredParameterTypes: {string}, ...: any)
 			abort(`{remote.Parent.Name}.{remote.Name}: Parameter {index} expected type '{requiredParameterType:gsub("|", " | ")}', got '{parameterType}'`)
 		end
 
-		if parameterType == "number" and (parameter == math.huge or parameter == -math.huge or parameter ~= parameter) then
-			abort(`{remote.Parent.Name}.{remote.Name}: Parameter {index} was inf or nan`)
+		if parameterType == "number" and parameter * 0 ~= 0 then
+			abort(`{remote.Parent.Name}.{remote.Name}: Parameter {index} was not a real number`)
 		end
 	end
 end
