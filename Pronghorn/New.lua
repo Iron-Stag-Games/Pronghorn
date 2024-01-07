@@ -293,7 +293,7 @@ end
 
 --- Creates and returns a TrackedVariable.
 --- @param variable -- The initial value of the TrackedVariable.
---- @return QueuedEvent -- The new TrackedVariable.
+--- @return TrackedVariable -- The new TrackedVariable.
 function New.TrackedVariable(variable: any): TrackedVariable
 	local callbacks: {Callback} = {}
 	local waiting: {Callback | thread} = {}
