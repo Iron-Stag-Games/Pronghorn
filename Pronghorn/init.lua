@@ -73,13 +73,22 @@ type Module = {
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 local function addModules(allModules: {Module}, object: Instance)
-	for _, child in object:GetChildren() do
-		if child:IsA("ModuleScript") then
-			if child ~= script then
-				table.insert(allModules, {Object = child, Return = require(child) :: any})
+	if object ~= script then
+		if object:IsA("ModuleScript") then
+			local alreadyAdded = false
+			for _, moduleTable in allModules do
+				if moduleTable.Object == object then
+					alreadyAdded = true
+					break
+				end
+			end
+			if not alreadyAdded then
+				table.insert(allModules, {Object = object, Return = require(object) :: any})
 			end
 		else
-			addModules(allModules, child)
+			for _, child in object:GetChildren() do
+				addModules(allModules, child)
+			end
 		end
 	end
 end
