@@ -64,25 +64,28 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 
 		metaTable.__call = function(_, context: any, ...: any?)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
-			Print(getEnvironment(), debugPrintText, {...})
-			return remote:InvokeServer(...)
+			return actions:Fire(...)
 		end
 
 	elseif remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent") then
+		local lastServerTime: number;
 
 		actions.Connect = function(_, func: (...any) -> ()): RBXScriptConnection
 			return (remote :: RemoteEvent).OnClientEvent:Connect(func)
 		end
 
 		actions.Fire = function(_, ...: any?)
-			Print(getEnvironment(), debugPrintText, {...})
-			return (remote :: RemoteEvent):FireServer(...)
+			if remote:IsA("UnreliableRemoteEvent") then
+				local nextServerTime = script:GetAttribute("ServerTime")
+				if nextServerTime == lastServerTime then return else lastServerTime = nextServerTime end
+			end
+			Print(getEnvironment(), debugPrintText, {...});
+			(remote :: RemoteEvent):FireServer(...)
 		end
 
 		metaTable.__call = function(_, context: any, ...: any?)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
-			Print(getEnvironment(), debugPrintText, {...});
-			(remote :: RemoteEvent):FireServer(...)
+			actions:Fire(...)
 		end
 	end
 end
@@ -223,6 +226,10 @@ end
 function Remotes:Init()
 	if RunService:IsServer() then
 		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
+
+		RunService.Heartbeat:Connect(function(_dt: number)
+			script:SetAttribute("ServerTime", tick())
+		end)
 	else
 		remotesFolder = ReplicatedStorage:WaitForChild("__remotes") :: Folder
 
