@@ -29,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B57                     ║
+║                    Pronghorn Framework  Rev. B58                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -114,6 +114,7 @@ function Pronghorn:SetEnabledChannels(newEnabledChannels: {[string]: boolean})
 end
 
 --- @todo
+--- @yields
 function Pronghorn:Import(paths: {Instance})
 	if imported then
 		error("Pronghorn:Import() cannot be called more than once", 0)
@@ -142,7 +143,7 @@ function Pronghorn:Import(paths: {Instance})
 			startWaits += 1
 			task.spawn(function()
 				local running = true
-				task.delay(5, function()
+				task.delay(15, function()
 					if running then
 						warn(`{moduleTable.Object:GetFullName()}: Infinite yield possible in Deferred function`)
 					end
