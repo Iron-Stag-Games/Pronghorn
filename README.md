@@ -102,6 +102,7 @@ New.TrackedVariable(Variable: any): {
 ```lua
 local Pronghorn = require(game:GetService("ReplicatedStorage").Pronghorn)
 Pronghorn:SetEnabledChannels({
+	Remotes = false;
 	ExampleModule = true;
 })
 
