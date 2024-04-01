@@ -28,6 +28,19 @@ local TypeChecker = require(script.TypeChecker)
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-- Types
+type GenericRemote = typeof(setmetatable({} :: {
+	Fire: (self: GenericRemote, players: Player | {Player}, ...any?) -> ();
+	FireAll: (self: GenericRemote, ...any?) -> ();
+	FireAllExcept: (self: GenericRemote, ignorePlayer: Player, ...any?) -> ();
+	SetListener: (self: GenericRemote, newFunction: (Player, ...any) -> (...any)) -> ();
+	AddListener: (self: GenericRemote, newFunction: (Player, ...any) -> ()) -> RBXScriptConnection;
+	Connect: (self: GenericRemote, func: (...any) -> (...any)) -> ();
+}, {} :: {
+	__call: (self: GenericRemote, context: any, ...any?) -> ()
+}))
+
+-- Objects
 local remotesFolder: Folder;
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,7 +62,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 	if not Remotes[moduleName] then
 		Remotes[moduleName] = {}
 	end
-	Remotes[moduleName][remote.Name] = setmetatable(actions, metaTable)
+	Remotes[moduleName][remote.Name] = setmetatable(actions, metaTable) :: GenericRemote
 
 	if remote:IsA("RemoteFunction") then
 
@@ -122,7 +135,7 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 	if not Remotes[moduleName] then
 		Remotes[moduleName] = {}
 	end
-	Remotes[moduleName][remote.Name] = actions
+	Remotes[moduleName][remote.Name] = (actions :: any) :: GenericRemote
 
 	if remoteType == "Returns" then
 		actions.Fire = function(_, player: Player, ...: any?)
@@ -192,7 +205,7 @@ function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, 
 	if not Remotes[moduleName] then
 		Remotes[moduleName] = {}
 	end
-	Remotes[moduleName][remote.Name] = actions
+	Remotes[moduleName][remote.Name] = (actions :: any) :: GenericRemote
 
 	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> (...any))
 		return function(player: Player, ...: any)
