@@ -30,14 +30,14 @@ local TypeChecker = require(script.TypeChecker)
 
 -- Types
 type GenericRemote = typeof(setmetatable({} :: {
-	Fire: (self: GenericRemote, players: Player | {Player}, ...any?) -> ();
-	FireAll: (self: GenericRemote, ...any?) -> ();
-	FireAllExcept: (self: GenericRemote, ignorePlayer: Player, ...any?) -> ();
+	Fire: (self: GenericRemote, players: Player | {Player}, ...any) -> ();
+	FireAll: (self: GenericRemote, ...any) -> ();
+	FireAllExcept: (self: GenericRemote, ignorePlayer: Player, ...any) -> ();
 	SetListener: (self: GenericRemote, newFunction: (Player, ...any) -> (...any)) -> ();
 	AddListener: (self: GenericRemote, newFunction: (Player, ...any) -> ()) -> RBXScriptConnection;
-	Connect: (self: GenericRemote, func: (...any) -> (...any)) -> ();
+	Connect: (self: GenericRemote, func: (...any) -> ()) -> ();
 }, {} :: {
-	__call: (self: GenericRemote, context: any, ...any?) -> ()
+	__call: (self: GenericRemote, context: any, ...any) -> ()
 }))
 
 -- Objects
@@ -70,12 +70,12 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 			remote.OnClientInvoke = func
 		end
 
-		actions.Fire = function(_, ...: any?)
+		actions.Fire = function(_, ...: any)
 			Print(getEnvironment(), debugPrintText, {...})
 			return remote:InvokeServer(...)
 		end
 
-		metaTable.__call = function(_, context: any, ...: any?)
+		metaTable.__call = function(_, context: any, ...: any)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
 			return actions:Fire(...)
 		end
@@ -87,7 +87,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 			return (remote :: RemoteEvent).OnClientEvent:Connect(func)
 		end
 
-		actions.Fire = function(_, ...: any?)
+		actions.Fire = function(_, ...: any)
 			if remote:IsA("UnreliableRemoteEvent") then
 				local nextServerTime = script:GetAttribute("ServerTime")
 				if nextServerTime == lastServerTime then return else lastServerTime = nextServerTime end
@@ -96,7 +96,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 			(remote :: RemoteEvent):FireServer(...)
 		end
 
-		metaTable.__call = function(_, context: any, ...: any?)
+		metaTable.__call = function(_, context: any, ...: any)
 			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
 			actions:Fire(...)
 		end
@@ -138,13 +138,13 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 	Remotes[moduleName][remote.Name] = (actions :: any) :: GenericRemote
 
 	if remoteType == "Returns" then
-		actions.Fire = function(_, player: Player, ...: any?)
+		actions.Fire = function(_, player: Player, ...: any)
 			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", ...)
 			return remote:InvokeClient(player, ...)
 		end
 	else
-		actions.Fire = function(_, players: Player | {Player}, ...: any?)
+		actions.Fire = function(_, players: Player | {Player}, ...: any)
 			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", players, ...)
 			if type(players) == "table" then
@@ -156,13 +156,13 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 			end
 		end
 
-		actions.FireAll = function(_, ...: any?)
+		actions.FireAll = function(_, ...: any)
 			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "FireAll", ...)
 			remote:FireAllClients(...)
 		end
 
-		actions.FireAllExcept = function(_, ignorePlayer: Player, ...: any?)
+		actions.FireAllExcept = function(_, ignorePlayer: Player, ...: any)
 			TypeChecker(remote, requiredParameterTypes, ...)
 			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do

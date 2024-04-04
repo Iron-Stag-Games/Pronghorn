@@ -73,14 +73,14 @@ New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[s
 			-- Can contain a "Tags" key with type {string}.
 			-- RBXScriptSignal properties (e.g. "Changed") can be assigned a function.
 New.Event(): {
-	Fire: (self: any, ...any?) -> ();
+	Fire: (self: any, ...any) -> ();
 	Connect: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
 	Once: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
 	Wait: (self: any) -> (any);
 	DisconnectAll: (self: any) -> ();
 }
 New.QueuedEvent(): {
-	Fire: (self: any, ...any?) -> ();
+	Fire: (self: any, ...any) -> ();
 	Connect: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
 	Once: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
 	Wait: (self: any) -> (any);

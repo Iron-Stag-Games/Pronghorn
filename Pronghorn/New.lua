@@ -150,7 +150,7 @@ function New.Event(): Event
 	local waiting: {Callback | thread} = {}
 
 	local actions: Event = {
-		Fire = function(_, ...: any?)
+		Fire = function(_, ...: any)
 			for _, callback in callbacks do
 				task.spawn(callback, ...)
 			end
@@ -224,7 +224,7 @@ function New.QueuedEvent(nameHint: string?): Event
 	end
 
 	local actions: Event = {
-		Fire = function(_, ...: any?)
+		Fire = function(_, ...: any)
 			if not next(callbacks) and not next(waiting) then
 				if queueCount >= QUEUED_EVENT_QUEUE_SIZE then
 					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for '{nameHint}'` else ""}; did you forget to connect to it?`, 0)
