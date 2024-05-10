@@ -34,7 +34,7 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return function(remote: any, requiredParameterTypes: {string}, ...: any)
+return function(remote: any, callingPlayer: Player?, requiredParameterTypes: {string}, ...: any)
 	local requiredParameterTypesTemp = table.clone(requiredParameterTypes)
 	local parameters = {...}
 	local numRequiredParameterTypes = #requiredParameterTypesTemp
@@ -79,11 +79,11 @@ return function(remote: any, requiredParameterTypes: {string}, ...: any)
 		end
 
 		if not pass then
-			abort(`{remote.Parent.Name}.{remote.Name}: Parameter {index} expected type '{requiredParameterType:gsub("|", " | ")}', got '{parameterType}'`)
+			abort(`{remote.Parent.Name}.{remote.Name}{if callingPlayer then ` ({callingPlayer.Name})` else ""}: Parameter {index} expected type '{requiredParameterType:gsub("|", " | ")}', got '{parameterType}'`)
 		end
 
 		if parameterType == "number" and parameter * 0 ~= 0 then
-			abort(`{remote.Parent.Name}.{remote.Name}: Parameter {index} was not a real number`)
+			abort(`{remote.Parent.Name}.{remote.Name}{if callingPlayer then ` ({callingPlayer.Name})` else ""}: Parameter {index} was not a real number`)
 		end
 	end
 end

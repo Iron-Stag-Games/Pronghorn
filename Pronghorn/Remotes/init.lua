@@ -139,13 +139,13 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 
 	if remoteType == "Returns" then
 		actions.Fire = function(_, player: Player, ...: any)
-			TypeChecker(remote, requiredParameterTypes, ...)
+			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", ...)
 			return remote:InvokeClient(player, ...)
 		end
 	else
 		actions.Fire = function(_, players: Player | {Player}, ...: any)
-			TypeChecker(remote, requiredParameterTypes, ...)
+			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", players, ...)
 			if type(players) == "table" then
 				for _, player in players do
@@ -157,13 +157,13 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 		end
 
 		actions.FireAll = function(_, ...: any)
-			TypeChecker(remote, requiredParameterTypes, ...)
+			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "FireAll", ...)
 			remote:FireAllClients(...)
 		end
 
 		actions.FireAllExcept = function(_, ignorePlayer: Player, ...: any)
-			TypeChecker(remote, requiredParameterTypes, ...)
+			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
 				if player ~= ignorePlayer then
@@ -209,7 +209,7 @@ function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, 
 
 	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> (...any))
 		return function(player: Player, ...: any)
-			TypeChecker(remote, requiredParameterTypes, ...)
+			TypeChecker(remote, player, requiredParameterTypes, ...)
 			return newFunction(player, ...)
 		end
 	end
