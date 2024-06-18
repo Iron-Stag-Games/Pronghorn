@@ -2,14 +2,14 @@
 	"name": "Pronghorn",
 	"className": "ModuleScript",
 	"filePaths": [
-		"Pronghorn/init.lua"
+		"Pronghorn/init.luau"
 	],
 	"children": [
 		{
 			"name": "Debug",
 			"className": "ModuleScript",
 			"filePaths": [
-				"Pronghorn/Debug.lua"
+				"Pronghorn/Debug.luau"
 			],
 			"children": []
 		},
@@ -17,14 +17,14 @@
 			"name": "Remotes",
 			"className": "ModuleScript",
 			"filePaths": [
-				"Pronghorn/Remotes/init.lua"
+				"Pronghorn/Remotes/init.luau"
 			],
 			"children": [
 				{
 					"name": "TypeChecker",
 					"className": "ModuleScript",
 					"filePaths": [
-						"Pronghorn/Remotes/TypeChecker.lua"
+						"Pronghorn/Remotes/TypeChecker.luau"
 					],
 					"children": []
 				}
@@ -34,7 +34,7 @@
 			"name": "New",
 			"className": "ModuleScript",
 			"filePaths": [
-				"Pronghorn/New.lua"
+				"Pronghorn/New.luau"
 			],
 			"children": []
 		}
