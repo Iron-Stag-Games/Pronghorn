@@ -30,14 +30,14 @@ local TypeChecker = require(script.TypeChecker)
 
 -- Types
 type GenericRemote = typeof(setmetatable({} :: {
-	Fire: (self: GenericRemote, players: Player | {Player}, ...any) -> ();
+	Fire: (self: GenericRemote, players: Player | {Player}, ...any) -> (...any);
 	FireAll: (self: GenericRemote, ...any) -> ();
 	FireAllExcept: (self: GenericRemote, ignorePlayer: Player, ...any) -> ();
 	SetListener: (self: GenericRemote, newFunction: (Player, ...any) -> (...any)) -> ();
 	AddListener: (self: GenericRemote, newFunction: (Player, ...any) -> ()) -> RBXScriptConnection;
-	Connect: (self: GenericRemote, func: (...any) -> ()) -> ();
+	Connect: (self: GenericRemote, func: (...any) -> ()) -> RBXScriptConnection;
 }, {} :: {
-	__call: (self: GenericRemote, context: any, ...any) -> ()
+	__call: (self: GenericRemote, context: any, ...any) -> (...any)
 }))
 
 -- Objects
@@ -76,8 +76,10 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 		end
 
 		metaTable.__call = function(_, context: any, ...: any)
-			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
-			return actions:Fire(...)
+			if context == Remotes[moduleName] then
+				return actions:Fire(...)
+			end
+			return actions:Fire(context, ...)
 		end
 
 	elseif remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent") then
@@ -97,8 +99,10 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 		end
 
 		metaTable.__call = function(_, context: any, ...: any)
-			if context ~= Remotes[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
-			actions:Fire(...)
+			if context == Remotes[moduleName] then
+				return actions:Fire(...)
+			end
+			return actions:Fire(context, ...)
 		end
 	end
 end
@@ -111,12 +115,13 @@ end
 --- @param name -- The name of the Remote.
 --- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
 --- @param remoteType? -- Whether the Remote is unreliable, reliable, or yields and returns a value.
+--- @return GenericRemote -- The new Remote.
 --- @error Remotes cannot be created on the client -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | Unreliable" | "Reliable" | "Returns"', got '{remoteType}' -- Incorrect usage.
 --- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
 --- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
-function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?)
+function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?): GenericRemote
 	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
 	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | "Unreliable" | "Reliable" | "Returns"', got '{remoteType}'`, 0) end
@@ -130,12 +135,12 @@ function Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, 
 	local environment = "[" .. moduleName .. "]"
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
 	local remote = New.Instance(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent", serverFolder, name)
-	local actions = {}
+	local actions: any = {}
 
 	if not Remotes[moduleName] then
 		Remotes[moduleName] = {}
 	end
-	Remotes[moduleName][remote.Name] = (actions :: any) :: GenericRemote
+	Remotes[moduleName][remote.Name] = actions :: GenericRemote
 
 	if remoteType == "Returns" then
 		actions.Fire = function(_, player: Player, ...: any)
@@ -181,12 +186,13 @@ end
 --- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
 --- @param remoteType? -- Whether the Remote is unreliable, reliable, or yields and returns a value.
 --- @param func -- The listener function to be invoked.
+--- @return GenericRemote -- The new Remote.
 --- @error Remotes cannot be created on the client -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | Unreliable" | "Reliable" | "Returns"', got '{remoteType}' -- Incorrect usage.
 --- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
 --- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
-function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?)
+function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?): GenericRemote
 	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToServer: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
 	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | "Unreliable" | "Reliable" | "Returns"', got '{remoteType}'`, 0) end
@@ -200,12 +206,12 @@ function Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, 
 
 	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
 	local remote = New.Instance(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent", serverFolder, name)
-	local actions = {}
+	local actions: any = {}
 
 	if not Remotes[moduleName] then
 		Remotes[moduleName] = {}
 	end
-	Remotes[moduleName][remote.Name] = (actions :: any) :: GenericRemote
+	Remotes[moduleName][remote.Name] = actions :: GenericRemote
 
 	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> (...any))
 		return function(player: Player, ...: any)
