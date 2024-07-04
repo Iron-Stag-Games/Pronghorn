@@ -151,11 +151,11 @@ function New.Event(): Event
 
 	local actions: Event = {
 		Fire = function(_, ...: any)
+			local currentlyWaiting = table.clone(waiting)
+			table.clear(waiting)
 			for _, callback in callbacks do
 				task.spawn(callback, ...)
 			end
-			local currentlyWaiting = table.clone(waiting)
-			table.clear(waiting)
 			for _, callback in currentlyWaiting do
 				task.spawn(callback, ...)
 			end
@@ -233,11 +233,11 @@ function New.QueuedEvent(nameHint: string?): Event
 				table.insert(queuedEventCoroutines, coroutine.running())
 				coroutine.yield()
 			end
+			local currentlyWaiting = table.clone(waiting)
+			table.clear(waiting)
 			for _, callback in callbacks do
 				task.spawn(callback, ...)
 			end
-			local currentlyWaiting = table.clone(waiting)
-			table.clear(waiting)
 			for _, callback in currentlyWaiting do
 				task.spawn(callback, ...)
 			end
@@ -303,16 +303,17 @@ function New.TrackedVariable(variable: any): TrackedVariable
 			return variable
 		end;
 
-		Set = function(_, value: any)
-			if variable ~= value then
-				variable = value
-				for _, callback in callbacks do
-					task.spawn(callback, value)
-				end
+		Set = function(_, newValue: any)
+			if variable ~= newValue then
+				local oldValue = variable
+				variable = newValue
 				local currentlyWaiting = table.clone(waiting)
 				table.clear(waiting)
+				for _, callback in callbacks do
+					task.spawn(callback, oldValue, newValue)
+				end
 				for _, callback in currentlyWaiting do
-					task.spawn(callback, value)
+					task.spawn(callback, oldValue, newValue)
 				end
 			end
 		end;

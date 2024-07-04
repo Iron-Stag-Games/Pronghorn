@@ -2,23 +2,34 @@ std = "roblox"
 
 [rules]
 almost_swapped = "deny"
+constant_table_comparison = "deny"
+deprecated = "deny"
 divide_by_zero = "deny"
 duplicate_keys = "deny"
+empty_if = "allow"
 global_usage = "allow"
+high_cyclomatic_complexity = "allow"
 if_same_then_else = "deny"
 ifs_same_cond = "deny"
-incorrect_standard_library_use = "deny"
+incorrect_standard_library_use = "allow"
+manual_table_clone = "deny"
 mismatched_arg_count = "deny"
+mixed_table = "deny"
 multiple_statements = "allow"
+must_use = "allow"
 parenthese_conditions = "deny"
 roblox_incorrect_color3_new_bounds = "deny"
 roblox_incorrect_roact_usage = "deny"
+roblox_suspicious_udim2_new = "deny"
 shadowing = "deny"
+suspicious_reverse_loop = "deny"
 type_check_inside_call = "deny"
 unbalanced_assignments = "deny"
 undefined_variable = "deny"
 unscoped_variables = "deny"
+unused_variable = "warn"
 
 [config]
 shadowing = { ignore_pattern = "^self$|^_" }
-unused_variable = { ignore_pattern = "^_", allow_unused_self = true }
+unscoped_variables = { ignore_pattern = "^self$" }
+unused_variable = { allow_unused_self = true }
