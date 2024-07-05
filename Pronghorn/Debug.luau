@@ -21,7 +21,7 @@ local enabledChannels: {[string]: boolean} = {}
 --- Prints content to the output.
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
-function Debug.Print(...: any)
+function Debug.Print(...: any): ()
 	local split = (debug.info(2, "s") :: string):split(".")
 	local channel = split[#split]
 
@@ -35,7 +35,7 @@ end
 --- Prints content to the output as a warning.
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
-function Debug.Warn(...: any)
+function Debug.Warn(...: any): ()
 	local split = (debug.info(2, "s") :: string):split(".")
 	local channel = split[#split]
 
@@ -49,7 +49,7 @@ end
 --- Prints content to the output as a warning with a call stack.
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
-function Debug.Trace(...: any)
+function Debug.Trace(...: any): ()
 	local split = (debug.info(2, "s") :: string):split(".")
 	local channel = split[#split]
 
@@ -63,7 +63,7 @@ function Debug.Trace(...: any)
 end
 
 --- @private
-function Debug:SetEnabledChannels(newEnabledChannels: {[string]: boolean})
+function Debug:SetEnabledChannels(newEnabledChannels: {[string]: boolean}): ()
 	if type(newEnabledChannels) ~= "table" then error(`Debug.SetEnabledChannels: Parameter 'newEnabledChannels' expected type '\{[string]: boolean}', got {typeof(newEnabledChannels)}`, 0) end
 
 	enabledChannels = newEnabledChannels

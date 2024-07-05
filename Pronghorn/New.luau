@@ -40,7 +40,7 @@ local QUEUED_EVENT_QUEUE_SIZE = 256
 --- Applies properties, attributes, tags, callbacks, and children to an Instance.
 --- @param instance -- The Instance to apply to.
 --- @param properties -- A table of properties to apply to the Instance.
-function New.Properties<T>(instance: T & Instance, properties: Properties)
+function New.Properties<T>(instance: T & Instance, properties: Properties): ()
 	for key, value in properties do
 		if key == "Children" then
 			for _, child in value do

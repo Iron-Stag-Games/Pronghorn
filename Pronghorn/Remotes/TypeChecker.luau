@@ -22,7 +22,7 @@ local IS_STUDIO = RunService:IsStudio()
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function abort(errorMessage: string)
+local function abort(errorMessage: string): ()
 	if IS_STUDIO then
 		error(errorMessage, 0)
 	else
@@ -34,7 +34,7 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return function(remote: any, callingPlayer: Player?, requiredParameterTypes: {string}, ...: any)
+return function(remote: any, callingPlayer: Player?, requiredParameterTypes: {string}, ...: any): ()
 	local requiredParameterTypesTemp = table.clone(requiredParameterTypes)
 	local parameters = {...}
 	local numRequiredParameterTypes = #requiredParameterTypesTemp

@@ -83,7 +83,7 @@ local deferredComplete = New.Event()
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function addModules(allModules: {Module}, object: Instance)
+local function addModules(allModules: {Module}, object: Instance): ()
 	if object ~= script then
 		if object:IsA("ModuleScript") then
 			local alreadyAdded = false
@@ -109,13 +109,13 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 --- @todo
-function Pronghorn:SetEnabledChannels(newEnabledChannels: {[string]: boolean})
+function Pronghorn:SetEnabledChannels(newEnabledChannels: {[string]: boolean}): ()
 	Debug:SetEnabledChannels(newEnabledChannels)
 end
 
 --- @todo
 --- @yields
-function Pronghorn:Import(paths: {Instance})
+function Pronghorn:Import(paths: {Instance}): ()
 	if imported then
 		error("Pronghorn:Import() cannot be called more than once", 0)
 	end
@@ -198,7 +198,7 @@ end
 
 --- Yields until all imported module Deferred Functions have completed.
 --- @yields
-function Pronghorn:Wait()
+function Pronghorn:Wait(): ()
 	while startWaits > 0 do
 		deferredComplete:Wait()
 	end
