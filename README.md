@@ -31,13 +31,13 @@ No Controllers or Services, just Modules and Remotes.
 ## Remotes
 ```lua
 -- Creation
-local exampleRemote = Remotes:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?): any
-local exampleRemote = Remotes:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?): any
+local exampleRemote = Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?): any
+local exampleRemote = Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?): any
 
 -- Server Invocation Absolute
-Remotes.ExampleModule.ExampleRemote:Fire(players: Player | {Player}, ...)
-Remotes.ExampleModule.ExampleRemote:FireAll(...)
-Remotes.ExampleModule.ExampleRemote:FireAllExcept(ignorePlayer: Player, ....)
+Remotes.Server.ExampleModule.ExampleRemote:Fire(players: Player | {Player}, ...)
+Remotes.Server.ExampleModule.ExampleRemote:FireAll(...)
+Remotes.Server.ExampleModule.ExampleRemote:FireAllExcept(ignorePlayer: Player, ....)
 
 -- Server Invocation Shortcut
 exampleRemote:Fire(players: Player | {Player}, ...)
@@ -45,11 +45,11 @@ exampleRemote:FireAll(...)
 exampleRemote:FireAllExcept(ignorePlayer: Player, ....)
 
 -- Client Invocation Absolute
-Remotes.ExampleModule:ExampleRemote(...)
-Remotes.ExampleModule.ExampleRemote:Fire(...)
+Remotes.Client.ExampleModule:ExampleRemote(...)
+Remotes.Client.ExampleModule.ExampleRemote:Fire(...)
 
 -- Client Invocation Shortcut
-local exampleRemote = Remotes.ExampleModule.ExampleRemote
+local exampleRemote = Remotes.Client.ExampleModule.ExampleRemote
 exampleRemote:Fire(...)
 ```
 
@@ -170,11 +170,11 @@ end
 ```lua
 -- On Server
 
-local tableCounted = Remotes:CreateToClient("TableCounted", {"string"})
+local tableCounted = Remotes.Server:CreateToClient("TableCounted", {"string"})
 -- Second parameter is nil, so this Remote is non-returning.
 
-Remotes:CreateToServer("CountTable", {"table"}, "Returns", function(player: Player, tableToCount: {any})
-	Remotes.ExampleServerModule.TableCounted:FireAll(player.Name) -- Absolute method
+Remotes.Server:CreateToServer("CountTable", {"table"}, "Returns", function(player: Player, tableToCount: {any})
+	Remotes.Server.ExampleServerModule.TableCounted:FireAll(player.Name) -- Absolute method
 	tableCounted:FireAll(player.Name) -- Shortcut method
 	return #tableToCount
 end)
@@ -183,12 +183,12 @@ end)
 ```lua
 -- On Client
 
-Remotes.ExampleServerModule.TableCounted:Connect(function(playerName: string)
+Remotes.Client.ExampleServerModule.TableCounted:Connect(function(playerName: string)
 	Print(playerName, "requested a Table to be counted.")
 end)
 
 function ExampleClientModule:Deferred()
-	Print(Remotes.ExampleServerModule:CountTable({"A", "B", "C"}))
+	Print(Remotes.Client.ExampleServerModule:CountTable({"A", "B", "C"}))
 end
 ```
 
