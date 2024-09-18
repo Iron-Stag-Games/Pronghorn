@@ -31,5 +31,4 @@ unused_variable = "warn"
 
 [config]
 shadowing = { ignore_pattern = "^self$|^_" }
-unscoped_variables = { ignore_pattern = "^self$" }
-unused_variable = { allow_unused_self = true }
+unused_variable = { ignore_pattern = "^self$|^_", allow_unused_self = true }
