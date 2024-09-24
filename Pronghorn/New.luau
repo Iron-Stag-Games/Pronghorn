@@ -21,6 +21,7 @@ export type Event = {
 	Connect: (self: Event, callback: Callback) -> (Connection);
 	Once: (self: Event, callback: Callback) -> (Connection);
 	Wait: (self: Event, timeout: number?) -> (any);
+	DisconnectAll: (self: TrackedVariable) -> ();
 }
 export type TrackedVariable = {
 	Get: (self: TrackedVariable) -> (any);
@@ -28,6 +29,7 @@ export type TrackedVariable = {
 	Connect: (self: TrackedVariable, callback: Callback) -> (Connection);
 	Once: (self: TrackedVariable, callback: Callback) -> (Connection);
 	Wait: (self: TrackedVariable, timeout: number?) -> (any);
+	DisconnectAll: (self: TrackedVariable) -> ();
 }
 
 -- Constants
