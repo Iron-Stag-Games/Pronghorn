@@ -15,7 +15,7 @@ local New = {}
 -- Types
 type Properties = {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}
 export type Callback = (...any) -> ()
-export type Connection = {Disconnect: () -> ()}
+export type Connection = {Disconnect: (self: Connection) -> ()}
 export type Event = {
 	Fire: (self: Event, ...any) -> ();
 	Connect: (self: Event, callback: Callback) -> (Connection);
