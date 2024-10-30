@@ -241,6 +241,7 @@ function New.QueuedEvent(nameHint: string?): Event
 				task.spawn(callback, ...)
 			end
 			for _, callback in currentlyWaiting do
+				if typeof(callback) == "thread" and coroutine.status(callback) ~= "suspended" then continue end
 				task.spawn(callback, ...)
 			end
 		end;
@@ -315,6 +316,7 @@ function New.TrackedVariable(variable: any): TrackedVariable
 					task.spawn(callback, oldValue, newValue)
 				end
 				for _, callback in currentlyWaiting do
+					if typeof(callback) == "thread" and coroutine.status(callback) ~= "suspended" then continue end
 					task.spawn(callback, oldValue, newValue)
 				end
 			end
