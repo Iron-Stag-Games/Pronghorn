@@ -159,6 +159,7 @@ function New.Event(): Event
 				task.spawn(callback, ...)
 			end
 			for _, callback in currentlyWaiting do
+				if typeof(callback) == "thread" and coroutine.status(callback) ~= "suspended" then continue end
 				task.spawn(callback, ...)
 			end
 		end;
@@ -186,7 +187,9 @@ function New.Event(): Event
 					if index then
 						table.remove(waiting, index)
 					end
-					task.spawn(co)
+					if coroutine.status(co) == "suspended" then
+						task.spawn(co)
+					end
 				end)
 			end
 			return coroutine.yield()
@@ -272,7 +275,9 @@ function New.QueuedEvent(nameHint: string?): Event
 					if index then
 						table.remove(waiting, index)
 					end
-					task.spawn(co)
+					if coroutine.status(co) == "suspended" then
+						task.spawn(co)
+					end
 				end)
 			end
 			return coroutine.yield()
@@ -345,7 +350,9 @@ function New.TrackedVariable(variable: any): TrackedVariable
 					if index then
 						table.remove(waiting, index)
 					end
-					task.spawn(co)
+					if coroutine.status(co) == "suspended" then
+						task.spawn(co)
+					end
 				end)
 			end
 			return coroutine.yield()
