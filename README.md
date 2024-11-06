@@ -183,11 +183,11 @@ end)
 ```lua
 -- On Client
 
-Remotes.Client.ExampleServerModule.TableCounted:Connect(function(playerName: string)
-	Print(playerName, "requested a Table to be counted.")
-end)
-
 function ExampleClientModule:Deferred()
+	Remotes.Client.ExampleServerModule.TableCounted:Connect(function(playerName: string)
+		Print(playerName, "requested a Table to be counted.")
+	end)
+
 	Print(Remotes.Client.ExampleServerModule:CountTable({"A", "B", "C"}))
 end
 ```
