@@ -20,7 +20,7 @@ export type Event<T...> = {
 	Fire: (self: Event<T...>, T...) -> ();
 	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
 	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
-	Wait: (self: Event<T...>) -> (T...) & (self: Event<T...>, timeout: number) -> (T...); -- Note: variadics can't be made nullable yet
+	Wait: (self: Event<T...>, timeout: number?) -> (T...); -- Note: variadics can't be made nullable yet
 	DisconnectAll: (self: Event<T...>) -> ();
 }
 export type TrackedVariable<T> = {
@@ -149,12 +149,12 @@ end
 
 --- Creates and returns an Event.
 --- @return Event -- The new Event.
-function New.Event<T...>(): Event<T...>
-	local callbacks: {Callback<T...>} = {}
-	local waiting: {Callback<T...> | thread} = {}
+function New.Event(): Event<...any>
+	local callbacks: {Callback<...any>} = {}
+	local waiting: {Callback<...any> | thread} = {}
 
-	local actions: Event<T...> = {
-		Fire = function(_, ...: T...)
+	local actions: Event<...any> = {
+		Fire = function(_, ...: any)
 			local currentlyWaiting = table.clone(waiting)
 			table.clear(waiting)
 			for _, callback in callbacks do
@@ -166,14 +166,14 @@ function New.Event<T...>(): Event<T...>
 			end
 		end;
 
-		Connect = function(_, callback: Callback<T...>)
+		Connect = function(_, callback: Callback<...any>)
 			table.insert(callbacks, callback)
 			return {Disconnect = function()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
-		Once = function(_, callback: Callback<T...>)
+		Once = function(_, callback: Callback<...any>)
 			table.insert(waiting, callback)
 			return {Disconnect = function()
 				table.remove(waiting, table.find(waiting, callback))
@@ -216,9 +216,9 @@ end
 --- Creates and returns a QueuedEvent.
 --- @param nameHint? -- The name of the QueuedEvent for debugging.
 --- @return QueuedEvent -- The new QueuedEvent.
-function New.QueuedEvent<T...>(nameHint: string?): Event<T...>
-	local callbacks: {Callback<T...>} = {}
-	local waiting: {Callback<T...> | thread} = {}
+function New.QueuedEvent(nameHint: string?): Event<...any>
+	local callbacks: {Callback<...any>} = {}
+	local waiting: {Callback<...any> | thread} = {}
 	local queueCount = 0
 	local queuedEventCoroutines: {thread} = {}
 
@@ -230,8 +230,8 @@ function New.QueuedEvent<T...>(nameHint: string?): Event<T...>
 		queueCount = 0
 	end
 
-	local actions: Event<T...> = {
-		Fire = function(_, ...: T...)
+	local actions: Event<...any> = {
+		Fire = function(_, ...: any)
 			if not next(callbacks) and not next(waiting) then
 				if queueCount >= QUEUED_EVENT_QUEUE_SIZE then
 					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for '{nameHint}'` else ""}; did you forget to connect to it?`, 0)
@@ -251,7 +251,7 @@ function New.QueuedEvent<T...>(nameHint: string?): Event<T...>
 			end
 		end;
 
-		Connect = function(_, callback: Callback<T...>)
+		Connect = function(_, callback: Callback<...any>)
 			resumeQueuedEventCoroutines()
 			table.insert(callbacks, callback)
 			return {Disconnect = function()
@@ -259,7 +259,7 @@ function New.QueuedEvent<T...>(nameHint: string?): Event<T...>
 			end}
 		end;
 
-		Once = function(_, callback: Callback<T...>)
+		Once = function(_, callback: Callback<...any>)
 			resumeQueuedEventCoroutines()
 			table.insert(waiting, callback)
 			return {Disconnect = function()
@@ -304,16 +304,16 @@ end
 --- Creates and returns a TrackedVariable.
 --- @param variable -- The initial value of the TrackedVariable.
 --- @return TrackedVariable -- The new TrackedVariable.
-function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
-	local callbacks: {Callback<T, T>} = {}
-	local waiting: {Callback<T, T> | thread} = {}
+function New.TrackedVariable(variable: any): TrackedVariable<any>
+	local callbacks: {Callback<any, any>} = {}
+	local waiting: {Callback<any, any> | thread} = {}
 
-	local actions: TrackedVariable<T> = {
-		Get = function(_): T
+	local actions: TrackedVariable<any> = {
+		Get = function(_): any
 			return variable
 		end;
 
-		Set = function(_, newValue: T)
+		Set = function(_, newValue: any)
 			if variable ~= newValue then
 				local oldValue = variable
 				variable = newValue
@@ -329,14 +329,14 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 			end
 		end;
 
-		Connect = function(_, callback: Callback<T, T>)
+		Connect = function(_, callback: Callback<any, any>)
 			table.insert(callbacks, callback)
 			return {Disconnect = function()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
-		Once = function(_, callback: Callback<T, T>)
+		Once = function(_, callback: Callback<any, any>)
 			table.insert(waiting, callback)
 			return {Disconnect = function()
 				table.remove(waiting, table.find(waiting, callback))
