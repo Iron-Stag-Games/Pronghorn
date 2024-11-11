@@ -1,4 +1,6 @@
 --!strict
+--!optimize 2
+--!native
 --[[
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
@@ -29,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B71                     ║
+║                    Pronghorn Framework  Rev. B72                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
