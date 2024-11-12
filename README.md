@@ -37,7 +37,7 @@ Trace(...)
 
 ## New
 ```luau
-New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): Instance
+New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): any
 New.Clone(instance: T, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): T
 	-- New.Instance / New.Clone
 		-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
@@ -69,11 +69,8 @@ New.TrackedVariable(variable: any): TrackedVariable<T> = {
 	Wait: (self: TrackedVariable<T>) -> (T, T) & (self: TrackedVariable<T>, timeout: number) -> (T?, T?);
 	DisconnectAll: (self: TrackedVariable<T>) -> ();
 }
-New.InstanceStream(): InstanceStream<T...> = {
-	Instances: {Instance};
-	Start: (self: InstanceStream<T...>, players: Player | {Player}, instances: {Instance}) -> (string);
-	Listen: (self: InstanceStream<T...>, uid: string) -> (Event<T...>, Event<Instance>);
-}
+New.ServerInstanceStream(players: Player | {Player}, instances: {Instance}): string
+New.ClientInstanceStream(uid: string): (Event<T...>, Event<U>)
 ```
 
 ## Remotes

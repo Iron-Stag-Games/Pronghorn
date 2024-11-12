@@ -121,11 +121,11 @@ end
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---- Creates a Remote that sends information to Clients.
---- @param name -- The name of the Remote.
---- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
---- @param remoteType? -- Whether the Remote is unreliable, reliable, or yields and returns a value.
---- @return GenericRemote -- The new Remote.
+--- Creates a `Remote` that sends information to clients.
+--- @param name -- The name of the `Remote`.
+--- @param requiredParameterTypes -- The required types for parameters. Accepts `ClassName`, `EnumItem`, `any`, `...`, `?`, and `|`.
+--- @param remoteType? -- Whether the `Remote` is unreliable, reliable, or yields and returns a value.
+--- @return ServerRemote -- The new `Remote`.
 --- @error Remotes cannot be created on the client -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | Unreliable" | "Reliable" | "Returns"', got '{remoteType}' -- Incorrect usage.
@@ -193,12 +193,12 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	return actions
 end
 
---- Creates a Remote that receives information from Clients.
---- @param name -- The name of the Remote.
---- @param requiredParameterTypes -- The required types for parameters. Accepts ClassName, EnumItem, any, ..., ?, and |.
---- @param remoteType? -- Whether the Remote is unreliable, reliable, or yields and returns a value.
+--- Creates a `Remote` that receives information from clients.
+--- @param name -- The name of the `Remote`.
+--- @param requiredParameterTypes -- The required types for parameters. Accepts `ClassName`, `EnumItem`, `any`, `...`, `?`, and `|`.
+--- @param remoteType? -- Whether the `Remote` is unreliable, reliable, or yields and returns a value.
 --- @param func -- The listener function to be invoked.
---- @return GenericRemote -- The new Remote.
+--- @return `ServerRemote` -- The new Remote.
 --- @error Remotes cannot be created on the client -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | Unreliable" | "Reliable" | "Returns"', got '{remoteType}' -- Incorrect usage.

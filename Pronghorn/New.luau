@@ -59,9 +59,9 @@ local localPlayer = Players.LocalPlayer
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---- Applies properties, attributes, tags, callbacks, and children to an Instance.
---- @param instance -- The Instance to apply to.
---- @param properties -- A table of properties to apply to the Instance.
+--- Applies properties, attributes, tags, callbacks, and children to an `Instance`.
+--- @param instance -- The `Instance` to apply to.
+--- @param properties -- A table of properties to apply to the `Instance`.
 function New.Properties<T>(instance: T, properties: Properties): ()
 	assert(typeof(instance) == "Instance", "Attempt to apply properties to a non-Instance")
 
@@ -87,11 +87,11 @@ function New.Properties<T>(instance: T, properties: Properties): ()
 end
 
 --- Creates and returns a new Instance.
---- @param className -- The ClassName for the Instance being created.
---- @param parent? -- The Parent for the Instance after creation.
---- @param name? -- The Name for the Instance.
---- @param properties? -- A table of properties to apply to the Instance.
---- @return Instance -- The new Instance.
+--- @param className -- The `ClassName` for the `Instance` being created.
+--- @param parent? -- The `Parent` for the `Instance` after creation.
+--- @param name? -- The `Name` for the `Instance`.
+--- @param properties? -- A table of properties to apply to the `Instance`.
+--- @return any -- The new `Instance`.
 --- @error Parent parameter used more than once -- Incorrect usage.
 --- @error Name parameter used more than once -- Incorrect usage.
 --- @error Properties parameter used more than once -- Incorrect usage.
@@ -125,12 +125,12 @@ function New.Instance(className: string, ...: (Instance | string | Properties)?)
 	return newInstance
 end
 
---- Clones and returns an Instance.
---- @param instance -- The Instance to clone from.
---- @param parent? -- The Parent for the cloned Instance after creation.
---- @param name? -- The Name for the cloned Instance.
---- @param properties? -- A table of properties to apply to the cloned Instance.
---- @return Instance -- The cloned Instance.
+--- Clones and returns an `Instance`.
+--- @param instance -- The `Instance` to clone from.
+--- @param parent? -- The `Parent` for the cloned `Instance` after creation.
+--- @param name? -- The `Name` for the cloned `Instance`.
+--- @param properties? -- A table of properties to apply to the cloned `Instance`.
+--- @return T -- The cloned `Instance`.
 --- @error Attempt to clone non-Instance -- Incorrect usage.
 --- @error Parent parameter used more than once -- Incorrect usage.
 --- @error Name parameter used more than once -- Incorrect usage.
@@ -167,8 +167,8 @@ function New.Clone<T>(instance: T, ...: (Instance | string | Properties)?): T
 	return newInstance
 end
 
---- Creates and returns an Event.
---- @return Event -- The new Event.
+--- Creates and returns an `Event`.
+--- @return Event<...any> -- The new `Event`.
 function New.Event(): Event<...any>
 	local callbacks: {Callback<...any>} = {}
 	local waiting: {Callback<...any> | thread} = {}
@@ -233,9 +233,9 @@ function New.Event(): Event<...any>
 	return actions
 end
 
---- Creates and returns a QueuedEvent.
---- @param nameHint? -- The name of the QueuedEvent for debugging.
---- @return QueuedEvent -- The new QueuedEvent.
+--- Creates and returns a `QueuedEvent`.
+--- @param nameHint? -- The name of the `QueuedEvent` for debugging.
+--- @return Event<...any> -- The new `QueuedEvent`.
 function New.QueuedEvent(nameHint: string?): Event<...any>
 	local callbacks: {Callback<...any>} = {}
 	local waiting: {Callback<...any> | thread} = {}
@@ -332,9 +332,9 @@ function New.QueuedEvent(nameHint: string?): Event<...any>
 	return actions
 end
 
---- Creates and returns a TrackedVariable.
---- @param variable -- The initial value of the TrackedVariable.
---- @return TrackedVariable -- The new TrackedVariable.
+--- Creates and returns a `TrackedVariable`.
+--- @param variable -- The initial value of the `TrackedVariable`.
+--- @return TrackedVariable<any> -- The new `TrackedVariable`.
 function New.TrackedVariable(variable: any): TrackedVariable<any>
 	local callbacks: {Callback<any, any>} = {}
 	local waiting: {Callback<any, any> | thread} = {}
@@ -407,91 +407,89 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 	return actions
 end
 
---- Creates and returns an InstanceStream.
---- @return InstanceStream -- The new InstanceStream.
-function New.InstanceStream(): InstanceStream<...any>
-	local replicators: {[Player]: RemoteEvent} = {}
+--- Starts a `ServerInstanceStream` and returns its UID.
+--- @param players -- The list of `Players` to stream `Instances` to.
+--- @param instances -- The list of `Instances` to stream.
+--- @param clone? -- Whether or not to clone the list of `Instances` into `PlayerGui`.
+--- @return string -- The UID of the `ServerInstanceStream`.
+--- @error ServerInstanceStream cannot be created on the client -- Incorrect usage.
+function New.ServerInstanceStream(players: Player | {Player}, instances: {Instance}, clone: boolean?): string
+	if IS_CLIENT then error("ServerInstanceStream cannot be created on the client", 0) end
 
-	local actions: InstanceStream<...Instance> = {
-		Instances = {};
+	local uid = `{HttpService:GenerateGUID(false)}_{#instances}`
 
-		Start = function(self: InstanceStream<...Instance>, players: Player | {Player}, instances: {Instance}): string
-			if IS_CLIENT then error("InstanceStream.Start cannot be called on the client", 0) end
+	for _, player in (if type(players) == "table" then players else {players}) :: {Player} do
+		if not player.Parent then continue end
 
-			table.clear(self.Instances)
-			for index, instance in instances do
-				self.Instances[index] = instance
+		local replicator = New.Instance("RemoteEvent", `__instanceStream_{uid}`) :: RemoteEvent
+
+		for _, instance in instances do
+			if clone then
+				instance = instance:Clone()
 			end
+			New.Instance("ObjectValue", replicator, {Value = instance, Children = if clone then {instance} else nil})
+		end
 
-			local uid = `{HttpService:GenerateGUID(false)}_{#instances}`
+		replicator.OnServerEvent:Once(function()
+			replicator:Destroy()
+		end)
 
-			for _, player in (if type(players) == "table" then players else {players}) :: {Player} do
-				if not player.Parent then continue end
+		replicator.Parent = player.PlayerGui
+		task.delay(10, replicator.Destroy, replicator)
+	end
 
-				local replicator = New.Instance("RemoteEvent", `__instanceStream_{uid}`) :: RemoteEvent
+	return uid
+end
 
-				if replicators[player] then
-					replicators[player]:Destroy()
-				end
-				replicators[player] = replicator
+--- Listens to a `ServerInstanceStream` and returns activity `Events`.
+--- @param uid -- The UID of the `ServerInstanceStream`.
+--- @return Event<...any> -- The `Event` that fires when the `ClientInstanceStream` has received all `Instances`.
+--- @return Event<any> -- The `Event` that fires when an `Instance` is received.
+--- @error ClientInstanceStream cannot be created on the server -- Incorrect usage.
+function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>)
+	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
 
-				for _, instance in instances do
-					New.Instance("ObjectValue", replicator, {Value = instance})
-				end
+	local replicator = assert(localPlayer.PlayerGui:FindFirstChild("__instanceStream_" .. uid), `Cannot find InstanceStream with UID '{uid}'`) :: RemoteEvent
+	local numInstances = assert(tonumber(uid:split("_")[2]))
+	local instances: {Instance} = {}
+	local finishedEvent: Event<...Instance> = New.QueuedEvent("InstanceStream Finished Event")
+	local streamEvent: Event<Instance> = New.QueuedEvent("InstanceStream Stream Event")
 
-				replicator.OnServerEvent:Once(function()
-					replicator:Destroy()
-					replicators[player] = nil
-				end)
+	replicator.Destroying:Connect(function()
+		finishedEvent:DisconnectAll()
+		streamEvent:DisconnectAll()
+	end)
 
-				replicator.Parent = player.PlayerGui
+	for _, child in replicator:GetChildren() do
+		assert(child:IsA("ObjectValue"))
+		if child.Value then
+			table.insert(instances, child.Value)
+			streamEvent:Fire(child.Value)
+		else
+			child.Changed:Once(function()
+				assert(child.Value)
+				table.insert(instances, child.Value)
+				streamEvent:Fire(child.Value)
+			end)
+		end
+	end
+
+	if #replicator:GetChildren() == numInstances then
+		finishedEvent:Fire(table.unpack(instances))
+		replicator:FireServer()
+	else
+		replicator.ChildAdded:Connect(function(child: Instance)
+			assert(child:IsA("ObjectValue") and (child.Value or child.Changed:Wait() and child.Value))
+			table.insert(instances, child.Value)
+			streamEvent:Fire(child)
+			if #replicator:GetChildren() == numInstances then
+				finishedEvent:Fire(table.unpack(instances))
+				replicator:FireServer()
 			end
+		end)
+	end
 
-			return uid
-		end;
-
-		Listen = function(self: InstanceStream<...Instance>, uid: string): (Event<...Instance>, Event<Instance>)
-			if IS_SERVER then error("InstanceStream.Listen cannot be called on the server", 0) end
-
-			local container = assert(localPlayer.PlayerGui:FindFirstChild("__instanceStream_" .. uid), `Cannot find InstanceStream with UID '{uid}'`) :: RemoteEvent
-			local numInstances = assert(tonumber(uid:split("_")[2]))
-			local finishedEvent: Event<...Instance> = New.QueuedEvent("InstanceStream Finished Event")
-			local streamEvent: Event<Instance> = New.QueuedEvent("InstanceStream Stream Event")
-
-			for _, child in container:GetChildren() do
-				assert(child:IsA("ObjectValue"))
-				if child.Value then
-					table.insert(self.Instances, child.Value)
-					streamEvent:Fire(child.Value)
-				else
-					child.Changed:Once(function()
-						assert(child.Value)
-						table.insert(self.Instances, child.Value)
-						streamEvent:Fire(child.Value)
-					end)
-				end
-			end
-
-			if #container:GetChildren() == numInstances then
-				finishedEvent:Fire(table.unpack(self.Instances))
-				container:FireServer()
-			else
-				container.ChildAdded:Connect(function(child: Instance)
-					assert(child:IsA("ObjectValue") and (child.Value or child.Changed:Wait() and child.Value))
-					table.insert(self.Instances, child.Value)
-					streamEvent:Fire(child)
-					if #container:GetChildren() == numInstances then
-						finishedEvent:Fire(table.unpack(self.Instances))
-						container:FireServer()
-					end
-				end)
-			end
-
-			return finishedEvent, streamEvent
-		end;
-	}
-
-	return actions
+	return finishedEvent, streamEvent
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
