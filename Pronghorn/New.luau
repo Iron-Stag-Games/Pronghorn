@@ -177,7 +177,7 @@ function New.Event(): Event<...any>
 		Fire = function(_self: Event<...any>, ...: any): ()
 			local currentlyWaiting = table.clone(waiting)
 			table.clear(waiting)
-			for _, callback in callbacks do
+			for _, callback in table.clone(callbacks) do
 				task.spawn(callback, ...)
 			end
 			for _, callback in currentlyWaiting do
@@ -268,7 +268,7 @@ function New.QueuedEvent(nameHint: string?): Event<...any>
 			else
 				local currentlyWaiting = table.clone(waiting)
 				table.clear(waiting)
-				for _, callback in callbacks do
+				for _, callback in table.clone(callbacks) do
 					task.spawn(callback, ...)
 				end
 				for _, callback in currentlyWaiting do
@@ -350,7 +350,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 				variable = newValue
 				local currentlyWaiting = table.clone(waiting)
 				table.clear(waiting)
-				for _, callback in callbacks do
+				for _, callback in table.clone(callbacks) do
 					task.spawn(callback, oldValue, newValue)
 				end
 				for _, callback in currentlyWaiting do
