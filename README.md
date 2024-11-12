@@ -28,8 +28,56 @@ No Controllers or Services, just Modules and Remotes.
 
 # Core Module Functions
 
+## Debug
+```luau
+Print(...)
+Warn(...)
+Trace(...)
+```
+
+## New
+```luau
+New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): Instance
+New.Clone(instance: T, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): T
+	-- New.Instance / New.Clone
+		-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
+			-- Ex. New.Instance("Part", {Properties})
+		-- Properties parameter special cases
+			-- Can contain a "Children" key with type {Instance}.
+			-- Can contain an "Attributes" key with type {[string]: any}.
+			-- Can contain a "Tags" key with type {string}.
+			-- RBXScriptSignal properties (e.g. "Changed") can be assigned a function.
+New.Event(): Event<T...> = {
+	Fire: (self: Event<T...>, T...) -> ();
+	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
+	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
+	Wait: (self: Event<T...>, timeout: number?) -> (T...);
+	DisconnectAll: (self: Event<T...>) -> ();
+}
+New.QueuedEvent(): Event<T...> = {
+	Fire: (self: Event<T...>, T...) -> ();
+	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
+	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
+	Wait: (self: Event<T...>, timeout: number?) -> (T...);
+	DisconnectAll: (self: Event<T...>) -> ();
+}
+New.TrackedVariable(variable: any): TrackedVariable<T> = {
+	Get: (self: TrackedVariable<T>) -> (T);
+	Set: (self: TrackedVariable<T>, value: T) -> ();
+	Connect: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
+	Once: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
+	Wait: (self: TrackedVariable<T>) -> (T, T) & (self: TrackedVariable<T>, timeout: number) -> (T?, T?);
+	DisconnectAll: (self: TrackedVariable<T>) -> ();
+}
+New.InstanceStream(): InstanceStream<T...> = {
+	Instances: {Instance};
+	Start: (self: InstanceStream<T...>, players: Player | {Player}, instances: {Instance}) -> (string);
+	Listen: (self: InstanceStream<T...>, uid: string) -> (Event<T...>, Event<Instance>);
+}
+```
+
 ## Remotes
-```lua
+```luau
 -- Creation
 local exampleRemote = Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?): any
 local exampleRemote = Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?): any
@@ -53,53 +101,10 @@ local exampleRemote = Remotes.Client.ExampleModule.ExampleRemote
 exampleRemote:Fire(...)
 ```
 
-## Debug
-```lua
-Print(...)
-Warn(...)
-Trace(...)
-```
-
-## New
-```lua
-New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): Instance
-New.Clone(instance: Instance?, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): 
-	-- New.Instance / New.Clone
-		-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
-			-- Ex. New.Instance("Part", {Properties})
-		-- Properties parameter special cases
-			-- Can contain a "Children" key with type {Instance}.
-			-- Can contain an "Attributes" key with type {[string]: any}.
-			-- Can contain a "Tags" key with type {string}.
-			-- RBXScriptSignal properties (e.g. "Changed") can be assigned a function.
-New.Event(): {
-	Fire: (self: any, ...any) -> ();
-	Connect: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
-	Once: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
-	Wait: (self: any) -> (any);
-	DisconnectAll: (self: any) -> ();
-}
-New.QueuedEvent(): {
-	Fire: (self: any, ...any) -> ();
-	Connect: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
-	Once: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
-	Wait: (self: any) -> (any);
-	DisconnectAll: (self: any) -> ();
-}
-New.TrackedVariable(Variable: any): {
-	Get: (self: any) -> (any);
-	Set: (self: any, value: any) -> ();
-	Connect: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
-	Once: (self: any, callback: Callback) -> ({Disconnect: (self: any) -> ()});
-	Wait: (self: any) -> (any);
-	DisconnectAll: (self: any) -> ();
-}
-```
-
 # Code Snippets
 
 ## Script Boilerplate
-```lua
+```luau
 local Pronghorn = require(game:GetService("ReplicatedStorage").Pronghorn)
 Pronghorn:SetEnabledChannels({
 	Remotes = false;
@@ -116,7 +121,7 @@ Pronghorn:Import({
 ```
 
 ## Module Boilerplate
-```lua
+```luau
 local ExampleModule = {}
 
 -- Services
@@ -140,50 +145,50 @@ return ExampleModule
 ```
 
 ## Automated Module Functions
-```lua
-function ExampleModule:Init()
+```luau
+function ExampleModule:Init(): ()
 	-- Runs after all modules are imported. Cannot yield.
 end
 
-function ExampleModule:Deferred()
+function ExampleModule:Deferred(): ()
 	-- Runs after all modules have initialized.
 end
 
-function ExampleModule.PlayerAdded(player: Player)
+function ExampleModule.PlayerAdded(player: Player): ()
 	-- Players.PlayerAdded shortcut.
 end
 
-function ExampleModule.PlayerAddedDeferred(player: Player)
+function ExampleModule.PlayerAddedDeferred(player: Player): ()
 	-- Players.PlayerAdded shortcut. Runs after all PlayerAdded functions.
 end
 
-function ExampleModule.PlayerRemoving(player: Player)
+function ExampleModule.PlayerRemoving(player: Player): ()
 	-- Players.PlayerRemoving shortcut.
 end
 
-function ExampleModule.PlayerRemovingDeferred(player: Player)
+function ExampleModule.PlayerRemovingDeferred(player: Player): ()
 	-- Players.PlayerRemoving shortcut. Runs after all PlayerRemoving functions.
 end
 ```
 
 ## Creating and Invoking a Remote
-```lua
+```luau
 -- On Server
 
 local tableCounted = Remotes.Server:CreateToClient("TableCounted", {"string"})
 -- Second parameter is nil, so this Remote is non-returning.
 
-Remotes.Server:CreateToServer("CountTable", {"table"}, "Returns", function(player: Player, tableToCount: {any})
+Remotes.Server:CreateToServer("CountTable", {"table"}, "Returns", function(player: Player, tableToCount: {any}): ()
 	Remotes.Server.ExampleServerModule.TableCounted:FireAll(player.Name) -- Absolute method
 	tableCounted:FireAll(player.Name) -- Shortcut method
 	return #tableToCount
 end)
 -- Second parameter is true, so this Remote returns.
 ```
-```lua
+```luau
 -- On Client
 
-function ExampleClientModule:Deferred()
+function ExampleClientModule:Deferred(): ()
 	Remotes.Client.ExampleServerModule.TableCounted:Connect(function(playerName: string)
 		Print(playerName, "requested a Table to be counted.")
 	end)
