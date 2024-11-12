@@ -45,6 +45,10 @@ type ClientRemote = typeof(setmetatable({} :: {
 	__call: (self: ClientRemote, context: any, ...any) -> (...any)
 }))
 
+-- Constants
+local IS_SERVER = RunService:IsServer()
+local IS_CLIENT = RunService:IsClient()
+
 -- Objects
 local remotesFolder: Folder;
 local numClientRemotesLoaded = 0
@@ -128,7 +132,7 @@ end
 --- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
 --- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
 function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?): ServerRemote
-	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
+	if IS_CLIENT then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
 	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | "Unreliable" | "Reliable" | "Returns"', got '{remoteType}'`, 0) end
 
@@ -201,7 +205,7 @@ end
 --- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
 --- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
 function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?): ServerRemote
-	if RunService:IsClient() then error("Remotes cannot be created on the client", 0) end
+	if IS_CLIENT then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToServer: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
 	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | "Unreliable" | "Reliable" | "Returns"', got '{remoteType}'`, 0) end
 	if func ~= nil and type(func) ~= "function" then error(`Remotes.CreateToServer: Parameter 'func' expected type '(Player, ...any) -> (...any)?', got '{typeof(func)}'`, 0) end
@@ -253,7 +257,7 @@ end
 
 --- @ignore
 function Remotes:Init()
-	if RunService:IsServer() then
+	if IS_SERVER then
 		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
 
 		RunService.Heartbeat:Connect(function(_dt: number)
