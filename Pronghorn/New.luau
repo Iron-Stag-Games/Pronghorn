@@ -410,27 +410,41 @@ end
 --- Creates and returns an InstanceStream.
 --- @return InstanceStream -- The new InstanceStream.
 function New.InstanceStream(): InstanceStream<...any>
+	local replicators: {[Player]: RemoteEvent} = {}
+
 	local actions: InstanceStream<...Instance> = {
 		Instances = {};
 
 		Start = function(self: InstanceStream<...Instance>, players: Player | {Player}, instances: {Instance}): string
 			if IS_CLIENT then error("InstanceStream.Start cannot be called on the client", 0) end
 
+			table.clear(self.Instances)
+			for index, instance in instances do
+				self.Instances[index] = instance
+			end
+
 			local uid = `{HttpService:GenerateGUID(false)}_{#instances}`
 
 			for _, player in (if type(players) == "table" then players else {players}) :: {Player} do
-				local container = New.Instance("RemoteEvent", `__instanceStream_{uid}`) :: RemoteEvent
+				if not player.Parent then continue end
+
+				local replicator = New.Instance("RemoteEvent", `__instanceStream_{uid}`) :: RemoteEvent
+
+				if replicators[player] then
+					replicators[player]:Destroy()
+				end
+				replicators[player] = replicator
 
 				for _, instance in instances do
-					table.insert(self.Instances, instance)
-					New.Instance("ObjectValue", container, {Value = instance})
+					New.Instance("ObjectValue", replicator, {Value = instance})
 				end
 
-				container.Parent = player.PlayerGui
-
-				container.OnServerEvent:Once(function()
-					container:Destroy()
+				replicator.OnServerEvent:Once(function()
+					replicator:Destroy()
+					replicators[player] = nil
 				end)
+
+				replicator.Parent = player.PlayerGui
 			end
 
 			return uid
@@ -445,9 +459,17 @@ function New.InstanceStream(): InstanceStream<...any>
 			local streamEvent: Event<Instance> = New.QueuedEvent("InstanceStream Stream Event")
 
 			for _, child in container:GetChildren() do
-				assert(child:IsA("ObjectValue") and child.Value)
-				table.insert(self.Instances, child.Value)
-				streamEvent:Fire(child.Value)
+				assert(child:IsA("ObjectValue"))
+				if child.Value then
+					table.insert(self.Instances, child.Value)
+					streamEvent:Fire(child.Value)
+				else
+					child.Changed:Once(function()
+						assert(child.Value)
+						table.insert(self.Instances, child.Value)
+						streamEvent:Fire(child.Value)
+					end)
+				end
 			end
 
 			if #container:GetChildren() == numInstances then
@@ -455,7 +477,7 @@ function New.InstanceStream(): InstanceStream<...any>
 				container:FireServer()
 			else
 				container.ChildAdded:Connect(function(child: Instance)
-					assert(child:IsA("ObjectValue") and child.Value)
+					assert(child:IsA("ObjectValue") and (child.Value or child.Changed:Wait() and child.Value))
 					table.insert(self.Instances, child.Value)
 					streamEvent:Fire(child)
 					if #container:GetChildren() == numInstances then
