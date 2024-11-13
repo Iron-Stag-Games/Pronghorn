@@ -317,7 +317,6 @@ function New.QueuedEvent(nameHint: string?): Event<...any>
 
 		DisconnectAll = function(_self: Event<...any>): ()
 			table.clear(callbacks)
-			table.clear(queuedEventInvocations)
 			for _, callback in waiting do
 				if type(callback) == "thread" then
 					task.cancel(callback)
@@ -407,60 +406,81 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 	return actions
 end
 
---- Starts a `ServerInstanceStream` and returns its UID.
+--- Starts a `ServerInstanceStream` and returns its UID and any newly created `Instances`.
 --- @param players -- The list of `Players` to stream `Instances` to.
 --- @param instances -- The list of `Instances` to stream.
---- @param clone? -- Whether or not to clone the list of `Instances` into `PlayerGui`.
+--- @param exclusive? -- Whether or not to exclusively replicate the list of `Instances` by moving them into `PlayerGui`. If the first argument is an array of `Players`, the `Instances` are cloned.
 --- @return string -- The UID of the `ServerInstanceStream`.
+--- @return {[Player]: Instance}? -- The containers which were created as a result of `exclusive?` = `true`.
+--- @return {[Player]: {any}}? -- The `Instances` which were cloned as a result of `players` = `{Player}` and `exclusive?` = `true`.
 --- @error ServerInstanceStream cannot be created on the client -- Incorrect usage.
-function New.ServerInstanceStream(players: Player | {Player}, instances: {Instance}, clone: boolean?): string
+function New.ServerInstanceStream(players: Player | {Player}, instances: {Instance}, exclusive: boolean?): (string, {[Player]: Instance}?, {[Player]: {any}}?)
 	if IS_CLIENT then error("ServerInstanceStream cannot be created on the client", 0) end
 
 	local uid = `{HttpService:GenerateGUID(false)}_{#instances}`
+	local containers: {[Player]: Instance}? = if exclusive then {} else nil
+	local clonedInstances: {[Player]: {any}}? = if exclusive and type(players) == "table" then {} else nil
 
 	for _, player in (if type(players) == "table" then players else {players}) :: {Player} do
 		if not player.Parent then continue end
 
-		local replicator = New.Instance("RemoteEvent", `__instanceStream_{uid}`) :: RemoteEvent
+		local container: RemoteEvent; container = New.Instance("RemoteEvent", `__instanceStream_{uid}`, {
+			OnServerEvent = function()
+				if not exclusive then
+					container:Destroy()
+				end
+			end;
+		})
 
-		for _, instance in instances do
-			if clone then
-				instance = instance:Clone()
-			end
-			New.Instance("ObjectValue", replicator, {Value = instance, Children = if clone then {instance} else nil})
+		if containers then
+			containers[player] = container
 		end
 
-		replicator.OnServerEvent:Once(function()
-			replicator:Destroy()
-		end)
+		if clonedInstances then
+			clonedInstances[player] = {}
+		end
 
-		replicator.Parent = player.PlayerGui
-		task.delay(10, replicator.Destroy, replicator)
+		for index, instance in instances do
+			if clonedInstances then
+				instance = instance:Clone()
+				clonedInstances[player][index] = instance
+			end
+			New.Instance("ObjectValue", container, {Value = instance, Children = if exclusive then {instance} else nil})
+		end
+
+		container.Parent = player.PlayerGui
+
+		if not exclusive then
+			task.delay(10, container.Destroy, container)
+		end
 	end
 
-	return uid
+	return uid, containers, clonedInstances
 end
 
 --- Listens to a `ServerInstanceStream` and returns activity `Events`.
 --- @param uid -- The UID of the `ServerInstanceStream`.
 --- @return Event<...any> -- The `Event` that fires when the `ClientInstanceStream` has received all `Instances`.
 --- @return Event<any> -- The `Event` that fires when an `Instance` is received.
+--- @return Instance -- The container for the `ServerInstanceStream`.
 --- @error ClientInstanceStream cannot be created on the server -- Incorrect usage.
-function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>)
+function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>, Instance)
 	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
 
-	local replicator = assert(localPlayer.PlayerGui:FindFirstChild("__instanceStream_" .. uid), `Cannot find InstanceStream with UID '{uid}'`) :: RemoteEvent
+	local container = assert(localPlayer.PlayerGui:FindFirstChild("__instanceStream_" .. uid), `Cannot find InstanceStream with UID '{uid}'`) :: RemoteEvent
 	local numInstances = assert(tonumber(uid:split("_")[2]))
 	local instances: {Instance} = {}
 	local finishedEvent: Event<...Instance> = New.QueuedEvent("InstanceStream Finished Event")
 	local streamEvent: Event<Instance> = New.QueuedEvent("InstanceStream Stream Event")
 
-	replicator.Destroying:Connect(function()
+	container.Destroying:Once(function()
 		finishedEvent:DisconnectAll()
 		streamEvent:DisconnectAll()
 	end)
 
-	for _, child in replicator:GetChildren() do
+	container.Parent = localPlayer
+
+	for _, child in container:GetChildren() do
 		assert(child:IsA("ObjectValue"))
 		if child.Value then
 			table.insert(instances, child.Value)
@@ -474,22 +494,26 @@ function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>)
 		end
 	end
 
-	if #replicator:GetChildren() == numInstances then
+	if #container:GetChildren() == numInstances then
 		finishedEvent:Fire(table.unpack(instances))
-		replicator:FireServer()
+		finishedEvent:DisconnectAll()
+		streamEvent:DisconnectAll()
+		container:FireServer()
 	else
-		replicator.ChildAdded:Connect(function(child: Instance)
+		container.ChildAdded:Connect(function(child: Instance)
 			assert(child:IsA("ObjectValue") and (child.Value or child.Changed:Wait() and child.Value))
 			table.insert(instances, child.Value)
 			streamEvent:Fire(child)
-			if #replicator:GetChildren() == numInstances then
+			if #container:GetChildren() == numInstances then
 				finishedEvent:Fire(table.unpack(instances))
-				replicator:FireServer()
+				finishedEvent:DisconnectAll()
+				streamEvent:DisconnectAll()
+				container:FireServer()
 			end
 		end)
 	end
 
-	return finishedEvent, streamEvent
+	return finishedEvent, streamEvent, container
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
