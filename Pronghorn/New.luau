@@ -473,7 +473,18 @@ function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>, Inst
 	local finishedEvent: Event<...Instance> = New.QueuedEvent("InstanceStream Finished Event")
 	local streamEvent: Event<Instance> = New.QueuedEvent("InstanceStream Stream Event")
 
-	container.Destroying:Once(function()
+	local function checkFinished(): boolean
+		if #instances == numInstances then
+			finishedEvent:Fire(table.unpack(instances))
+			finishedEvent:DisconnectAll()
+			streamEvent:DisconnectAll()
+			container:FireServer()
+			return true
+		end
+		return false
+	end
+
+	container.Destroying:Once(function(): ()
 		finishedEvent:DisconnectAll()
 		streamEvent:DisconnectAll()
 	end)
@@ -486,30 +497,21 @@ function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>, Inst
 			table.insert(instances, child.Value)
 			streamEvent:Fire(child.Value)
 		else
-			child.Changed:Once(function()
+			child.Changed:Once(function(): ()
 				assert(child.Value)
 				table.insert(instances, child.Value)
 				streamEvent:Fire(child.Value)
+				checkFinished()
 			end)
 		end
 	end
 
-	if #container:GetChildren() == numInstances then
-		finishedEvent:Fire(table.unpack(instances))
-		finishedEvent:DisconnectAll()
-		streamEvent:DisconnectAll()
-		container:FireServer()
-	else
-		container.ChildAdded:Connect(function(child: Instance)
+	if not checkFinished() then
+		container.ChildAdded:Connect(function(child: Instance): ()
 			assert(child:IsA("ObjectValue") and (child.Value or child.Changed:Wait() and child.Value))
 			table.insert(instances, child.Value)
 			streamEvent:Fire(child)
-			if #container:GetChildren() == numInstances then
-				finishedEvent:Fire(table.unpack(instances))
-				finishedEvent:DisconnectAll()
-				streamEvent:DisconnectAll()
-				container:FireServer()
-			end
+			checkFinished()
 		end)
 	end
 
