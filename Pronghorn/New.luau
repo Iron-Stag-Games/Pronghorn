@@ -445,13 +445,22 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 				instance = instance:Clone()
 				clonedInstances[player][index] = instance
 			end
-			New.Instance("ObjectValue", container, {Value = instance, Children = if exclusive then {instance} else nil})
+			local objectValue: ObjectValue = New.Instance("ObjectValue", container, tostring(index), {
+				Value = instance;
+				Children = if exclusive then {instance} else nil;
+			})
+
+			instance.AncestryChanged:Once(function(): ()
+				if not instance.Parent then
+					objectValue:SetAttribute("Canceled", true)
+				end
+			end)
 		end
 
 		container.Parent = player.PlayerGui
 
 		if not exclusive then
-			task.delay(10, container.Destroy, container)
+			task.delay(30, container.Destroy, container)
 		end
 	end
 
@@ -460,28 +469,31 @@ end
 
 --- Listens to a `ServerInstanceStream` and returns activity `Events`.
 --- @param uid -- The UID of the `ServerInstanceStream`.
---- @return Event<...any> -- The `Event` that fires when the `ClientInstanceStream` has received all `Instances`.
---- @return Event<any> -- The `Event` that fires when an `Instance` is received.
+--- @return Event<...any?> -- The `Event` that fires when the `ClientInstanceStream` has received all `Instances`.
+--- @return Event<any?> -- The `Event` that fires when an `Instance` is received.
 --- @return Instance -- The container for the `ServerInstanceStream`.
 --- @error ClientInstanceStream cannot be created on the server -- Incorrect usage.
-function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>, Instance)
+function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, Instance)
 	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
 
 	local container = assert(localPlayer.PlayerGui:FindFirstChild("__instanceStream_" .. uid), `Cannot find InstanceStream with UID '{uid}'`) :: RemoteEvent
 	local numInstances = assert(tonumber(uid:split("_")[2]))
 	local instances: {Instance} = {}
-	local finishedEvent: Event<...Instance> = New.QueuedEvent("InstanceStream Finished Event")
-	local streamEvent: Event<Instance> = New.QueuedEvent("InstanceStream Stream Event")
+	local failedInstances: {true} = {}
+	local finishedEvent: Event<...Instance?> = New.QueuedEvent("InstanceStream Finished Event")
+	local streamEvent: Event<Instance?> = New.QueuedEvent("InstanceStream Stream Event")
 
 	local function checkFinished(): boolean
-		if #instances == numInstances then
-			finishedEvent:Fire(table.unpack(instances))
-			finishedEvent:DisconnectAll()
-			streamEvent:DisconnectAll()
-			container:FireServer()
-			return true
+		for index = 1, numInstances do
+			if not instances[index] and not failedInstances[index] then
+				return false
+			end
 		end
-		return false
+		finishedEvent:Fire(table.unpack(instances))
+		finishedEvent:DisconnectAll()
+		streamEvent:DisconnectAll()
+		container:FireServer()
+		return true
 	end
 
 	container.Destroying:Once(function(): ()
@@ -494,13 +506,18 @@ function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>, Inst
 	for _, child in container:GetChildren() do
 		assert(child:IsA("ObjectValue"))
 		if child.Value then
-			table.insert(instances, child.Value)
+			instances[tonumber(child.Name) :: number] = child.Value
 			streamEvent:Fire(child.Value)
 		else
+			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
+				failedInstances[tonumber(child.Name) :: number] = true
+				streamEvent:Fire(nil)
+				checkFinished()
+			end)
 			child.Changed:Once(function(): ()
 				assert(child.Value)
-				table.insert(instances, child.Value)
-				streamEvent:Fire(child.Value)
+				instances[tonumber(child.Name) :: number] = child.Value
+				streamEvent:Fire(tonumber(child.Name) :: number, child.Value)
 				checkFinished()
 			end)
 		end
@@ -508,10 +525,18 @@ function New.ClientInstanceStream(uid: string): (Event<...any>, Event<any>, Inst
 
 	if not checkFinished() then
 		container.ChildAdded:Connect(function(child: Instance): ()
-			assert(child:IsA("ObjectValue") and (child.Value or child.Changed:Wait() and child.Value))
-			table.insert(instances, child.Value)
-			streamEvent:Fire(child)
-			checkFinished()
+			assert(child:IsA("ObjectValue"))
+			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
+				failedInstances[tonumber(child.Name) :: number] = true
+				streamEvent:Fire(nil)
+				checkFinished()
+			end)
+			child.Changed:Once(function(): ()
+				assert(child.Value)
+				instances[tonumber(child.Name) :: number] = child.Value
+				streamEvent:Fire(child)
+				checkFinished()
+			end)
 		end)
 	end
 
