@@ -41,6 +41,7 @@ type ServerRemote = {
 type ClientRemote = typeof(setmetatable({} :: {
 	Fire: (self: ClientRemote, ...any) -> (...any);
 	Connect: (self: ClientRemote, func: (...any) -> ()) -> RBXScriptConnection;
+	ConnectDeferred: (self: ClientRemote, func: (...any) -> ()) -> {Connected: boolean, Disconnect: (self: any) -> ()};
 }, {} :: {
 	__call: (self: ClientRemote, context: any, ...any) -> (...any)
 }))
@@ -69,7 +70,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 	local debugPrintText = `{moduleName}:{remote.Name}`
 	local actions: any = {}
 	local metaTable: any = {
-		__call = function(_, context: any, ...: any)
+		__call = function(_, context: any, ...: any): ...any
 			if context ~= Remotes.Client[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
 			return actions:Fire(...)
 		end;
@@ -82,11 +83,17 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 
 	if remote:IsA("RemoteFunction") then
 
-		actions.Connect = function(_, func: (...any) -> (...any))
+		actions.Connect = function(_, func: (...any) -> (...any)): ()
 			remote.OnClientInvoke = func
 		end
 
-		actions.Fire = function(_, ...: any)
+		actions.ConnectDeferred = function(_, func: (...any) -> (...any)): ()
+			task.defer(function()
+				remote.OnClientInvoke = func
+			end)
+		end
+
+		actions.Fire = function(_, ...: any): ...any
 			Print(getEnvironment(), debugPrintText, {...})
 			return remote:InvokeServer(...)
 		end
@@ -99,7 +106,23 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 			return (remote :: RemoteEvent).OnClientEvent:Connect(func)
 		end
 
-		actions.Fire = function(_, ...: any)
+		actions.ConnectDeferred = function(_, func: (...any) -> ()): {Connected: boolean, Disconnect: (self: any) -> ()}
+			local connection: RBXScriptConnection?;
+			local proxy; proxy = {
+				Connected = false;
+				Disconnect = function(self: any): ()
+					assert(connection, "Disconnect was called before remote had connected"):Disconnect()
+					proxy.Connected = false
+				end
+			}
+			task.defer(function()
+				connection = (remote :: RemoteEvent).OnClientEvent:Connect(func)
+				proxy.Connected = true
+			end)
+			return proxy
+		end
+
+		actions.Fire = function(_, ...: any): ()
 			if remote:IsA("UnreliableRemoteEvent") then
 				local nextServerTime = script:GetAttribute("ServerTime") :: number
 				if nextServerTime == lastServerTime then return end
