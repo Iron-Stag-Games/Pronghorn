@@ -14,9 +14,13 @@ local New = {}
 -- Dependencies
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+-- Services
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
+-- Core
+local Print = require(script.Parent.Debug).Print
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -235,8 +239,12 @@ end
 
 --- Creates and returns a `QueuedEvent`.
 --- @param nameHint? -- The name of the `QueuedEvent` for debugging.
+--- @param queueSize? -- The queue size of the `QueuedEvent`.
 --- @return Event<...any> -- The new `QueuedEvent`.
-function New.QueuedEvent(nameHint: string?): Event<...any>
+function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
+	queueSize = queueSize or QUEUED_EVENT_QUEUE_SIZE
+	assert(queueSize)
+
 	local callbacks: {Callback<...any>} = {}
 	local waiting: {Callback<...any> | thread} = {}
 	local queueCount = 0
@@ -260,7 +268,7 @@ function New.QueuedEvent(nameHint: string?): Event<...any>
 	local actions: Event<...any> = {
 		Fire = function(self: Event<...any>, ...: any): ()
 			if not next(callbacks) and not next(waiting) then
-				if queueCount >= QUEUED_EVENT_QUEUE_SIZE then
+				if queueCount >= queueSize then
 					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for '{nameHint}'` else ""}; did you forget to connect to it?`, 0)
 				end
 				queueCount += 1
@@ -420,6 +428,7 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 	local uid = `{HttpService:GenerateGUID(false)}_{#instances}`
 	local containers: {[Player]: Instance}? = if exclusive then {} else nil
 	local clonedInstances: {[Player]: {any}}? = if exclusive and type(players) == "table" then {} else nil
+	local ancestryListeners: {RBXScriptConnection} = {}
 
 	for _, player in (if type(players) == "table" then players else {players}) :: {Player} do
 		if not player.Parent then continue end
@@ -428,6 +437,9 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 			OnServerEvent = function()
 				if not exclusive then
 					container:Destroy()
+					for _, connection in ancestryListeners do
+						connection:Disconnect()
+					end
 				end
 			end;
 		})
@@ -450,11 +462,11 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 				Children = if exclusive then {instance} else nil;
 			})
 
-			instance.AncestryChanged:Once(function(): ()
+			table.insert(ancestryListeners, instance.AncestryChanged:Once(function(): ()
 				if not instance.Parent then
 					objectValue:SetAttribute("Canceled", true)
 				end
-			end)
+			end))
 		end
 
 		container.Parent = player.PlayerGui
@@ -481,7 +493,7 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 	local instances: {Instance} = {}
 	local failedInstances: {true} = {}
 	local finishedEvent: Event<...Instance?> = New.QueuedEvent("InstanceStream Finished Event")
-	local streamEvent: Event<Instance?> = New.QueuedEvent("InstanceStream Stream Event")
+	local streamEvent: Event<Instance?> = New.QueuedEvent("InstanceStream Stream Event", math.huge)
 
 	local function checkFinished(): boolean
 		for index = 1, numInstances do
@@ -493,6 +505,7 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 		finishedEvent:DisconnectAll()
 		streamEvent:DisconnectAll()
 		container:FireServer()
+		Print(`InstanceStream '{uid}' finished`)
 		return true
 	end
 
@@ -503,19 +516,24 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 
 	container.Parent = localPlayer
 
+	Print(`InstanceStream '{uid}' starting`)
+
 	for _, child in container:GetChildren() do
 		assert(child:IsA("ObjectValue"))
 		if child.Value then
+			Print(`InstanceStream '{uid}' received '{child.Name}': {child.Value:GetFullName()}`)
 			instances[tonumber(child.Name) :: number] = child.Value
 			streamEvent:Fire(child.Value)
 		else
 			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
+				Print(`InstanceStream '{uid}' canceled '{child.Name}'`)
 				failedInstances[tonumber(child.Name) :: number] = true
 				streamEvent:Fire(nil)
 				checkFinished()
 			end)
 			child.Changed:Once(function(): ()
 				assert(child.Value)
+				Print(`InstanceStream '{uid}' received '{child.Name}': {child.Value:GetFullName()}`)
 				instances[tonumber(child.Name) :: number] = child.Value
 				streamEvent:Fire(tonumber(child.Name) :: number, child.Value)
 				checkFinished()
@@ -527,12 +545,14 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 		container.ChildAdded:Connect(function(child: Instance): ()
 			assert(child:IsA("ObjectValue"))
 			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
+				Print(`InstanceStream '{uid}' canceled '{child.Name}'`)
 				failedInstances[tonumber(child.Name) :: number] = true
 				streamEvent:Fire(nil)
 				checkFinished()
 			end)
 			child.Changed:Once(function(): ()
 				assert(child.Value)
+				Print(`InstanceStream '{uid}' received '{child.Name}': {child.Value:GetFullName()}`)
 				instances[tonumber(child.Name) :: number] = child.Value
 				streamEvent:Fire(child)
 				checkFinished()
