@@ -37,6 +37,7 @@ type ServerRemote = {
 	FireAllExcept: (self: ServerRemote, ignorePlayer: Player, ...any) -> ();
 	SetListener: (self: ServerRemote, newFunction: (Player, ...any) -> (...any)) -> ();
 	AddListener: (self: ServerRemote, newFunction: (Player, ...any) -> ()) -> RBXScriptConnection;
+	Destroy: (self: ServerRemote) -> ();
 }
 type ClientRemote = typeof(setmetatable({} :: {
 	Fire: (self: ClientRemote, ...any) -> (...any);
@@ -176,6 +177,11 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	end
 	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
 
+	actions.Destroy = function(): ()
+		remote:Destroy()
+		Remotes.Server[moduleName][remote.Name] = nil
+	end
+
 	if remoteType == "Returns" then
 		actions.Fire = function(_, player: Player, ...: any)
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
@@ -255,6 +261,11 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 			TypeChecker(remote, player, requiredParameterTypes, ...)
 			return newFunction(player, ...)
 		end
+	end
+
+	actions.Destroy = function(): ()
+		remote:Destroy()
+		Remotes.Server[moduleName][remote.Name] = nil
 	end
 
 	if remoteType == "Returns" then
