@@ -148,19 +148,20 @@ end
 --- @param name -- The name of the `Remote`.
 --- @param requiredParameterTypes -- The required types for parameters. Accepts `ClassName`, `EnumItem`, `any`, `...`, `?`, and `|`.
 --- @param remoteType? -- Whether the `Remote` is unreliable, reliable, or yields and returns a value.
+--- @param moduleNameOverride? -- The string to use in place of the module's name.
 --- @return ServerRemote -- The new `Remote`.
 --- @error Remotes cannot be created on the client -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | Unreliable" | "Reliable" | "Returns"', got '{remoteType}' -- Incorrect usage.
 --- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
 --- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
-function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?): ServerRemote
+function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, moduleNameOverride: string?): ServerRemote
 	if IS_CLIENT then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
 	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | "Unreliable" | "Reliable" | "Returns"', got '{remoteType}'`, 0) end
 
 	local split = (debug.info(2, "s") :: string):split(".")
-	local moduleName = split[#split]
+	local moduleName = moduleNameOverride or split[#split]
 
 	if type(Remotes.Server[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`, 0) end
 	if Remotes.Server[moduleName] and Remotes.Server[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`, 0) end
@@ -221,20 +222,21 @@ end
 --- @param requiredParameterTypes -- The required types for parameters. Accepts `ClassName`, `EnumItem`, `any`, `...`, `?`, and `|`.
 --- @param remoteType? -- Whether the `Remote` is unreliable, reliable, or yields and returns a value.
 --- @param func -- The listener function to be invoked.
+--- @param moduleNameOverride? -- The string to use in place of the module's name.
 --- @return `ServerRemote` -- The new Remote.
 --- @error Remotes cannot be created on the client -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'requiredParameterTypes' expected type '{string}', got '{typeof(requiredParameterTypes)}' -- Incorrect usage.
 --- @error Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | Unreliable" | "Reliable" | "Returns"', got '{remoteType}' -- Incorrect usage.
 --- @error Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function -- Not allowed.
 --- @error Remote '{name}' already created in '{moduleName}' -- Duplicate.
-function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?): ServerRemote
+function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?, moduleNameOverride: string?): ServerRemote
 	if IS_CLIENT then error("Remotes cannot be created on the client", 0) end
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToServer: Parameter 'requiredParameterTypes' expected type '\{string}', got '{typeof(requiredParameterTypes)}'`, 0) end
 	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter 'remoteType' expected 'nil | "Unreliable" | "Reliable" | "Returns"', got '{remoteType}'`, 0) end
 	if func ~= nil and type(func) ~= "function" then error(`Remotes.CreateToServer: Parameter 'func' expected type '(Player, ...any) -> (...any)?', got '{typeof(func)}'`, 0) end
 
 	local split = (debug.info(2, "s") :: string):split(".")
-	local moduleName = split[#split]
+	local moduleName = moduleNameOverride or split[#split]
 
 	if type(Remotes.Server[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name '{moduleName}' would overwrite a function`, 0) end
 	if Remotes.Server[moduleName] and Remotes.Server[moduleName][name] then error(`Remote '{name}' already created in '{moduleName}'`, 0) end
