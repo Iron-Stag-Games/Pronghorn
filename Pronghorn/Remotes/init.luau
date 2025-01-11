@@ -53,8 +53,6 @@ local IS_CLIENT = RunService:IsClient()
 
 -- Objects
 local remotesFolder: Folder;
-local numClientRemotesLoaded = 0
-local clientRemotesLoadedEvent = New.Event()
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
@@ -133,12 +131,18 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 			(remote :: RemoteEvent):FireServer(...)
 		end
 	end
+end
 
-	numClientRemotesLoaded += 1
-	
-	if numClientRemotesLoaded == script:GetAttribute("NumRemotes") then
-		clientRemotesLoadedEvent:Fire()
+local function haveClientEventsLoaded(): boolean
+	local numClientEventsLoaded = 0
+
+	for _, instance in remotesFolder:GetDescendants() do
+		if instance:IsA("BaseRemoteEvent") or instance:IsA("RemoteFunction") then
+			numClientEventsLoaded += 1
+		end
 	end
+
+	return numClientEventsLoaded == script:GetAttribute("NumRemotes") :: number
 end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -178,8 +182,10 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
 
 	actions.Destroy = function(): ()
+		if not Remotes.Server[moduleName][remote.Name] then return end
 		remote:Destroy()
 		Remotes.Server[moduleName][remote.Name] = nil
+		script:SetAttribute("NumRemotes", (script:GetAttribute("NumRemotes") :: number? or 0) - 1)
 	end
 
 	if remoteType == "Returns" then
@@ -264,8 +270,10 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 	end
 
 	actions.Destroy = function(): ()
+		if not Remotes.Server[moduleName][remote.Name] then return end
 		remote:Destroy()
 		Remotes.Server[moduleName][remote.Name] = nil
+		script:SetAttribute("NumRemotes", (script:GetAttribute("NumRemotes") :: number? or 0) - 1)
 	end
 
 	if remoteType == "Returns" then
@@ -296,7 +304,7 @@ function Remotes:Init()
 	if IS_SERVER then
 		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
 
-		RunService.Heartbeat:Connect(function(_dt: number)
+		RunService.Heartbeat:Connect(function(_dt: number): ()
 			script:SetAttribute("ServerTime", os.clock())
 		end)
 	else
@@ -308,15 +316,13 @@ function Remotes:Init()
 			connectEventClient(remote :: any)
 		end
 
-		remotesFolder.DescendantAdded:Connect(function(remote)
+		remotesFolder.DescendantAdded:Connect(function(remote: Instance): ()
 			if not (remote:IsA("RemoteFunction") or remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent")) then return end
 		
 			connectEventClient(remote :: any)
 		end)
 
-		if numClientRemotesLoaded < script:GetAttribute("NumRemotes") :: number then
-			clientRemotesLoadedEvent:Wait()
-		end
+		while not haveClientEventsLoaded() do task.wait() end
 	end
 end
 
