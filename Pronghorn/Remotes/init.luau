@@ -322,6 +322,8 @@ function Remotes:Init()
 			connectEventClient(remote :: any)
 		end)
 
+		task.defer(Players.LocalPlayer.RequestStreamAroundAsync, Players.LocalPlayer, Vector3.zero)
+
 		while not haveClientEventsLoaded() do task.wait() end
 	end
 end
