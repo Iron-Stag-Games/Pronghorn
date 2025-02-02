@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B86                     ║
+║                    Pronghorn Framework  Rev. B87                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -50,6 +50,9 @@
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]
+
+local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
+if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn from more than one Script; please use included BindableFunctions", 0) end
 
 local Pronghorn = {}
 
