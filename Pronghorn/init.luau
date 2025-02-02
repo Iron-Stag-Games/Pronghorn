@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B87                     ║
+║                    Pronghorn Framework  Rev. B88                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -145,8 +145,8 @@ function Pronghorn:Import(paths: {Instance}): ()
 					and key ~= "PlayerRemovingDeferred"
 				then
 					local bindableFunction = moduleTable.Object:FindFirstChild(key) :: Instance?
-					(if bindableFunction and bindableFunction:IsA("BindableFunction") then bindableFunction else New.Instance("BindableFunction", moduleTable.Object, key)).OnInvoke = function(...: any): ()
-						moduleTable.Return[key](moduleTable.Return, ...)
+					(if bindableFunction and bindableFunction:IsA("BindableFunction") then bindableFunction else New.Instance("BindableFunction", moduleTable.Object, key)).OnInvoke = function(...: any): ...any
+						return moduleTable.Return[key](moduleTable.Return, ...)
 					end
 				end
 			end
