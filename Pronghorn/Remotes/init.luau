@@ -325,7 +325,10 @@ function Remotes:Init()
 			connectEventClient(remote :: any)
 		end)
 
-		task.defer(Players.LocalPlayer.RequestStreamAroundAsync, Players.LocalPlayer, Vector3.zero)
+		-- Ensures Remotes all get replicated (Roblox bug)
+		if workspace.StreamingEnabled then
+			task.defer(Players.LocalPlayer.RequestStreamAroundAsync, Players.LocalPlayer, Vector3.zero)
+		end
 
 		while not haveClientEventsLoaded() do task.wait() end
 	end
