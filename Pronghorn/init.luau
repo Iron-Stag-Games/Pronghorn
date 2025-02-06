@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B88                     ║
+║                    Pronghorn Framework  Rev. B89                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -52,7 +52,7 @@
 ]]
 
 local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
-if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn from more than one Luau VM; please use included BindableFunctions", 0) end
+if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn from more than one Luau VM; please use BindableFunctions", 0) end
 
 local Pronghorn = {}
 
@@ -129,28 +129,6 @@ function Pronghorn:Import(paths: {Instance}): ()
 
 	for _, object in paths do
 		addModules(allModules, object)
-	end
-
-	-- Bindable functions
-	for _, moduleTable in allModules do
-		if type(moduleTable.Return) == "table" then
-			for key, value in moduleTable.Return do
-				if
-					type(value) == "function"
-					and key ~= "Init"
-					and key ~= "Deferred"
-					and key ~= "PlayerAdded"
-					and key ~= "PlayerAddedDeferred"
-					and key ~= "PlayerRemoving"
-					and key ~= "PlayerRemovingDeferred"
-				then
-					local bindableFunction = moduleTable.Object:FindFirstChild(key) :: Instance?
-					(if bindableFunction and bindableFunction:IsA("BindableFunction") then bindableFunction else New.Instance("BindableFunction", moduleTable.Object, key)).OnInvoke = function(...: any): ...any
-						return moduleTable.Return[key](moduleTable.Return, ...)
-					end
-				end
-			end
-		end
 	end
 
 	-- Init

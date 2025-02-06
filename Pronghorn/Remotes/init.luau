@@ -9,7 +9,7 @@
 ]]
 
 local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
-if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn/Remotes from more than one Luau VM; please use included BindableFunctions", 0) end
+if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn/Remotes from more than one Luau VM; please use BindableFunctions", 0) end
 
 local Remotes = {Server = {}, Client = {}}
 
