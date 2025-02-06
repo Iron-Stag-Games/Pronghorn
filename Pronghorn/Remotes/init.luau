@@ -305,6 +305,8 @@ end
 --- @ignore
 function Remotes:Init()
 	if IS_SERVER then
+		script:SetAttribute("NumRemotes", script:GetAttribute("NumRemotes") :: number? or 0)
+
 		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
 
 		RunService.Heartbeat:Connect(function(_dt: number): ()
