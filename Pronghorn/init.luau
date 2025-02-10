@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B89                     ║
+║                    Pronghorn Framework  Rev. B90                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║

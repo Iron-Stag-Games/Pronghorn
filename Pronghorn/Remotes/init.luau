@@ -55,7 +55,7 @@ local IS_SERVER = RunService:IsServer()
 local IS_CLIENT = RunService:IsClient()
 
 -- Objects
-local remotesFolder: Folder;
+local remotesFolder: Model;
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
@@ -307,13 +307,13 @@ function Remotes:Init()
 	if IS_SERVER then
 		script:SetAttribute("NumRemotes", script:GetAttribute("NumRemotes") :: number? or 0)
 
-		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
+		remotesFolder = New.Instance("Model", ReplicatedStorage, "__remotes", {ModelStreamingMode = Enum.ModelStreamingMode.Persistent})
 
 		RunService.Heartbeat:Connect(function(_dt: number): ()
 			script:SetAttribute("ServerTime", os.clock())
 		end)
 	else
-		remotesFolder = ReplicatedStorage:WaitForChild("__remotes") :: Folder
+		remotesFolder = ReplicatedStorage:WaitForChild("__remotes") :: Model
 
 		for _, remote in remotesFolder:GetDescendants() do
 			if not (remote:IsA("RemoteFunction") or remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent")) then continue end
@@ -326,11 +326,6 @@ function Remotes:Init()
 		
 			connectEventClient(remote :: any)
 		end)
-
-		-- Ensures Remotes all get replicated (Roblox bug)
-		if workspace.StreamingEnabled then
-			task.defer(Players.LocalPlayer.RequestStreamAroundAsync, Players.LocalPlayer, Vector3.zero)
-		end
 
 		while not haveClientEventsLoaded() do task.wait() end
 	end
