@@ -434,7 +434,7 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 		if not player.Parent then continue end
 
 		local container: RemoteEvent; container = New.Instance("RemoteEvent", `__instanceStream_{uid}`, {
-			OnServerEvent = function()
+			OnServerEvent = function(): ()
 				if not exclusive then
 					container:Destroy()
 					for _, connection in ancestryListeners do
@@ -535,7 +535,7 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 				assert(child.Value)
 				Print(`InstanceStream '{uid}' received '{child.Name}': {child.Value:GetFullName()}`)
 				instances[tonumber(child.Name) :: number] = child.Value
-				streamEvent:Fire(tonumber(child.Name) :: number, child.Value)
+				streamEvent:Fire(child.Value)
 				checkFinished()
 			end)
 		end
@@ -554,7 +554,7 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 				assert(child.Value)
 				Print(`InstanceStream '{uid}' received '{child.Name}': {child.Value:GetFullName()}`)
 				instances[tonumber(child.Name) :: number] = child.Value
-				streamEvent:Fire(child)
+				streamEvent:Fire(child.Value)
 				checkFinished()
 			end)
 		end)
