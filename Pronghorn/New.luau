@@ -35,6 +35,7 @@ export type Event<T...> = {
 	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
 	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
 	Wait: (self: Event<T...>, timeout: number?) -> (T...); -- Note: variadics can't be made nullable yet
+	WaitFor: (self: Event<T...>, timeout: number?) -> (T...); -- Note: variadics can't be made nullable yet
 	DisconnectAll: (self: Event<T...>) -> ();
 }
 export type TrackedVariable<T> = {
@@ -43,6 +44,7 @@ export type TrackedVariable<T> = {
 	Connect: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
 	Once: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
 	Wait: (self: TrackedVariable<T>) -> (T, T) & (self: TrackedVariable<T>, timeout: number) -> (T?, T?);
+	WaitFor: (self: TrackedVariable<T>) -> (T, T) & (self: TrackedVariable<T>, timeout: number) -> (T?, T?);
 	DisconnectAll: (self: TrackedVariable<T>) -> ();
 }
 export type InstanceStream<T...> = {
@@ -178,7 +180,7 @@ function New.Event(): Event<...any>
 	local waiting: {Callback<...any> | thread} = {}
 
 	local actions: Event<...any> = {
-		Fire = function(_self: Event<...any>, ...: any): ()
+		Fire = function(self: Event<...any>, ...: any): ()
 			local currentlyWaiting = table.clone(waiting)
 			table.clear(waiting)
 			for _, callback in table.clone(callbacks) do
@@ -190,21 +192,21 @@ function New.Event(): Event<...any>
 			end
 		end;
 
-		Connect = function(_self: Event<...any>, callback: Callback<...any>): Connection
+		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
-		Once = function(_self: Event<...any>, callback: Callback<...any>): Connection
+		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function()
 				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
 
-		Wait = function(_self: Event<...any>, timeout: number?): ...any
+		Wait = function(self: Event<...any>, timeout: number?): ...any
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
@@ -221,7 +223,11 @@ function New.Event(): Event<...any>
 			return coroutine.yield()
 		end;
 
-		DisconnectAll = function(_self: Event<...any>): ()
+		WaitFor = function(self: Event<any>, timeout: number?): ()
+			error("Unimplemented")
+		end;
+
+		DisconnectAll = function(self: Event<...any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
 				if type(callback) == "thread" then
@@ -323,7 +329,11 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			return coroutine.yield()
 		end;
 
-		DisconnectAll = function(_self: Event<...any>): ()
+		WaitFor = function(self: Event<any>, timeout: number?): ()
+			error("Unimplemented")
+		end;
+
+		DisconnectAll = function(self: Event<...any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
 				if type(callback) == "thread" then
@@ -347,11 +357,11 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 	local waiting: {Callback<any, any> | thread} = {}
 
 	local actions: TrackedVariable<any> = {
-		Get = function(_self: TrackedVariable<any>): any
+		Get = function(self: TrackedVariable<any>): any
 			return variable
 		end;
 
-		Set = function(_self: TrackedVariable<any>, newValue: any): ()
+		Set = function(self: TrackedVariable<any>, newValue: any): ()
 			if variable ~= newValue then
 				local oldValue = variable
 				variable = newValue
@@ -367,21 +377,21 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			end
 		end;
 
-		Connect = function(_self: TrackedVariable<any>, callback: Callback<any, any>): Connection
+		Connect = function(self: TrackedVariable<any>, callback: Callback<any, any>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
-		Once = function(_self: TrackedVariable<any>, callback: Callback<any, any>): Connection
+		Once = function(self: TrackedVariable<any>, callback: Callback<any, any>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function()
 				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
 
-		Wait = function(_self: TrackedVariable<any>, timeout: number?): ()
+		Wait = function(self: TrackedVariable<any>, timeout: number?): ()
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
@@ -398,7 +408,11 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			return coroutine.yield()
 		end;
 
-		DisconnectAll = function(_self: TrackedVariable<any>): ()
+		WaitFor = function(self: TrackedVariable<any>, timeout: number?): ()
+			error("Unimplemented")
+		end;
+
+		DisconnectAll = function(self: TrackedVariable<any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
 				if type(callback) == "thread" then

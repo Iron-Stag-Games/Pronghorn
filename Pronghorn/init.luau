@@ -85,6 +85,12 @@ local startWaits = math.huge
 local deferredComplete = New.Event()
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Module Variables
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Pronghorn.ModuleStatus = {} :: {[ModuleScript]: New.TrackedVariable<boolean>}
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -100,6 +106,7 @@ local function addModules(allModules: {Module}, object: Instance): ()
 			end
 			if not alreadyAdded then
 				table.insert(allModules, {Object = object, Return = require(object) :: any})
+				Pronghorn.ModuleStatus[object] = New.TrackedVariable(false)
 			end
 		else
 			for _, child in object:GetChildren() do
@@ -155,6 +162,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 				end)
 				moduleTable.Return:Deferred()
 				running = false
+				Pronghorn.ModuleStatus[moduleTable.Object]:Set(true)
 				startWaits -= 1
 				if startWaits == 0 then
 					deferredComplete:Fire()
