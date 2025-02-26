@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B91                     ║
+║                    Pronghorn Framework  Rev. B93                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -168,6 +168,8 @@ function Pronghorn:Import(paths: {Instance}): ()
 					deferredComplete:Fire()
 				end
 			end)
+		else
+			Pronghorn.ModuleStatus[moduleTable.Object]:Set(true)
 		end
 	end
 
