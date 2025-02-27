@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B93                     ║
+║                    Pronghorn Framework  Rev. B94                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -78,16 +78,14 @@ type Module = {
 }
 
 -- Defines
-local imported = false
 local startWaits = math.huge
-
--- Objects
-local deferredComplete = New.Event()
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Pronghorn.Imported = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
+Pronghorn.DeferredComplete = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
 Pronghorn.ModuleStatus = {} :: {[ModuleScript]: New.TrackedVariable<boolean>}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,7 +126,7 @@ end
 --- @todo
 --- @yields
 function Pronghorn:Import(paths: {Instance}): ()
-	if imported then
+	if Pronghorn.Imported:Get() then
 		error("Pronghorn:Import() cannot be called more than once", 0)
 	end
 
@@ -165,7 +163,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 				Pronghorn.ModuleStatus[moduleTable.Object]:Set(true)
 				startWaits -= 1
 				if startWaits == 0 then
-					deferredComplete:Fire()
+					Pronghorn.DeferredComplete:Set(true)
 				end
 			end)
 		else
@@ -205,17 +203,11 @@ function Pronghorn:Import(paths: {Instance}): ()
 		end
 	end)
 
+	Pronghorn.Imported:Set(true)
+
 	-- Wait for Deferred Functions to complete
-	Pronghorn:Wait()
-
-	imported = true
-end
-
---- Yields until all imported module Deferred Functions have completed.
---- @yields
-function Pronghorn:Wait(): ()
-	while startWaits > 0 do
-		deferredComplete:Wait()
+	if not Pronghorn.DeferredComplete:Get() then
+		Pronghorn.DeferredComplete:Wait()
 	end
 end
 
