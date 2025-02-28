@@ -476,7 +476,7 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 				Children = if exclusive then {instance} else nil;
 			})
 
-			table.insert(ancestryListeners, instance.AncestryChanged:Once(function(): ()
+			table.insert(ancestryListeners, instance.AncestryChanged:Connect(function(): ()
 				if not instance.Parent then
 					objectValue:SetAttribute("Canceled", true)
 				end
