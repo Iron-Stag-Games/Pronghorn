@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B95                     ║
+║                    Pronghorn Framework  Rev. B96                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -86,7 +86,7 @@ local startWaits = math.huge
 
 Pronghorn.Imported = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
 Pronghorn.DeferredComplete = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
-Pronghorn.ModuleStatus = {} :: {[ModuleScript]: New.TrackedVariable<boolean>}
+Pronghorn.ModuleStatus = {} :: {[ModuleScript]: New.TrackedVariable<number>}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
@@ -104,7 +104,7 @@ local function addModules(allModules: {Module}, object: Instance): ()
 			end
 			if not alreadyAdded then
 				table.insert(allModules, {Object = object, Return = require(object) :: any})
-				Pronghorn.ModuleStatus[object] = New.TrackedVariable(false)
+				Pronghorn.ModuleStatus[object] = New.TrackedVariable(0)
 			end
 		else
 			for _, child in object:GetChildren() do
@@ -144,6 +144,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 				error(`{moduleTable.Object:GetFullName()}: Yielded during Init function`, 0)
 			end
 		end
+		Pronghorn.ModuleStatus[moduleTable.Object]:Set(1)
 	end
 
 	-- Deferred
@@ -160,14 +161,14 @@ function Pronghorn:Import(paths: {Instance}): ()
 				end)
 				moduleTable.Return:Deferred()
 				running = false
-				Pronghorn.ModuleStatus[moduleTable.Object]:Set(true)
+				Pronghorn.ModuleStatus[moduleTable.Object]:Set(2)
 				startWaits -= 1
 				if startWaits == 0 then
 					Pronghorn.DeferredComplete:Set(true)
 				end
 			end)
 		else
-			Pronghorn.ModuleStatus[moduleTable.Object]:Set(true)
+			Pronghorn.ModuleStatus[moduleTable.Object]:Set(2)
 		end
 	end
 
