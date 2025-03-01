@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B96                     ║
+║                    Pronghorn Framework  Rev. B97                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -84,6 +84,7 @@ local startWaits = math.huge
 -- Module Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Pronghorn.Importing = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
 Pronghorn.Imported = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
 Pronghorn.DeferredComplete = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
 Pronghorn.ModuleStatus = {} :: {[ModuleScript]: New.TrackedVariable<number>}
@@ -126,9 +127,11 @@ end
 --- @todo
 --- @yields
 function Pronghorn:Import(paths: {Instance}): ()
-	if Pronghorn.Imported:Get() then
+	if Pronghorn.Importing:Get() then
 		error("Pronghorn:Import() cannot be called more than once", 0)
 	end
+
+	Pronghorn.Importing:Set(true)
 
 	local allModules: {Module} = {}
 
