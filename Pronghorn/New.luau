@@ -509,15 +509,18 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 	local numInstances = assert(tonumber(uid:split("_")[2]))
 	local instances: {Instance} = {}
 	local failedInstances: {true} = {}
+	local finished = false
 	local finishedEvent: Event<...Instance?> = New.QueuedEvent("InstanceStream Finished Event")
 	local streamEvent: Event<Instance?> = New.QueuedEvent("InstanceStream Stream Event", math.huge)
 
 	local function checkFinished(): boolean
+		if finished then return true end
 		for index = 1, numInstances do
 			if not instances[index] and not failedInstances[index] then
 				return false
 			end
 		end
+		finished = true
 		finishedEvent:Fire(table.unpack(instances))
 		finishedEvent:DisconnectAll()
 		streamEvent:DisconnectAll()
@@ -528,7 +531,7 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 
 	container.Destroying:Once(function(): ()
 		for _, child in container:GetChildren() :: {ObjectValue} do
-			if not child.Value then
+			if not child.Value and not child:GetAttribute("Canceled") then
 				child:SetAttribute("Canceled", true)
 			end
 		end
@@ -542,7 +545,12 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 
 	for _, child in container:GetChildren() do
 		assert(child:IsA("ObjectValue"))
-		if child.Value then
+		if child:GetAttribute("Canceled") then
+			Warn(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
+			failedInstances[tonumber(child.Name) :: number] = true
+			streamEvent:Fire(nil)
+			checkFinished()
+		elseif child.Value then
 			Print(`InstanceStream "{uid}" received "{child.Name}": {child.Value:GetFullName()}`)
 			instances[tonumber(child.Name) :: number] = child.Value
 			streamEvent:Fire(child.Value)
