@@ -21,6 +21,7 @@ local RunService = game:GetService("RunService")
 
 -- Core
 local Print = require(script.Parent.Debug).Print
+local Warn = require(script.Parent.Debug).Warn
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -526,6 +527,11 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 	end
 
 	container.Destroying:Once(function(): ()
+		for _, child in container:GetChildren() :: {ObjectValue} do
+			if not child.Value then
+				child:SetAttribute("Canceled", true)
+			end
+		end
 		finishedEvent:DisconnectAll()
 		streamEvent:DisconnectAll()
 	end)
@@ -542,7 +548,7 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 			streamEvent:Fire(child.Value)
 		else
 			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
-				Print(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
+				Warn(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
 				failedInstances[tonumber(child.Name) :: number] = true
 				streamEvent:Fire(nil)
 				checkFinished()
@@ -561,7 +567,7 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 		container.ChildAdded:Connect(function(child: Instance): ()
 			assert(child:IsA("ObjectValue"))
 			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
-				Print(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
+				Warn(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
 				failedInstances[tonumber(child.Name) :: number] = true
 				streamEvent:Fire(nil)
 				checkFinished()
