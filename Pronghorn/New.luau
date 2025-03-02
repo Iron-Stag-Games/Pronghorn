@@ -275,7 +275,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		Fire = function(self: Event<...any>, ...: any): ()
 			if not next(callbacks) and not next(waiting) then
 				if queueCount >= queueSize then
-					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for '{nameHint}'` else ""}; did you forget to connect to it?`, 0)
+					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for "{nameHint}"` else ""}; did you forget to connect to it?`, 0)
 				end
 				queueCount += 1
 				table.insert(queuedEventInvocations, {...})
@@ -471,10 +471,12 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 				instance = instance:Clone()
 				clonedInstances[player][index] = instance
 			end
-			local objectValue: ObjectValue = New.Instance("ObjectValue", container, tostring(index), {
+			local objectValue: ObjectValue = New.Instance("ObjectValue", tostring(index), {
 				Value = instance;
 				Children = if exclusive then {instance} else nil;
 			})
+			objectValue:SetAttribute("FullName", instance:GetFullName())
+			objectValue.Parent = container
 
 			table.insert(ancestryListeners, instance.AncestryChanged:Connect(function(): ()
 				if not instance.Parent then
@@ -502,7 +504,7 @@ end
 function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, Instance)
 	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
 
-	local container = assert(localPlayer.PlayerGui:FindFirstChild("__instanceStream_" .. uid), `Cannot find InstanceStream with UID '{uid}'`) :: RemoteEvent
+	local container = assert(localPlayer.PlayerGui:FindFirstChild("__instanceStream_" .. uid), `Cannot find InstanceStream with UID "{uid}"`) :: RemoteEvent
 	local numInstances = assert(tonumber(uid:split("_")[2]))
 	local instances: {Instance} = {}
 	local failedInstances: {true} = {}
@@ -519,7 +521,7 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 		finishedEvent:DisconnectAll()
 		streamEvent:DisconnectAll()
 		container:FireServer()
-		Print(`InstanceStream '{uid}' finished`)
+		Print(`InstanceStream "{uid}" finished`)
 		return true
 	end
 
@@ -530,24 +532,24 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 
 	container.Parent = localPlayer
 
-	Print(`InstanceStream '{uid}' starting`)
+	Print(`InstanceStream "{uid}" starting`)
 
 	for _, child in container:GetChildren() do
 		assert(child:IsA("ObjectValue"))
 		if child.Value then
-			Print(`InstanceStream '{uid}' received '{child.Name}': {child.Value:GetFullName()}`)
+			Print(`InstanceStream "{uid}" received "{child.Name}": {child.Value:GetFullName()}`)
 			instances[tonumber(child.Name) :: number] = child.Value
 			streamEvent:Fire(child.Value)
 		else
 			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
-				Print(`InstanceStream '{uid}' canceled '{child.Name}'`)
+				Print(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
 				failedInstances[tonumber(child.Name) :: number] = true
 				streamEvent:Fire(nil)
 				checkFinished()
 			end)
 			child.Changed:Once(function(): ()
 				assert(child.Value)
-				Print(`InstanceStream '{uid}' received '{child.Name}': {child.Value:GetFullName()}`)
+				Print(`InstanceStream "{uid}" received "{child.Name}": {child.Value:GetFullName()}`)
 				instances[tonumber(child.Name) :: number] = child.Value
 				streamEvent:Fire(child.Value)
 				checkFinished()
@@ -559,14 +561,14 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 		container.ChildAdded:Connect(function(child: Instance): ()
 			assert(child:IsA("ObjectValue"))
 			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
-				Print(`InstanceStream '{uid}' canceled '{child.Name}'`)
+				Print(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
 				failedInstances[tonumber(child.Name) :: number] = true
 				streamEvent:Fire(nil)
 				checkFinished()
 			end)
 			child.Changed:Once(function(): ()
 				assert(child.Value)
-				Print(`InstanceStream '{uid}' received '{child.Name}': {child.Value:GetFullName()}`)
+				Print(`InstanceStream "{uid}" received "{child.Name}": {child.Value:GetFullName()}`)
 				instances[tonumber(child.Name) :: number] = child.Value
 				streamEvent:Fire(child.Value)
 				checkFinished()
