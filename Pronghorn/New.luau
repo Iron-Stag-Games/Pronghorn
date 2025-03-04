@@ -505,7 +505,7 @@ end
 function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, Instance)
 	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
 
-	local container = assert(localPlayer.PlayerGui:FindFirstChild("__instanceStream_" .. uid), `Cannot find InstanceStream with UID "{uid}"`) :: RemoteEvent
+	local container = assert(localPlayer.PlayerGui:WaitForChild("__instanceStream_" .. uid, 30), `Cannot find InstanceStream with UID "{uid}"`) :: RemoteEvent
 	local numInstances = assert(tonumber(uid:split("_")[2]))
 	local instances: {Instance} = {}
 	local failedInstances: {true} = {}
