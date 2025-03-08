@@ -174,6 +174,9 @@ function Pronghorn:Import(paths: {Instance}): ()
 			Pronghorn.ModuleStatus[moduleTable.Object]:Set(2)
 		end
 	end
+	if startWaits == 0 then
+		Pronghorn.DeferredComplete:Set(true)
+	end
 
 	-- PlayerAdded
 	local function playerAdded(player: Player)
