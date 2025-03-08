@@ -17,7 +17,7 @@ local Debug = {}
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local enabledChannels: {[string]: boolean} = {}
+local enabledChannels: {[string]: boolean}? = nil
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -27,6 +27,8 @@ local enabledChannels: {[string]: boolean} = {}
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Print(...: any): ()
+	if not enabledChannels then return end
+
 	local split = (debug.info(2, "s") :: string):split(".")
 	local channel = split[#split]
 
@@ -41,6 +43,8 @@ end
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Warn(...: any): ()
+	if not enabledChannels then return end
+
 	local split = (debug.info(2, "s") :: string):split(".")
 	local channel = split[#split]
 
@@ -55,6 +59,8 @@ end
 --- @param ... -- The content to print.
 --- @error '{channel}' is not a valid debug channel -- Internal error.
 function Debug.Trace(...: any): ()
+	if not enabledChannels then return end
+
 	local split = (debug.info(2, "s") :: string):split(".")
 	local channel = split[#split]
 
