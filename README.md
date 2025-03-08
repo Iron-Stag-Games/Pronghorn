@@ -202,10 +202,8 @@ A collection of useful modules compatible with the Pronghorn Framework.
 
 # Games made with Pronghorn
 
+- **[Claw Machine Simulator](https://www.roblox.com/games/6891812658)** - RB Battles Games
 - **[ExoTech](https://www.roblox.com/games/7634484468)** - Iron Stag Games
-- **[Traitor Town](https://www.roblox.com/games/255236425)** - Traitor Town
-- **[RB Battles](https://www.roblox.com/games/5036207802)** - RB Battles Games
 - **[Mansion Tycoon](https://www.roblox.com/games/12912731475)** - Capybara's Productions
-- **NDA title** - RB Battles PVP
-- **NDA title #1** - Fund For Games
-- **NDA title #2** - Fund For Games
+- **[RB Battles](https://www.roblox.com/games/5036207802)** - RB Battles Games
+- **[Traitor Town](https://www.roblox.com/games/255236425)** - Traitor Town
