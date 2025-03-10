@@ -72,7 +72,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 	local debugPrintText = `{moduleName}:{remote.Name}`
 	local actions: any = {}
 	local metaTable: any = {
-		__call = function(_, context: any, ...: any): ...any
+		__call = function(self: ClientRemote, context: any, ...: any): ...any
 			if context ~= Remotes.Client[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
 			return actions:Fire(...)
 		end;
@@ -85,17 +85,17 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 
 	if remote:IsA("RemoteFunction") then
 
-		actions.Connect = function(_, func: (...any) -> (...any)): ()
+		actions.Connect = function(self: ClientRemote, func: (...any) -> (...any)): ()
 			remote.OnClientInvoke = func
 		end
 
-		actions.ConnectDeferred = function(_, func: (...any) -> (...any)): ()
+		actions.ConnectDeferred = function(self: ClientRemote, func: (...any) -> (...any)): ()
 			task.defer(function()
 				remote.OnClientInvoke = func
 			end)
 		end
 
-		actions.Fire = function(_, ...: any): ...any
+		actions.Fire = function(self: ClientRemote, ...: any): ...any
 			Print(getEnvironment(), debugPrintText, {...})
 			return remote:InvokeServer(...)
 		end
@@ -104,11 +104,11 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 
 		local lastServerTime: number;
 
-		actions.Connect = function(_, func: (...any) -> ()): RBXScriptConnection
+		actions.Connect = function(self: ClientRemote, func: (...any) -> ()): RBXScriptConnection
 			return (remote :: RemoteEvent).OnClientEvent:Connect(func)
 		end
 
-		actions.ConnectDeferred = function(_, func: (...any) -> ()): {Connected: boolean, Disconnect: (self: any) -> ()}
+		actions.ConnectDeferred = function(self: ClientRemote, func: (...any) -> ()): {Connected: boolean, Disconnect: (self: any) -> ()}
 			local connection: RBXScriptConnection?;
 			local proxy; proxy = {
 				Connected = false;
@@ -124,7 +124,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 			return proxy
 		end
 
-		actions.Fire = function(_, ...: any): ()
+		actions.Fire = function(self: ClientRemote, ...: any): ()
 			if remote:IsA("UnreliableRemoteEvent") then
 				local nextServerTime = script:GetAttribute("ServerTime") :: number
 				if nextServerTime == lastServerTime then return end
@@ -184,7 +184,7 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	end
 	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
 
-	actions.Destroy = function(): ()
+	actions.Destroy = function(self: ServerRemote): ()
 		if not Remotes.Server[moduleName][remote.Name] then return end
 		remote:Destroy()
 		Remotes.Server[moduleName][remote.Name] = nil
@@ -192,13 +192,13 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	end
 
 	if remoteType == "Returns" then
-		actions.Fire = function(_, player: Player, ...: any)
+		actions.Fire = function(self: ServerRemote, player: Player, ...: any)
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", ...)
 			return remote:InvokeClient(player, ...)
 		end
 	else
-		actions.Fire = function(_, players: Player | {Player}, ...: any)
+		actions.Fire = function(self: ServerRemote, players: Player | {Player}, ...: any)
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", players, ...)
 			if type(players) == "table" then
@@ -210,13 +210,13 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 			end
 		end
 
-		actions.FireAll = function(_, ...: any)
+		actions.FireAll = function(self: ServerRemote, ...: any)
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "FireAll", ...)
 			remote:FireAllClients(...)
 		end
 
-		actions.FireAllExcept = function(_, ignorePlayer: Player, ...: any)
+		actions.FireAllExcept = function(self: ServerRemote, ignorePlayer: Player, ...: any)
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
@@ -272,7 +272,7 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 		end
 	end
 
-	actions.Destroy = function(): ()
+	actions.Destroy = function(self: ServerRemote): ()
 		if not Remotes.Server[moduleName][remote.Name] then return end
 		remote:Destroy()
 		Remotes.Server[moduleName][remote.Name] = nil
@@ -284,7 +284,7 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 			remote.OnServerInvoke = getTypeCheckedFunction(func)
 		end
 
-		actions.SetListener = function(_, newFunction: (Player, ...any) -> (...any))
+		actions.SetListener = function(self: ServerRemote, newFunction: (Player, ...any) -> (...any))
 			remote.OnServerInvoke = getTypeCheckedFunction(newFunction)
 		end
 	else
@@ -292,7 +292,7 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 			remote.OnServerEvent:Connect(getTypeCheckedFunction(func))
 		end
 
-		actions.AddListener = function(_, newFunction: (Player, ...any) -> ()): RBXScriptConnection
+		actions.AddListener = function(self: ServerRemote, newFunction: (Player, ...any) -> ()): RBXScriptConnection
 			return remote.OnServerEvent:Connect(getTypeCheckedFunction(newFunction))
 		end
 	end
@@ -309,7 +309,7 @@ function Remotes:Init()
 
 		remotesFolder = New.Instance("Model", ReplicatedStorage, "__remotes", {ModelStreamingMode = Enum.ModelStreamingMode.Persistent})
 
-		RunService.Heartbeat:Connect(function(_dt: number): ()
+		RunService.Heartbeat:Connect(function(dt: number): ()
 			script:SetAttribute("ServerTime", os.clock())
 		end)
 	else
