@@ -24,7 +24,6 @@ local RunService = game:GetService("RunService")
 
 -- Core
 local Print = require(script.Parent.Debug).Print
-local New = require(script.Parent.New)
 
 -- Child Modules
 local TypeChecker = require(script.TypeChecker)
@@ -175,8 +174,19 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	if Remotes.Server[moduleName] and Remotes.Server[moduleName][name] then error(`Remote "{name}" already created in "{moduleName}"`, 0) end
 
 	local environment = "[" .. moduleName .. "]"
-	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
-	local remote = New.Instance(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent", serverFolder, name)
+
+	local serverFolder = remotesFolder:FindFirstChild(moduleName)
+	if not serverFolder then
+		local newServerFolder = Instance.new("Folder")
+		newServerFolder.Name = moduleName
+		newServerFolder.Parent = remotesFolder
+		serverFolder = newServerFolder
+	end
+
+	local remote: any = Instance.new(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent")
+	remote.Name = name
+	remote.Parent = serverFolder
+
 	local actions: any = {}
 
 	if not Remotes.Server[moduleName] then
@@ -256,8 +266,18 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 	if type(Remotes.Server[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name "{moduleName}" would overwrite a function`, 0) end
 	if Remotes.Server[moduleName] and Remotes.Server[moduleName][name] then error(`Remote "{name}" already created in "{moduleName}"`, 0) end
 
-	local serverFolder = remotesFolder:FindFirstChild(moduleName) or New.Instance("Folder", remotesFolder, moduleName)
-	local remote = New.Instance(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent", serverFolder, name)
+	local serverFolder = remotesFolder:FindFirstChild(moduleName)
+	if not serverFolder then
+		local newServerFolder = Instance.new("Folder")
+		newServerFolder.Name = moduleName
+		newServerFolder.Parent = remotesFolder
+		serverFolder = newServerFolder
+	end
+
+	local remote: any = Instance.new(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent")
+	remote.Name = name
+	remote.Parent = serverFolder
+
 	local actions: any = {}
 
 	if not Remotes.Server[moduleName] then
@@ -307,7 +327,9 @@ function Remotes:Init()
 	if IS_SERVER then
 		script:SetAttribute("NumRemotes", script:GetAttribute("NumRemotes") :: number? or 0)
 
-		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
+		remotesFolder = Instance.new("Folder")
+		remotesFolder.Name = "__remotes"
+		remotesFolder.Parent = ReplicatedStorage
 
 		RunService.Heartbeat:Connect(function(dt: number): ()
 			script:SetAttribute("ServerTime", os.clock())

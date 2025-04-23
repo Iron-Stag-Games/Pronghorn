@@ -37,16 +37,7 @@ Trace(...)
 
 ## New
 ```luau
-New.Instance(className: string, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): any
-New.Clone(instance: T, parent: Instance?, name: string?, properties: {[string]: any, children: {Instance}?, attributes: {[string]: any}?, tags: {string}?}?): T
-	-- New.Instance / New.Clone
-		-- Parent, Name, and Properties optional parameters can be provided in any combination and order.
-			-- Ex. New.Instance("Part", {Properties})
-		-- Properties parameter special cases
-			-- Can contain a "Children" key with type {Instance}.
-			-- Can contain an "Attributes" key with type {[string]: any}.
-			-- Can contain a "Tags" key with type {string}.
-			-- RBXScriptSignal properties (e.g. "Changed") can be assigned a function.
+New.Children(parent: Instance, children: {Instance}?): ()
 New.Event(): Event<T...> = {
 	Fire: (self: Event<T...>, T...) -> ();
 	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);

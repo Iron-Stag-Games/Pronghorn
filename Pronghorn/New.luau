@@ -66,112 +66,17 @@ local localPlayer = Players.LocalPlayer
 -- Module Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---- Applies properties, attributes, tags, callbacks, and children to an `Instance`.
---- @param instance -- The `Instance` to apply to.
---- @param properties -- A table of properties to apply to the `Instance`.
-function New.Properties<T>(instance: T, properties: Properties): ()
-	assert(typeof(instance) == "Instance", "Attempt to apply properties to a non-Instance")
-
-	for key, value in properties do
-		if key == "Children" then
-			for _, child in value do
-				child.Parent = instance
+--- Parents all children to an instance.
+--- @param parent -- The new parent `Instance` of the children.
+--- @param children? -- The list of `Instances` to be parented.
+function New.Children(parent: Instance, children: {Instance}?): ()
+	if children then
+		for _, child in children do
+			if typeof(child) == "Instance" then
+				child.Parent = parent
 			end
-		elseif key == "Attributes" then
-			for attributeName, attribute in value do
-				instance:SetAttribute(attributeName, attribute)
-			end
-		elseif key == "Tags" then
-			for _, tag in value do
-				instance:AddTag(tag)
-			end
-		elseif typeof((instance :: any)[key]) == "RBXScriptSignal" then
-			(instance :: any)[key]:Connect(value)
-		else
-			(instance :: any)[key] = value
 		end
 	end
-end
-
---- Creates and returns a new Instance.
---- @param className -- The `ClassName` for the `Instance` being created.
---- @param parent? -- The `Parent` for the `Instance` after creation.
---- @param name? -- The `Name` for the `Instance`.
---- @param properties? -- A table of properties to apply to the `Instance`.
---- @return any -- The new `Instance`.
---- @error Parent parameter used more than once -- Incorrect usage.
---- @error Name parameter used more than once -- Incorrect usage.
---- @error Properties parameter used more than once -- Incorrect usage.
-function New.Instance(className: string, ...: (Instance | string | Properties)?): any
-	local parent: Instance?, name: string?, properties: Properties?;
-	for _, parameter in {...} do
-		if typeof(parameter) == "Instance" then
-			if parent then error("Parent parameter used more than once") end
-			parent = parameter
-		elseif type(parameter) == "string" or type(parameter) == "number" then
-			if name then error("Name parameter used more than once") end
-			name = tostring(parameter)
-		elseif type(parameter) == "table" then
-			if properties then error("Properties parameter used more than once") end
-			properties = parameter
-		end
-	end
-
-	local newInstance = Instance.new(className)
-
-	if name then
-		newInstance.Name = name
-	end
-	if properties then
-		New.Properties(newInstance, properties)
-	end
-	if parent then
-		newInstance.Parent = parent
-	end
-
-	return newInstance
-end
-
---- Clones and returns an `Instance`.
---- @param instance -- The `Instance` to clone from.
---- @param parent? -- The `Parent` for the cloned `Instance` after creation.
---- @param name? -- The `Name` for the cloned `Instance`.
---- @param properties? -- A table of properties to apply to the cloned `Instance`.
---- @return T -- The cloned `Instance`.
---- @error Attempt to clone non-Instance -- Incorrect usage.
---- @error Parent parameter used more than once -- Incorrect usage.
---- @error Name parameter used more than once -- Incorrect usage.
---- @error Properties parameter used more than once -- Incorrect usage.
-function New.Clone<T>(instance: T, ...: (Instance | string | Properties)?): T
-	assert(typeof(instance) == "Instance", "Attempt to clone non-Instance")
-
-	local parent: Instance?, name: string?, properties: Properties?;
-	for _, parameter in {...} do
-		if typeof(parameter) == "Instance" then
-			if parent then error("Parent parameter used more than once") end
-			parent = parameter
-		elseif type(parameter) == "string" or type(parameter) == "number" then
-			if name then error("Name parameter used more than once") end
-			name = tostring(parameter)
-		elseif type(parameter) == "table" then
-			if properties then error("Properties parameter used more than once") end
-			properties = parameter
-		end
-	end
-
-	local newInstance = instance:Clone()
-
-	if name then
-		newInstance.Name = name
-	end
-	if properties then
-		New.Properties(newInstance, properties)
-	end
-	if parent then
-		newInstance.Parent = parent
-	end
-
-	return newInstance
 end
 
 --- Creates and returns an `Event`.
@@ -448,16 +353,16 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 	for _, player in (if type(players) == "table" then players else {players}) :: {Player} do
 		if not player.Parent then continue end
 
-		local container: RemoteEvent; container = New.Instance("RemoteEvent", `__instanceStream_{uid}`, {
-			OnServerEvent = function(): ()
-				if not exclusive then
-					container:Destroy()
-					for _, connection in ancestryListeners do
-						connection:Disconnect()
-					end
+		local container = Instance.new("RemoteEvent")
+		container.Name = `__instanceStream_{uid}`
+		container.OnServerEvent:Connect(function(): ()
+			if not exclusive then
+				container:Destroy()
+				for _, connection in ancestryListeners do
+					connection:Disconnect()
 				end
-			end;
-		})
+			end
+		end)
 
 		if containers then
 			containers[player] = container
@@ -472,11 +377,11 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 				instance = instance:Clone()
 				clonedInstances[player][index] = instance
 			end
-			local objectValue: ObjectValue = New.Instance("ObjectValue", tostring(index), {
-				Value = instance;
-				Children = if exclusive then {instance} else nil;
-			})
+			local objectValue = Instance.new("ObjectValue")
+			objectValue.Name = tostring(index)
+			objectValue.Value = instance
 			objectValue:SetAttribute("FullName", instance:GetFullName())
+			New.Children(objectValue, if exclusive then {instance} else nil)
 			objectValue.Parent = container
 
 			table.insert(ancestryListeners, instance.AncestryChanged:Connect(function(): ()
