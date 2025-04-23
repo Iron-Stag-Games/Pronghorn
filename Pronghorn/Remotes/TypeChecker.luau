@@ -81,7 +81,7 @@ return function(remote: any, callingPlayer: Player?, requiredParameterTypes: {st
 		end
 
 		if not pass then
-			abort(`{remote.Parent.Name}.{remote.Name}{if callingPlayer then ` ({callingPlayer.Name})` else ""}: Parameter {index} expected type '{requiredParameterType:gsub("|", " | ")}', got '{parameterType}'`)
+			abort(`{remote.Parent.Name}.{remote.Name}{if callingPlayer then ` ({callingPlayer.Name})` else ""}: Parameter {index} expected type "{requiredParameterType:gsub("|", " | ")}", got "{parameterType}"`)
 		end
 
 		if parameterType == "number" and parameter * 0 ~= 0 then
