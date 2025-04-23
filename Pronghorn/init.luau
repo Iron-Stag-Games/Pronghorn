@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B104                    ║
+║                    Pronghorn Framework  Rev. B105                    ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -39,8 +39,6 @@
 ║                                                                      ║
 ║      Pronghorn is a Roblox framework with a direct approach to       ║
 ║         Module scripting that facilitates rapid development.         ║
-║                                                                      ║
-║        No Controllers or Services, just Modules and Remotes.         ║
 ║                                                                      ║
 ╠═══════════════════════════════ Usage ════════════════════════════════╣
 ║                                                                      ║

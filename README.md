@@ -2,8 +2,6 @@
 
 Pronghorn is a Roblox framework with a direct approach to Module scripting that facilitates rapid development.
 
-No Controllers or Services, just Modules and Remotes.
-
 ## Usage
 - Pronghorn:Import() is used in a Script to import your Modules.
 - Modules as descendants of other Modules are not imported.
