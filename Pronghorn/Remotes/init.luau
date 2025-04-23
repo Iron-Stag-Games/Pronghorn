@@ -55,7 +55,7 @@ local IS_SERVER = RunService:IsServer()
 local IS_CLIENT = RunService:IsClient()
 
 -- Objects
-local remotesFolder: Model;
+local remotesFolder: Folder;
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
@@ -307,13 +307,13 @@ function Remotes:Init()
 	if IS_SERVER then
 		script:SetAttribute("NumRemotes", script:GetAttribute("NumRemotes") :: number? or 0)
 
-		remotesFolder = New.Instance("Model", ReplicatedStorage, "__remotes", {ModelStreamingMode = Enum.ModelStreamingMode.Persistent})
+		remotesFolder = New.Instance("Folder", ReplicatedStorage, "__remotes")
 
 		RunService.Heartbeat:Connect(function(dt: number): ()
 			script:SetAttribute("ServerTime", os.clock())
 		end)
 	else
-		remotesFolder = ReplicatedStorage:WaitForChild("__remotes") :: Model
+		remotesFolder = ReplicatedStorage:WaitForChild("__remotes") :: Folder
 
 		for _, remote in remotesFolder:GetDescendants() do
 			if not (remote:IsA("RemoteFunction") or remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent")) then continue end
