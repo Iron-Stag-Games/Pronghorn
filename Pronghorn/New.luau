@@ -28,7 +28,6 @@ local Warn = require(script.Parent.Debug).Warn
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Types
-type Properties = {[string]: any, Children: {Instance}?, Attributes: {[string]: any}?, Tags: {string}?}
 export type Callback<T...> = (T...) -> ()
 export type Connection = {Disconnect: (self: Connection) -> ()}
 export type Event<T...> = {
