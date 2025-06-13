@@ -99,14 +99,14 @@ function New.Event(): Event<...any>
 
 		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
-			return {Disconnect = function()
+			return {Disconnect = function(): ()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
 		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
-			return {Disconnect = function()
+			return {Disconnect = function(): ()
 				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
@@ -115,7 +115,7 @@ function New.Event(): Event<...any>
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
-				task.delay(timeout, function()
+				task.delay(timeout, function(): ()
 					local index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)
@@ -200,7 +200,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
 			resumeQueuedEventInvocations(self)
-			return {Disconnect = function()
+			return {Disconnect = function(): ()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
@@ -208,7 +208,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
 			resumeQueuedEventInvocations(self)
-			return {Disconnect = function()
+			return {Disconnect = function(): ()
 				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
@@ -221,7 +221,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
-				task.delay(timeout, function()
+				task.delay(timeout, function(): ()
 					local index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)
@@ -284,14 +284,14 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 
 		Connect = function(self: TrackedVariable<any>, callback: Callback<any, any>): Connection
 			table.insert(callbacks, callback)
-			return {Disconnect = function()
+			return {Disconnect = function(): ()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
 		Once = function(self: TrackedVariable<any>, callback: Callback<any, any>): Connection
 			table.insert(waiting, callback)
-			return {Disconnect = function()
+			return {Disconnect = function(): ()
 				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
@@ -300,7 +300,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
-				task.delay(timeout, function()
+				task.delay(timeout, function(): ()
 					local index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)

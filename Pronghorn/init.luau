@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B105                    ║
+║                    Pronghorn Framework  Rev. B106                    ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -206,6 +206,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 				task.spawn(moduleTable.Return.PlayerRemovingDeferred, player)
 			end
 		end
+		task.defer(player.Destroy, player)
 	end)
 
 	Pronghorn.Imported:Set(true)
