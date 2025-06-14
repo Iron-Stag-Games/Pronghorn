@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B106                    ║
+║                    Pronghorn Framework  Rev. B107                    ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -196,6 +196,8 @@ function Pronghorn:Import(paths: {Instance}): ()
 
 	-- PlayerRemoving
 	Players.PlayerRemoving:Connect(function(player: Player)
+		task.wait()
+		pcall(player.Destroy, player)
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoving then
 				task.spawn(moduleTable.Return.PlayerRemoving, player)
@@ -206,7 +208,6 @@ function Pronghorn:Import(paths: {Instance}): ()
 				task.spawn(moduleTable.Return.PlayerRemovingDeferred, player)
 			end
 		end
-		task.defer(player.Destroy, player)
 	end)
 
 	Pronghorn.Imported:Set(true)
