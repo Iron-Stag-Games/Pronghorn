@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B107                    ║
+║                    Pronghorn Framework  Rev. B108                    ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -177,7 +177,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 	end
 
 	-- PlayerAdded
-	local function playerAdded(player: Player)
+	local function playerAdded(player: Player): ()
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
 				task.spawn(moduleTable.Return.PlayerAdded, player)
@@ -194,10 +194,8 @@ function Pronghorn:Import(paths: {Instance}): ()
 		playerAdded(player)
 	end
 
-	-- PlayerRemoving
-	Players.PlayerRemoving:Connect(function(player: Player)
-		task.wait()
-		pcall(player.Destroy, player)
+	-- PlayerRemoving / PlayerRemoved
+	Players.PlayerRemoving:Connect(function(player: Player): ()
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoving then
 				task.spawn(moduleTable.Return.PlayerRemoving, player)
@@ -206,6 +204,18 @@ function Pronghorn:Import(paths: {Instance}): ()
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemovingDeferred then
 				task.spawn(moduleTable.Return.PlayerRemovingDeferred, player)
+			end
+		end
+		if player.Parent then player.AncestryChanged:Wait() end
+		pcall(player.Destroy, player)
+		for _, moduleTable in allModules do
+			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoved then
+				task.spawn(moduleTable.Return.PlayerRemoved, player)
+			end
+		end
+		for _, moduleTable in allModules do
+			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemovedDeferred then
+				task.spawn(moduleTable.Return.PlayerRemovedDeferred, player)
 			end
 		end
 	end)
