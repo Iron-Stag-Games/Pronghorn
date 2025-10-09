@@ -36,7 +36,7 @@ local TypeChecker = require(script.TypeChecker)
 type ServerRemote = {
 	Fire: (self: ServerRemote, players: Player | {Player}, ...any) -> (...any);
 	FireAll: (self: ServerRemote, ...any) -> ();
-	FireAllExcept: (self: ServerRemote, ignorePlayer: Player, ...any) -> ();
+	FireAllExcept: (self: ServerRemote, ignorePlayer: Player?, ...any) -> ();
 	SetListener: (self: ServerRemote, newFunction: (Player, ...any) -> (...any)) -> ();
 	AddListener: (self: ServerRemote, newFunction: (Player, ...any) -> ()) -> RBXScriptConnection;
 	Destroy: (self: ServerRemote) -> ();
@@ -54,7 +54,7 @@ local IS_SERVER = RunService:IsServer()
 local IS_CLIENT = RunService:IsClient()
 
 -- Objects
-local remotesFolder: Folder;
+local remotesFolder: Folder
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
@@ -101,14 +101,14 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 
 	elseif remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent") then
 
-		local lastServerTime: number;
+		local lastServerTime: number
 
 		actions.Connect = function(self: ClientRemote, func: (...any) -> ()): RBXScriptConnection
 			return (remote :: RemoteEvent).OnClientEvent:Connect(func)
 		end
 
 		actions.ConnectDeferred = function(self: ClientRemote, func: (...any) -> ()): {Connected: boolean, Disconnect: (self: any) -> ()}
-			local connection: RBXScriptConnection?;
+			local connection: RBXScriptConnection?
 			local proxy; proxy = {
 				Connected = false;
 				Disconnect = function(self: any): ()
@@ -129,8 +129,8 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 				if nextServerTime == lastServerTime then return end
 				lastServerTime = nextServerTime
 			end
-			Print(getEnvironment(), debugPrintText, {...});
-			(remote :: RemoteEvent):FireServer(...)
+			Print(getEnvironment(), debugPrintText, {...})
+			;(remote :: RemoteEvent):FireServer(...)
 		end
 	end
 end
@@ -202,13 +202,13 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	end
 
 	if remoteType == "Returns" then
-		actions.Fire = function(self: ServerRemote, player: Player, ...: any)
+		actions.Fire = function(self: ServerRemote, player: Player, ...: any): ...any
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", ...)
 			return remote:InvokeClient(player, ...)
 		end
 	else
-		actions.Fire = function(self: ServerRemote, players: Player | {Player}, ...: any)
+		actions.Fire = function(self: ServerRemote, players: Player | {Player}, ...: any): ()
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "Fire", players, ...)
 			if type(players) == "table" then
@@ -220,13 +220,13 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 			end
 		end
 
-		actions.FireAll = function(self: ServerRemote, ...: any)
+		actions.FireAll = function(self: ServerRemote, ...: any): ()
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "FireAll", ...)
 			remote:FireAllClients(...)
 		end
 
-		actions.FireAllExcept = function(self: ServerRemote, ignorePlayer: Player, ...: any)
+		actions.FireAllExcept = function(self: ServerRemote, ignorePlayer: Player?, ...: any): ()
 			TypeChecker(remote, nil, requiredParameterTypes, ...)
 			Print(environment, name, "FireAllExcept", ignorePlayer, ...)
 			for _, player in Players:GetPlayers() do
@@ -285,8 +285,8 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 	end
 	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
 
-	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> (...any))
-		return function(player: Player, ...: any)
+	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> (...any)): (player: Player, ...any) -> ...any
+		return function(player: Player, ...: any): ...any
 			TypeChecker(remote, player, requiredParameterTypes, ...)
 			return newFunction(player, ...)
 		end
@@ -304,7 +304,7 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 			remote.OnServerInvoke = getTypeCheckedFunction(func)
 		end
 
-		actions.SetListener = function(self: ServerRemote, newFunction: (Player, ...any) -> (...any))
+		actions.SetListener = function(self: ServerRemote, newFunction: (Player, ...any) -> (...any)): ()
 			remote.OnServerInvoke = getTypeCheckedFunction(newFunction)
 		end
 	else
