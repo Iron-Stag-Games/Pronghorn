@@ -129,13 +129,13 @@ function Pronghorn:Import(paths: {Instance}): ()
 		error("Pronghorn:Import() cannot be called more than once", 0)
 	end
 
+	Pronghorn.Importing:Set(true)
+
 	local allModules: {Module} = {}
 
 	for _, object in paths do
 		addModules(allModules, object)
 	end
-
-	Pronghorn.Importing:Set(true)
 
 	-- Init
 	for _, moduleTable in allModules do
