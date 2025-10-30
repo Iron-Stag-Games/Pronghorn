@@ -72,6 +72,8 @@ return function(remote: any, callingPlayer: Player?, requiredParameterTypes: {st
 			for _, parameterTypeOption in requiredParameterTypeOptions do
 				if
 					parameterType == parameterTypeOption
+					or parameter == true and parameterTypeOption == "true"
+					or parameter == false and parameterTypeOption == "false"
 					or parameterType == "EnumItem" and "Enum." .. tostring(parameter.EnumType) == parameterTypeOption
 					or parameterType == "Instance" and parameter:IsA(parameterTypeOption)
 				then
