@@ -162,14 +162,13 @@ end
 -- On Server
 
 local tableCounted = Remotes.Server:CreateToClient("TableCounted", {"string"})
--- Second parameter is nil, so this Remote is non-returning.
+-- Third parameter is nil, so this Remote's type is "Reliable" by default.
 
 Remotes.Server:CreateToServer("CountTable", {"table"}, "Returns", function(player: Player, tableToCount: {any}): ()
 	Remotes.Server.ExampleServerModule.TableCounted:FireAll(player.Name) -- Absolute method
 	tableCounted:FireAll(player.Name) -- Shortcut method
 	return #tableToCount
 end)
--- Second parameter is true, so this Remote returns.
 ```
 ```luau
 -- On Client
