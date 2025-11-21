@@ -40,14 +40,14 @@ New.Event(): Event<T...> = {
 	Fire: (self: Event<T...>, T...) -> ();
 	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
 	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
-	Wait: (self: Event<T...>, timeout: number?) -> (T...);
+	Wait: (self: Event<T...>, timeout: number?) -> (boolean, T...);
 	DisconnectAll: (self: Event<T...>) -> ();
 }
 New.QueuedEvent(): Event<T...> = {
 	Fire: (self: Event<T...>, T...) -> ();
 	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
 	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
-	Wait: (self: Event<T...>, timeout: number?) -> (T...);
+	Wait: (self: Event<T...>, timeout: number?) -> (boolean, T...);
 	DisconnectAll: (self: Event<T...>) -> ();
 }
 New.TrackedVariable(variable: any): TrackedVariable<T> = {
@@ -55,7 +55,8 @@ New.TrackedVariable(variable: any): TrackedVariable<T> = {
 	Set: (self: TrackedVariable<T>, value: T) -> ();
 	Connect: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
 	Once: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
-	Wait: (self: TrackedVariable<T>) -> (T, T) & (self: TrackedVariable<T>, timeout: number) -> (T?, T?);
+	Wait: (self: TrackedVariable<T>, timeout: number?) -> (boolean, T, T);
+	WaitFor: (self: TrackedVariable<T>, value: T, timeout: number?) -> (boolean, T, T);
 	DisconnectAll: (self: TrackedVariable<T>) -> ();
 }
 New.ServerInstanceStream(players: Player | {Player}, instances: {Instance}, exclusive: boolean?): (string, {[Player]: Instance}?, {[Player]: {any}}?)
