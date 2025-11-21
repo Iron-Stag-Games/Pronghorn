@@ -34,7 +34,7 @@ export type Event<T...> = {
 	Fire: (self: Event<T...>, T...) -> ();
 	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
 	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
-	Wait: (self: Event<T...>) -> (T...) & (self: Event<T...>, timeout: number) -> (T...); -- Nullable variadics when?
+	Wait: (self: Event<T...>, timeout: number?) -> (boolean, T...);
 	DisconnectAll: (self: Event<T...>) -> ();
 }
 export type TrackedVariable<T> = {
@@ -42,8 +42,8 @@ export type TrackedVariable<T> = {
 	Set: (self: TrackedVariable<T>, value: T) -> ();
 	Connect: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
 	Once: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
-	Wait: (self: TrackedVariable<T>) -> (T, T) & (self: TrackedVariable<T>, timeout: number) -> (T?, T?);
-	WaitFor: (self: TrackedVariable<T>, value: T) -> (T, T) & (self: TrackedVariable<T>, value: T, timeout: number) -> (T?, T?);
+	Wait: (self: TrackedVariable<T>, timeout: number?) -> (boolean, T, T);
+	WaitFor: (self: TrackedVariable<T>, value: T, timeout: number?) -> (boolean, T, T);
 	DisconnectAll: (self: TrackedVariable<T>) -> ();
 }
 export type InstanceStream<T...> = {
@@ -79,7 +79,7 @@ end
 
 --- Creates and returns an `Event`.
 --- @return Event<...any> -- The new `Event`.
-function New.Event(): Event<any>
+function New.Event(): Event<...any>
 	local callbacks: {Callback<...any>} = {}
 	local waiting: {Callback<...any> | thread} = {}
 
@@ -91,8 +91,12 @@ function New.Event(): Event<any>
 				task.spawn(callback, ...)
 			end
 			for _, callback in currentlyWaiting do
-				if typeof(callback) == "thread" and coroutine.status(callback) ~= "suspended" then continue end
-				task.spawn(callback, ...)
+				if typeof(callback) == "thread" then
+					if coroutine.status(callback) ~= "suspended" then continue end
+					task.spawn(callback, true, ...)
+				else
+					task.spawn(callback, ...)
+				end
 			end
 		end;
 
@@ -110,7 +114,7 @@ function New.Event(): Event<any>
 			end}
 		end;
 
-		Wait = function(self: Event<any>, timeout: number?): ...any
+		Wait = function(self: Event<any>, timeout: number?): (boolean, ...any)
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
@@ -120,7 +124,7 @@ function New.Event(): Event<any>
 						table.remove(waiting, index)
 					end
 					if coroutine.status(co) == "suspended" then
-						task.spawn(co)
+						task.spawn(co, false)
 					end
 				end)
 			end
@@ -147,7 +151,7 @@ end
 --- @param nameHint? -- The name of the `QueuedEvent` for debugging.
 --- @param queueSize? -- The queue size of the `QueuedEvent`.
 --- @return Event<...any> -- The new `QueuedEvent`.
-function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<any>
+function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 	queueSize = queueSize or QUEUED_EVENT_QUEUE_SIZE
 
 	local callbacks: {Callback<...any>} = {}
@@ -185,8 +189,12 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<any>
 					task.spawn(callback, ...)
 				end
 				for _, callback in currentlyWaiting do
-					if typeof(callback) == "thread" and coroutine.status(callback) ~= "suspended" then continue end
-					task.spawn(callback, ...)
+					if typeof(callback) == "thread" then
+						if coroutine.status(callback) ~= "suspended" then continue end
+						task.spawn(callback, true, ...)
+					else
+						task.spawn(callback, ...)
+					end
 				end
 			end
 		end;
@@ -207,7 +215,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<any>
 			end}
 		end;
 
-		Wait = function(self: Event<any>, timeout: number?): ...any
+		Wait = function(self: Event<any>, timeout: number?): (boolean, ...any)
 			local queuedInvocation = resumeQueuedEventInvocations(self)
 			if queuedInvocation then
 				return table.unpack(queuedInvocation)
@@ -221,7 +229,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<any>
 						table.remove(waiting, index)
 					end
 					if coroutine.status(co) == "suspended" then
-						task.spawn(co)
+						task.spawn(co, false)
 					end
 				end)
 			end
@@ -266,8 +274,12 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 					task.spawn(callback, oldValue, newValue)
 				end
 				for _, callback in currentlyWaiting do
-					if typeof(callback) == "thread" and coroutine.status(callback) ~= "suspended" then continue end
-					task.spawn(callback, oldValue, newValue)
+					if typeof(callback) == "thread" then
+						if coroutine.status(callback) ~= "suspended" then continue end
+						task.spawn(callback, true, oldValue, newValue)
+					else
+						task.spawn(callback, oldValue, newValue)
+					end
 				end
 			end
 		end;
@@ -286,7 +298,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			end}
 		end;
 
-		Wait = function(self: TrackedVariable<any>, timeout: number?): (any?, any?)
+		Wait = function(self: TrackedVariable<any>, timeout: number?): (boolean, any?, any?)
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
@@ -296,14 +308,14 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 						table.remove(waiting, index)
 					end
 					if coroutine.status(co) == "suspended" then
-						task.spawn(co)
+						task.spawn(co, false)
 					end
 				end)
 			end
 			return coroutine.yield()
 		end;
 
-		WaitFor = function(self: TrackedVariable<any>, value: any, timeout: number?): (any?, any?)
+		WaitFor = function(self: TrackedVariable<any>, value: any, timeout: number?): (boolean, any?, any?)
 			error("Unimplemented")
 		end;
 
