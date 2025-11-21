@@ -34,8 +34,7 @@ export type Event<T...> = {
 	Fire: (self: Event<T...>, T...) -> ();
 	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
 	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
-	Wait: (self: Event<T...>, timeout: number?) -> (T...); -- Note: variadics can't be made nullable yet
-	WaitFor: (self: Event<T...>, timeout: number?) -> (T...); -- Note: variadics can't be made nullable yet
+	Wait: (self: Event<T...>) -> (T...) & (self: Event<T...>, timeout: number) -> (T...); -- Nullable variadics when?
 	DisconnectAll: (self: Event<T...>) -> ();
 }
 export type TrackedVariable<T> = {
@@ -44,7 +43,7 @@ export type TrackedVariable<T> = {
 	Connect: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
 	Once: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
 	Wait: (self: TrackedVariable<T>) -> (T, T) & (self: TrackedVariable<T>, timeout: number) -> (T?, T?);
-	WaitFor: (self: TrackedVariable<T>) -> (T, T) & (self: TrackedVariable<T>, timeout: number) -> (T?, T?);
+	WaitFor: (self: TrackedVariable<T>, value: T) -> (T, T) & (self: TrackedVariable<T>, value: T, timeout: number) -> (T?, T?);
 	DisconnectAll: (self: TrackedVariable<T>) -> ();
 }
 export type InstanceStream<T...> = {
@@ -80,12 +79,12 @@ end
 
 --- Creates and returns an `Event`.
 --- @return Event<...any> -- The new `Event`.
-function New.Event(): Event<...any>
+function New.Event(): Event<any>
 	local callbacks: {Callback<...any>} = {}
 	local waiting: {Callback<...any> | thread} = {}
 
-	local actions: Event<...any> = {
-		Fire = function(self: Event<...any>, ...: any): ()
+	local actions: Event<any> = {
+		Fire = function(self: Event<any>, ...: any): ()
 			local currentlyWaiting = table.clone(waiting)
 			table.clear(waiting)
 			for _, callback in table.clone(callbacks) do
@@ -97,21 +96,21 @@ function New.Event(): Event<...any>
 			end
 		end;
 
-		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
+		Connect = function(self: Event<any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function(): ()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
-		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
+		Once = function(self: Event<any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function(): ()
 				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
 
-		Wait = function(self: Event<...any>, timeout: number?): ...any
+		Wait = function(self: Event<any>, timeout: number?): ...any
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
@@ -128,11 +127,7 @@ function New.Event(): Event<...any>
 			return coroutine.yield()
 		end;
 
-		WaitFor = function(self: Event<any>, timeout: number?): ()
-			error("Unimplemented")
-		end;
-
-		DisconnectAll = function(self: Event<...any>): ()
+		DisconnectAll = function(self: Event<any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
 				if type(callback) == "thread" then
@@ -152,16 +147,15 @@ end
 --- @param nameHint? -- The name of the `QueuedEvent` for debugging.
 --- @param queueSize? -- The queue size of the `QueuedEvent`.
 --- @return Event<...any> -- The new `QueuedEvent`.
-function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
+function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<any>
 	queueSize = queueSize or QUEUED_EVENT_QUEUE_SIZE
-	assert(queueSize)
 
 	local callbacks: {Callback<...any>} = {}
 	local waiting: {Callback<...any> | thread} = {}
 	local queueCount = 0
 	local queuedEventInvocations: {{any}} = {}
 
-	local function resumeQueuedEventInvocations(self: Event<...any>): {any}?
+	local function resumeQueuedEventInvocations(self: Event<any>): {any}?
 		local _, firstInvocation = next(queuedEventInvocations)
 
 		if next(callbacks) or next(waiting) then
@@ -176,8 +170,8 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		return firstInvocation
 	end
 
-	local actions: Event<...any> = {
-		Fire = function(self: Event<...any>, ...: any): ()
+	local actions: Event<any> = {
+		Fire = function(self: Event<any>, ...: any): ()
 			if not next(callbacks) and not next(waiting) then
 				if queueCount >= queueSize then
 					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for "{nameHint}"` else ""}; did you forget to connect to it?`, 0)
@@ -197,7 +191,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			end
 		end;
 
-		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
+		Connect = function(self: Event<any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
 			resumeQueuedEventInvocations(self)
 			return {Disconnect = function(): ()
@@ -205,7 +199,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			end}
 		end;
 
-		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
+		Once = function(self: Event<any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
 			resumeQueuedEventInvocations(self)
 			return {Disconnect = function(): ()
@@ -213,7 +207,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			end}
 		end;
 
-		Wait = function(self: Event<...any>, timeout: number?): ...any
+		Wait = function(self: Event<any>, timeout: number?): ...any
 			local queuedInvocation = resumeQueuedEventInvocations(self)
 			if queuedInvocation then
 				return table.unpack(queuedInvocation)
@@ -234,11 +228,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			return coroutine.yield()
 		end;
 
-		WaitFor = function(self: Event<any>, timeout: number?): ()
-			error("Unimplemented")
-		end;
-
-		DisconnectAll = function(self: Event<...any>): ()
+		DisconnectAll = function(self: Event<any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
 				if type(callback) == "thread" then
@@ -296,7 +286,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			end}
 		end;
 
-		Wait = function(self: TrackedVariable<any>, timeout: number?): ()
+		Wait = function(self: TrackedVariable<any>, timeout: number?): (any?, any?)
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
@@ -313,7 +303,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			return coroutine.yield()
 		end;
 
-		WaitFor = function(self: TrackedVariable<any>, timeout: number?): ()
+		WaitFor = function(self: TrackedVariable<any>, value: any, timeout: number?): (any?, any?)
 			error("Unimplemented")
 		end;
 
@@ -402,11 +392,11 @@ end
 
 --- Listens to a `ServerInstanceStream` and returns activity `Events`.
 --- @param uid -- The UID of the `ServerInstanceStream`.
---- @return Event<...any?> -- The `Event` that fires when the `ClientInstanceStream` has received all `Instances`.
---- @return Event<any?> -- The `Event` that fires when an `Instance` is received.
+--- @return Event<...Instance?> -- The `Event` that fires when the `ClientInstanceStream` has received all `Instances`.
+--- @return Event<Instance?> -- The `Event` that fires when an `Instance` is received.
 --- @return Instance -- The container for the `ServerInstanceStream`.
 --- @error ClientInstanceStream cannot be created on the server -- Incorrect usage.
-function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, Instance)
+function New.ClientInstanceStream(uid: string): (Event<...Instance?>, Event<Instance?>, Instance)
 	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
 
 	local container = assert(localPlayer.PlayerGui:WaitForChild("__instanceStream_" .. uid, 30), `Cannot find InstanceStream with UID "{uid}"`) :: RemoteEvent
@@ -414,8 +404,8 @@ function New.ClientInstanceStream(uid: string): (Event<...any?>, Event<any?>, In
 	local instances: {Instance} = {}
 	local failedInstances: {true} = {}
 	local finished = false
-	local finishedEvent: Event<...Instance?> = New.QueuedEvent("InstanceStream Finished Event")
-	local streamEvent: Event<Instance?> = New.QueuedEvent("InstanceStream Stream Event", math.huge)
+	local finishedEvent = New.QueuedEvent("InstanceStream Finished Event") :: Event<...Instance?>
+	local streamEvent = New.QueuedEvent("InstanceStream Stream Event", math.huge) :: Event<Instance?>
 
 	local function checkFinished(): boolean
 		if finished then return true end

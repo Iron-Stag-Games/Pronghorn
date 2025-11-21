@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B111                    ║
+║                    Pronghorn Framework  Rev. B112                    ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -140,7 +140,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 	-- Init
 	for _, moduleTable in allModules do
 		if type(moduleTable.Return) == "table" and moduleTable.Return.Init then
-			local thread = task.spawn(moduleTable.Return.Init, moduleTable.Return)
+			local thread = task.spawn(moduleTable.Return.Init :: (self: typeof(moduleTable.Return)) -> (), moduleTable.Return)
 			if coroutine.status(thread) ~= "dead" then
 				error(`{moduleTable.Object:GetFullName()}: Yielded during Init function`, 0)
 			end
@@ -160,7 +160,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 						warn(`{moduleTable.Object:GetFullName()}: Infinite yield possible in Deferred function`)
 					end
 				end)
-				moduleTable.Return:Deferred()
+				;(moduleTable.Return.Deferred :: (self: typeof(moduleTable.Return)) -> ())(moduleTable.Return)
 				running = false
 				Pronghorn.ModuleStatus[moduleTable.Object]:Set(2)
 				startWaits -= 1
@@ -180,12 +180,12 @@ function Pronghorn:Import(paths: {Instance}): ()
 	local function playerAdded(player: Player): ()
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
-				task.spawn(moduleTable.Return.PlayerAdded, player)
+				task.spawn(moduleTable.Return.PlayerAdded :: (player: Player) -> (), player)
 			end
 		end
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAddedDeferred then
-				task.spawn(moduleTable.Return.PlayerAddedDeferred, player)
+				task.spawn(moduleTable.Return.PlayerAddedDeferred :: (player: Player) -> (), player)
 			end
 		end
 	end
@@ -198,24 +198,24 @@ function Pronghorn:Import(paths: {Instance}): ()
 	Players.PlayerRemoving:Connect(function(player: Player): ()
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoving then
-				task.spawn(moduleTable.Return.PlayerRemoving, player)
+				task.spawn(moduleTable.Return.PlayerRemoving :: (player: Player) -> (), player)
 			end
 		end
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemovingDeferred then
-				task.spawn(moduleTable.Return.PlayerRemovingDeferred, player)
+				task.spawn(moduleTable.Return.PlayerRemovingDeferred :: (player: Player) -> (), player)
 			end
 		end
 		if player.Parent then player.AncestryChanged:Wait() end
 		pcall(player.Destroy, player)
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemoved then
-				task.spawn(moduleTable.Return.PlayerRemoved, player)
+				task.spawn(moduleTable.Return.PlayerRemoved :: (player: Player) -> (), player)
 			end
 		end
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerRemovedDeferred then
-				task.spawn(moduleTable.Return.PlayerRemovedDeferred, player)
+				task.spawn(moduleTable.Return.PlayerRemovedDeferred :: (player: Player) -> (), player)
 			end
 		end
 	end)

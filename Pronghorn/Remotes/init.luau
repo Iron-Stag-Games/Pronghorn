@@ -11,7 +11,13 @@
 local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
 if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn/Remotes from more than one Luau VM; please use BindableFunctions", 0) end
 
-local Remotes = {Server = {}, Client = {}}
+local Remotes = {
+	Server = {} :: {[string]: {[string]: ServerRemote}} & {
+		CreateToClient: (self: any, name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, moduleNameOverride: string?) -> ServerRemote;
+		CreateToServer: (self: any, name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?, moduleNameOverride: string?) -> ServerRemote;
+	};
+	Client = {} :: {[string]: {[string]: ClientRemote}};
+}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Dependencies
