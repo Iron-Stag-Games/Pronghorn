@@ -83,8 +83,8 @@ function New.Event(): Event<...any>
 	local callbacks: {Callback<...any>} = {}
 	local waiting: {Callback<...any> | thread} = {}
 
-	local actions: Event<any> = {
-		Fire = function(self: Event<any>, ...: any): ()
+	local actions: Event<...any> = {
+		Fire = function(self: Event<...any>, ...: any): ()
 			local currentlyWaiting = table.clone(waiting)
 			table.clear(waiting)
 			for _, callback in table.clone(callbacks) do
@@ -100,21 +100,21 @@ function New.Event(): Event<...any>
 			end
 		end;
 
-		Connect = function(self: Event<any>, callback: Callback<...any>): Connection
+		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function(): ()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
-		Once = function(self: Event<any>, callback: Callback<...any>): Connection
+		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function(): ()
 				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
 
-		Wait = function(self: Event<any>, timeout: number?): (boolean, ...any)
+		Wait = function(self: Event<...any>, timeout: number?): (boolean, ...any)
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			if timeout then
@@ -131,7 +131,7 @@ function New.Event(): Event<...any>
 			return coroutine.yield()
 		end;
 
-		DisconnectAll = function(self: Event<any>): ()
+		DisconnectAll = function(self: Event<...any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
 				if type(callback) == "thread" then
@@ -159,7 +159,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 	local queueCount = 0
 	local queuedEventInvocations: {{any}} = {}
 
-	local function resumeQueuedEventInvocations(self: Event<any>): {any}?
+	local function resumeQueuedEventInvocations(self: Event<...any>): {any}?
 		local _, firstInvocation = next(queuedEventInvocations)
 
 		if next(callbacks) or next(waiting) then
@@ -174,8 +174,8 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		return firstInvocation
 	end
 
-	local actions: Event<any> = {
-		Fire = function(self: Event<any>, ...: any): ()
+	local actions: Event<...any> = {
+		Fire = function(self: Event<...any>, ...: any): ()
 			if not next(callbacks) and not next(waiting) then
 				if queueCount >= queueSize then
 					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for "{nameHint}"` else ""}; did you forget to connect to it?`, 0)
@@ -199,7 +199,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			end
 		end;
 
-		Connect = function(self: Event<any>, callback: Callback<...any>): Connection
+		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
 			resumeQueuedEventInvocations(self)
 			return {Disconnect = function(): ()
@@ -207,7 +207,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			end}
 		end;
 
-		Once = function(self: Event<any>, callback: Callback<...any>): Connection
+		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
 			resumeQueuedEventInvocations(self)
 			return {Disconnect = function(): ()
@@ -215,7 +215,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			end}
 		end;
 
-		Wait = function(self: Event<any>, timeout: number?): (boolean, ...any)
+		Wait = function(self: Event<...any>, timeout: number?): (boolean, ...any)
 			local queuedInvocation = resumeQueuedEventInvocations(self)
 			if queuedInvocation then
 				return table.unpack(queuedInvocation)
@@ -236,7 +236,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			return coroutine.yield()
 		end;
 
-		DisconnectAll = function(self: Event<any>): ()
+		DisconnectAll = function(self: Event<...any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
 				if type(callback) == "thread" then
