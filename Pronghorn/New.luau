@@ -117,8 +117,9 @@ function New.Event(): Event<...any>
 		Wait = function(self: Event<...any>, timeout: number?): (boolean, ...any)
 			local co = coroutine.running()
 			table.insert(waiting, co)
+			local timeoutThread: thread?
 			if timeout then
-				task.delay(timeout, function(): ()
+				timeoutThread = task.delay(timeout, function(): ()
 					local index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)
@@ -128,7 +129,11 @@ function New.Event(): Event<...any>
 					end
 				end)
 			end
-			return coroutine.yield()
+			local returns = {coroutine.yield()}
+			if timeoutThread then
+				task.cancel(timeoutThread)
+			end
+			return table.unpack(returns)
 		end;
 
 		DisconnectAll = function(self: Event<...any>): ()
@@ -218,12 +223,13 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		Wait = function(self: Event<...any>, timeout: number?): (boolean, ...any)
 			local queuedInvocation = resumeQueuedEventInvocations(self)
 			if queuedInvocation then
-				return table.unpack(queuedInvocation)
+				return true, table.unpack(queuedInvocation)
 			end
 			local co = coroutine.running()
 			table.insert(waiting, co)
+			local timeoutThread: thread?
 			if timeout then
-				task.delay(timeout, function(): ()
+				timeoutThread = task.delay(timeout, function(): ()
 					local index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)
@@ -233,7 +239,11 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 					end
 				end)
 			end
-			return coroutine.yield()
+			local returns = {coroutine.yield()}
+			if timeoutThread then
+				task.cancel(timeoutThread)
+			end
+			return table.unpack(returns)
 		end;
 
 		DisconnectAll = function(self: Event<...any>): ()
@@ -301,8 +311,9 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 		Wait = function(self: TrackedVariable<any>, timeout: number?): (boolean, any?, any?)
 			local co = coroutine.running()
 			table.insert(waiting, co)
+			local timeoutThread: thread?
 			if timeout then
-				task.delay(timeout, function(): ()
+				timeoutThread = task.delay(timeout, function(): ()
 					local index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)
@@ -312,7 +323,11 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 					end
 				end)
 			end
-			return coroutine.yield()
+			local returns = {coroutine.yield()}
+			if timeoutThread then
+				task.cancel(timeoutThread)
+			end
+			return table.unpack(returns)
 		end;
 
 		WaitFor = function(self: TrackedVariable<any>, value: any, timeout: number?): (boolean, any?, any?)
