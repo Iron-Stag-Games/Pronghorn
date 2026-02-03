@@ -58,7 +58,7 @@ local IS_CLIENT = RunService:IsClient()
 local QUEUED_EVENT_QUEUE_SIZE = 256
 
 -- Objects
-local localPlayer = Players.LocalPlayer
+local localPlayer = Players.LocalPlayer :: Player
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -369,9 +369,13 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 	for _, player in (if type(players) == "table" then players else {players}) :: {Player} do
 		if not player.Parent then continue end
 
-		local container = Instance.new("RemoteEvent")
+		local container = Instance.new("ScreenGui")
 		container.Name = `__instanceStream_{uid}`
-		container.OnServerEvent:Connect(function(): ()
+		container.Enabled = false
+		container.ResetOnSpawn = false
+
+		local remoteEvent = Instance.new("RemoteEvent")
+		remoteEvent.OnServerEvent:Connect(function(): ()
 			if not exclusive then
 				container:Destroy()
 				for _, connection in ancestryListeners do
@@ -379,6 +383,7 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 				end
 			end
 		end)
+		remoteEvent.Parent = container
 
 		if containers then
 			containers[player] = container
@@ -426,7 +431,8 @@ end
 function New.ClientInstanceStream(uid: string): (Event<...Instance?>, Event<Instance?>, Instance)
 	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
 
-	local container = assert(localPlayer.PlayerGui:WaitForChild("__instanceStream_" .. uid, 30), `Cannot find InstanceStream with UID "{uid}"`) :: RemoteEvent
+	local container = assert(localPlayer.PlayerGui:WaitForChild("__instanceStream_" .. uid, 30), `Cannot find InstanceStream with UID "{uid}"`) :: ScreenGui
+	local remoteEvent = assert(container:WaitForChild("RemoteEvent", 30), `InstanceStream with UID "{uid}" missing RemoteEvent`) :: RemoteEvent
 	local numInstances = assert(tonumber(uid:split("_")[2]))
 	local instances: {Instance} = {}
 	local failedInstances: {true} = {}
@@ -445,14 +451,14 @@ function New.ClientInstanceStream(uid: string): (Event<...Instance?>, Event<Inst
 		finishedEvent:Fire(table.unpack(instances))
 		finishedEvent:DisconnectAll()
 		streamEvent:DisconnectAll()
-		container:FireServer()
+		remoteEvent:FireServer()
 		Print(`InstanceStream "{uid}" finished`)
 		return true
 	end
 
 	container.Destroying:Once(function(): ()
-		for _, child in container:GetChildren() :: {ObjectValue} do
-			if not child.Value and not child:GetAttribute("Canceled") then
+		for _, child in container:GetChildren() do
+			if child:IsA("ObjectValue") and not child.Value and not child:GetAttribute("Canceled") then
 				child:SetAttribute("Canceled", true)
 			end
 		end
@@ -465,7 +471,7 @@ function New.ClientInstanceStream(uid: string): (Event<...Instance?>, Event<Inst
 	Print(`InstanceStream "{uid}" starting`)
 
 	for _, child in container:GetChildren() do
-		assert(child:IsA("ObjectValue"))
+		if not child:IsA("ObjectValue") then continue end
 		if child:GetAttribute("Canceled") then
 			Warn(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
 			failedInstances[tonumber(child.Name) :: number] = true
@@ -494,7 +500,7 @@ function New.ClientInstanceStream(uid: string): (Event<...Instance?>, Event<Inst
 
 	if not checkFinished() then
 		container.ChildAdded:Connect(function(child: Instance): ()
-			assert(child:IsA("ObjectValue"))
+			if not child:IsA("ObjectValue") then return end
 			child:GetAttributeChangedSignal("Canceled"):Once(function(): ()
 				Warn(`InstanceStream "{uid}" canceled "{child.Name}": {child:GetAttribute("FullName")}`)
 				failedInstances[tonumber(child.Name) :: number] = true
