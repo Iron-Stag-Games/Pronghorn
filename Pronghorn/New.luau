@@ -130,7 +130,7 @@ function New.Event(): Event<...any>
 				end)
 			end
 			local returns = {coroutine.yield()}
-			if timeoutThread then
+			if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then
 				task.cancel(timeoutThread)
 			end
 			return table.unpack(returns)
@@ -240,7 +240,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 				end)
 			end
 			local returns = {coroutine.yield()}
-			if timeoutThread then
+			if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then
 				task.cancel(timeoutThread)
 			end
 			return table.unpack(returns)
