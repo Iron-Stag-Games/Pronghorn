@@ -130,7 +130,7 @@ function New.Event(): Event<...any>
 				end)
 			end
 			local returns = {coroutine.yield()}
-			if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then
+			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
 				task.cancel(timeoutThread)
 			end
 			return table.unpack(returns)
@@ -139,7 +139,7 @@ function New.Event(): Event<...any>
 		DisconnectAll = function(self: Event<...any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
-				if type(callback) == "thread" then
+				if type(callback) == "thread" and coroutine.status(callback) == "suspended" then
 					task.cancel(callback)
 				end
 			end
@@ -240,7 +240,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 				end)
 			end
 			local returns = {coroutine.yield()}
-			if timeoutThread and coroutine.status(timeoutThread) ~= "dead" then
+			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
 				task.cancel(timeoutThread)
 			end
 			return table.unpack(returns)
@@ -249,7 +249,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		DisconnectAll = function(self: Event<...any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
-				if type(callback) == "thread" then
+				if type(callback) == "thread" and coroutine.status(callback) == "suspended" then
 					task.cancel(callback)
 				end
 			end
@@ -324,7 +324,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 				end)
 			end
 			local returns = {coroutine.yield()}
-			if timeoutThread then
+			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
 				task.cancel(timeoutThread)
 			end
 			return table.unpack(returns)
@@ -337,7 +337,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 		DisconnectAll = function(self: TrackedVariable<any>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
-				if type(callback) == "thread" then
+				if type(callback) == "thread" and coroutine.status(callback) == "suspended" then
 					task.cancel(callback)
 				end
 			end
