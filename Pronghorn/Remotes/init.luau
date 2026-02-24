@@ -68,7 +68,7 @@ local remotesFolder: Folder
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 local function getEnvironment(): string
-	local info = debug.info(2, "s") or "ERR_DEBUG.INFO_RETURNED_NIL"
+	local info = debug.info(3, "s") or "ERR_DEBUG.INFO_RETURNED_NIL"
 	local split = info:split(".")
 	return "[" .. split[#split] .. "]"
 end
