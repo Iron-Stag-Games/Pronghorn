@@ -350,16 +350,16 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 	return actions
 end
 
---- Starts a `ServerInstanceStream` and returns its UID and any newly created `Instances`.
+--- Starts an `InstanceStream` and returns its UID and any newly created `Instances`.
 --- @param players -- The list of `Players` to stream `Instances` to.
 --- @param instances -- The list of `Instances` to stream.
 --- @param exclusive? -- Whether or not to exclusively replicate the list of `Instances` by moving them into `PlayerGui`. If the first argument is an array of `Players`, the `Instances` are cloned.
---- @return string -- The UID of the `ServerInstanceStream`.
+--- @return string -- The UID of the `InstanceStream`.
 --- @return {[Player]: Instance}? -- The containers which were created as a result of `exclusive?` = `true`.
 --- @return {[Player]: {any}}? -- The `Instances` which were cloned as a result of `players` = `{Player}` and `exclusive?` = `true`.
---- @error ServerInstanceStream cannot be created on the client -- Incorrect usage.
+--- @error InstanceStream cannot be created on the client -- Incorrect usage.
 function New.ServerInstanceStream(players: Player | {Player}, instances: {Instance}, exclusive: boolean?): (string, {[Player]: Instance}?, {[Player]: {any}}?)
-	if IS_CLIENT then error("ServerInstanceStream cannot be created on the client", 0) end
+	if IS_CLIENT then error("InstanceStream cannot be created on the client", 0) end
 
 	local uid = `{HttpService:GenerateGUID(false)}_{#instances}`
 	local containers: {[Player]: Instance}? = if exclusive then {} else nil
@@ -422,11 +422,11 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 	return uid, containers, clonedInstances
 end
 
---- Listens to a `ServerInstanceStream` and returns activity `Events`.
---- @param uid -- The UID of the `ServerInstanceStream`.
+--- Listens to an `InstanceStream` and returns activity `Events`.
+--- @param uid -- The UID of the `InstanceStream`.
 --- @return Event<...Instance?> -- The `Event` that fires when the `ClientInstanceStream` has received all `Instances`.
 --- @return Event<Instance?> -- The `Event` that fires when an `Instance` is received.
---- @return Instance -- The container for the `ServerInstanceStream`.
+--- @return Instance -- The container for the `InstanceStream`.
 --- @error ClientInstanceStream cannot be created on the server -- Incorrect usage.
 function New.ClientInstanceStream(uid: string): (Event<...Instance?>, Event<Instance?>, Instance)
 	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
