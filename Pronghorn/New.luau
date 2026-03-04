@@ -331,7 +331,23 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 		end;
 
 		WaitFor = function(self: TrackedVariable<any>, value: any, timeout: number?): (boolean, any?, any?)
-			error("Unimplemented")
+			local co = coroutine.running()
+			local timeoutThread: thread?
+			if timeout then
+				timeoutThread = task.delay(timeout, function(): ()
+					if coroutine.status(co) == "suspended" then
+						task.spawn(co, false)
+					end
+				end)
+			end
+			local success: boolean, oldValue: any?, newValue: any?
+			repeat
+				success, oldValue, newValue = self:Wait()
+			until not success or newValue == value
+			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
+				task.cancel(timeoutThread)
+			end
+			return success, oldValue, newValue
 		end;
 
 		DisconnectAll = function(self: TrackedVariable<any>): ()
