@@ -182,17 +182,3 @@ function ExampleClientModule:Deferred(): ()
 	Print(Remotes.Client.ExampleServerModule:CountTable({"A", "B", "C"}))
 end
 ```
-
-# Useful Modules
-
-https://github.com/Iron-Stag-Games/Useful-Modules
-
-A collection of useful modules compatible with the Pronghorn Framework.
-
-# Games made with Pronghorn
-
-- **[Claw Machine Simulator](https://www.roblox.com/games/6891812658)** - RB Battles Games
-- **[ExoTech](https://www.roblox.com/games/7634484468)** - Iron Stag Games
-- **[Mansion Tycoon](https://www.roblox.com/games/12912731475)** - Capybara's Productions
-- **[RB Battles](https://www.roblox.com/games/5036207802)** - RB Battles Games
-- **[Traitor Town](https://www.roblox.com/games/255236425)** - Traitor Town
