@@ -149,7 +149,7 @@ function New.Event(): Event<...any>
 
 	table.freeze(actions)
 
-	return actions
+	return actions :: Event<...any>
 end
 
 --- Creates and returns a `QueuedEvent`.
@@ -259,22 +259,22 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 
 	table.freeze(actions)
 
-	return actions
+	return actions :: Event<...any>
 end
 
 --- Creates and returns a `TrackedVariable`.
 --- @param variable -- The initial value of the `TrackedVariable`.
---- @return TrackedVariable<any> -- The new `TrackedVariable`.
-function New.TrackedVariable(variable: any): TrackedVariable<any>
-	local callbacks: {Callback<any, any>} = {}
-	local waiting: {Callback<any, any> | thread} = {}
+--- @return TrackedVariable<T> -- The new `TrackedVariable`.
+function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
+	local callbacks: {Callback<T, T>} = {}
+	local waiting: {Callback<T, T> | thread} = {}
 
-	local actions: TrackedVariable<any> = {
-		Get = function(self: TrackedVariable<any>): any
+	local actions: TrackedVariable<T> = {
+		Get = function(self: TrackedVariable<T>): T
 			return variable
 		end;
 
-		Set = function(self: TrackedVariable<any>, newValue: any): ()
+		Set = function(self: TrackedVariable<T>, newValue: T): ()
 			if variable ~= newValue then
 				local oldValue = variable
 				variable = newValue
@@ -294,21 +294,21 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			end
 		end;
 
-		Connect = function(self: TrackedVariable<any>, callback: Callback<any, any>): Connection
+		Connect = function(self: TrackedVariable<T>, callback: Callback<T, T>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function(): ()
 				table.remove(callbacks, table.find(callbacks, callback))
 			end}
 		end;
 
-		Once = function(self: TrackedVariable<any>, callback: Callback<any, any>): Connection
+		Once = function(self: TrackedVariable<T>, callback: Callback<T, T>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function(): ()
 				table.remove(waiting, table.find(waiting, callback))
 			end}
 		end;
 
-		Wait = function(self: TrackedVariable<any>, timeout: number?): (boolean, any?, any?)
+		Wait = function(self: TrackedVariable<T>, timeout: number?): (boolean, T, T)
 			local co = coroutine.running()
 			table.insert(waiting, co)
 			local timeoutThread: thread?
@@ -327,10 +327,10 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
 				task.cancel(timeoutThread)
 			end
-			return table.unpack(returns)
+			return (table.unpack :: any)(returns)
 		end;
 
-		WaitFor = function(self: TrackedVariable<any>, value: any, timeout: number?): (boolean, any?, any?)
+		WaitFor = function(self: TrackedVariable<T>, value: T, timeout: number?): (boolean, T, T)
 			local co = coroutine.running()
 			local timeoutThread: thread?
 			if timeout then
@@ -340,7 +340,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 					end
 				end)
 			end
-			local success: boolean, oldValue: any?, newValue: any?
+			local success: boolean, oldValue: T?, newValue: T?
 			repeat
 				success, oldValue, newValue = self:Wait()
 			until not success or newValue == value
@@ -350,7 +350,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 			return success, oldValue, newValue
 		end;
 
-		DisconnectAll = function(self: TrackedVariable<any>): ()
+		DisconnectAll = function(self: TrackedVariable<T>): ()
 			table.clear(callbacks)
 			for _, callback in waiting do
 				if type(callback) == "thread" and coroutine.status(callback) == "suspended" then
@@ -363,7 +363,7 @@ function New.TrackedVariable(variable: any): TrackedVariable<any>
 
 	table.freeze(actions)
 
-	return actions
+	return actions :: TrackedVariable<T>
 end
 
 --- Starts an `InstanceStream` and returns its UID and any newly created `Instances`.
