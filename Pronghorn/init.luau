@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B122                    ║
+║                    Pronghorn Framework  Rev. B123                    ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -106,7 +106,11 @@ local function addModules(allModules: {Module}, object: Instance): ()
 				Pronghorn.ModuleStatus[object] = New.TrackedVariable(0)
 			end
 		else
-			for _, child in object:GetChildren() do
+			local children = object:GetChildren()
+			table.sort(children, function(a0: Instance, a1: Instance): boolean
+				return a0.Name < a1.Name
+			end)
+			for _, child in children do
 				addModules(allModules, child)
 			end
 		end
