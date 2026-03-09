@@ -82,9 +82,9 @@ local startWaits = math.huge
 -- Module Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Pronghorn.Importing = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
-Pronghorn.Imported = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
-Pronghorn.DeferredComplete = New.TrackedVariable(false) :: New.TrackedVariable<boolean>
+Pronghorn.Importing = New.TrackedVariable(false)
+Pronghorn.Imported = New.TrackedVariable(false)
+Pronghorn.DeferredComplete = New.TrackedVariable(false)
 Pronghorn.ModuleStatus = {} :: {[ModuleScript]: New.TrackedVariable<number>}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
