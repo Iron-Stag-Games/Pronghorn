@@ -8,8 +8,9 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
+if pcall(function(): () game:GetService("RunService"):IsEdit() end) then error("Cannot require Pronghorn/Debug in Edit mode", 0) end
 local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
-if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn/Debug from more than one Luau VM; please use BindableFunctions", 0) end
+if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Cannot require Pronghorn/Debug from more than one Luau VM; please use BindableFunctions", 0) end
 
 local Debug = {}
 

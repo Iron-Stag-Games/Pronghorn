@@ -32,23 +32,23 @@ export type Callback<T...> = (T...) -> ()
 export type Connection = {Disconnect: (self: Connection) -> ()}
 export type Event<T...> = {
 	Fire: (self: Event<T...>, T...) -> ();
-	Connect: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
-	Once: (self: Event<T...>, callback: Callback<T...>) -> (Connection);
+	Connect: (self: Event<T...>, callback: Callback<T...>) -> Connection;
+	Once: (self: Event<T...>, callback: Callback<T...>) -> Connection;
 	Wait: (self: Event<T...>, timeout: number?) -> (boolean, T...);
 	DisconnectAll: (self: Event<T...>) -> ();
 }
 export type TrackedVariable<T> = {
-	Get: (self: TrackedVariable<T>) -> (T);
+	Get: (self: TrackedVariable<T>) -> T;
 	Set: (self: TrackedVariable<T>, value: T) -> ();
-	Connect: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
-	Once: (self: TrackedVariable<T>, callback: Callback<T, T>) -> (Connection);
+	Connect: (self: TrackedVariable<T>, callback: Callback<T, T>) -> Connection;
+	Once: (self: TrackedVariable<T>, callback: Callback<T, T>) -> Connection;
 	Wait: (self: TrackedVariable<T>, timeout: number?) -> (boolean, T, T);
 	WaitFor: (self: TrackedVariable<T>, value: T, timeout: number?) -> (boolean, T, T);
 	DisconnectAll: (self: TrackedVariable<T>) -> ();
 }
 export type InstanceStream<T...> = {
 	Instances: {Instance};
-	Start: (self: InstanceStream<T...>, players: Player | {Player}, instances: {Instance}) -> (string);
+	Start: (self: InstanceStream<T...>, players: Player | {Player}, instances: {Instance}) -> string;
 	Listen: (self: InstanceStream<T...>, uid: string) -> (Event<T...>, Event<Instance>);
 }
 
@@ -157,7 +157,7 @@ end
 --- @param queueSize? -- The queue size of the `QueuedEvent`.
 --- @return Event<...any> -- The new `QueuedEvent`.
 function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
-	queueSize = queueSize or QUEUED_EVENT_QUEUE_SIZE
+	local queueSize = queueSize or QUEUED_EVENT_QUEUE_SIZE
 
 	local callbacks: {Callback<...any>} = {}
 	local waiting: {Callback<...any> | thread} = {}

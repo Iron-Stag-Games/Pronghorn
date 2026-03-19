@@ -8,8 +8,9 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
+if pcall(function(): () game:GetService("RunService"):IsEdit() end) then error("Cannot require Pronghorn/Remotes in Edit mode", 0) end
 local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
-if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn/Remotes from more than one Luau VM; please use BindableFunctions", 0) end
+if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Cannot require Pronghorn/Remotes from more than one Luau VM; please use BindableFunctions", 0) end
 
 local Remotes = {
 	Server = {} :: {[string]: {[string]: ServerRemote}} & {
@@ -41,19 +42,19 @@ local TypeChecker = require(script.TypeChecker)
 -- Types
 type RBXScriptConnectionProxy = {Connected: boolean, Disconnect: (self: any) -> ()}
 type ServerRemote = {
-	Fire: (self: ServerRemote, players: Player | {Player}, ...any) -> (...any);
+	Fire: (self: ServerRemote, players: Player | {Player}, ...any) -> ...any;
 	FireAll: (self: ServerRemote, ...any) -> ();
 	FireAllExcept: (self: ServerRemote, ignorePlayer: Player?, ...any) -> ();
-	SetListener: (self: ServerRemote, newFunction: (Player, ...any) -> (...any)) -> ();
+	SetListener: (self: ServerRemote, newFunction: (Player, ...any) -> ...any) -> ();
 	AddListener: (self: ServerRemote, newFunction: (Player, ...any) -> ()) -> RBXScriptConnection;
 	Destroy: (self: ServerRemote) -> ();
 }
 type ClientRemote = typeof(setmetatable({} :: {
-	Fire: (self: ClientRemote, ...any) -> (...any);
-	Connect: (self: ClientRemote, func: (...any) -> ()) -> RBXScriptConnection;
-	ConnectDeferred: (self: ClientRemote, func: (...any) -> ()) -> RBXScriptConnectionProxy;
+	Fire: (self: ClientRemote, ...any) -> ...any;
+	Connect: (self: ClientRemote, func: (...any) -> ...any) -> RBXScriptConnection;
+	ConnectDeferred: (self: ClientRemote, func: (...any) -> ...any) -> RBXScriptConnectionProxy;
 }, {} :: {
-	__call: (self: ClientRemote, context: any, ...any) -> (...any)
+	__call: (self: ClientRemote, context: any, ...any) -> ...any
 }))
 
 -- Constants
@@ -84,18 +85,13 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 		end;
 	}
 
-	if not Remotes.Client[moduleName] then
-		Remotes.Client[moduleName] = {}
-	end
-	Remotes.Client[moduleName][remote.Name] = setmetatable(actions, metaTable) :: ClientRemote
-
 	if remote:IsA("RemoteFunction") then
 
-		actions.Connect = function(self: ClientRemote, func: (...any) -> (...any)): ()
+		actions.Connect = function(self: ClientRemote, func: (...any) -> ...any): ()
 			remote.OnClientInvoke = func
 		end
 
-		actions.ConnectDeferred = function(self: ClientRemote, func: (...any) -> (...any)): ()
+		actions.ConnectDeferred = function(self: ClientRemote, func: (...any) -> ...any): ()
 			task.defer(function()
 				remote.OnClientInvoke = func
 			end)
@@ -140,6 +136,11 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 			;(remote :: RemoteEvent):FireServer(...)
 		end
 	end
+
+	if not Remotes.Client[moduleName] then
+		Remotes.Client[moduleName] = {}
+	end
+	Remotes.Client[moduleName][remote.Name] = (setmetatable(actions, metaTable) :: any) :: ClientRemote
 end
 
 local function haveClientEventsLoaded(): boolean
@@ -196,11 +197,6 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 
 	local actions: any = {}
 
-	if not Remotes.Server[moduleName] then
-		Remotes.Server[moduleName] = {}
-	end
-	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
-
 	actions.Destroy = function(self: ServerRemote): ()
 		if not Remotes.Server[moduleName][remote.Name] then return end
 		remote:Destroy()
@@ -243,6 +239,11 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 			end
 		end
 	end
+
+	if not Remotes.Server[moduleName] then
+		Remotes.Server[moduleName] = {}
+	end
+	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
 
 	script:SetAttribute("NumRemotes", (script:GetAttribute("NumRemotes") :: number? or 0) + 1)
 
@@ -292,7 +293,7 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 	end
 	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
 
-	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> (...any)): (player: Player, ...any) -> ...any
+	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> ...any): (player: Player, ...any) -> ...any
 		return function(player: Player, ...: any): ...any
 			TypeChecker(remote, player, requiredParameterTypes, ...)
 			return newFunction(player, ...)
@@ -311,7 +312,7 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 			remote.OnServerInvoke = getTypeCheckedFunction(func)
 		end
 
-		actions.SetListener = function(self: ServerRemote, newFunction: (Player, ...any) -> (...any)): ()
+		actions.SetListener = function(self: ServerRemote, newFunction: (Player, ...any) -> ...any): ()
 			remote.OnServerInvoke = getTypeCheckedFunction(newFunction)
 		end
 	else
@@ -346,13 +347,13 @@ function Remotes:Init()
 
 		for _, remote in remotesFolder:GetDescendants() do
 			if not (remote:IsA("RemoteFunction") or remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent")) then continue end
-		
+
 			connectEventClient(remote :: any)
 		end
 
 		remotesFolder.DescendantAdded:Connect(function(remote: Instance): ()
 			if not (remote:IsA("RemoteFunction") or remote:IsA("UnreliableRemoteEvent") or remote:IsA("RemoteEvent")) then return end
-		
+
 			connectEventClient(remote :: any)
 		end)
 

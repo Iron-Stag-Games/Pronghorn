@@ -31,7 +31,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B123                    ║
+║                    Pronghorn Framework  Rev. B124                    ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -49,8 +49,9 @@
 ╚══════════════════════════════════════════════════════════════════════╝
 ]]
 
+if pcall(function(): () game:GetService("RunService"):IsEdit() end) then error("Cannot require Pronghorn in Edit mode", 0) end
 local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
-if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Required Pronghorn from more than one Luau VM; please use BindableFunctions", 0) end
+if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Cannot require Pronghorn from more than one Luau VM; please use BindableFunctions", 0) end
 
 local Pronghorn = {}
 
