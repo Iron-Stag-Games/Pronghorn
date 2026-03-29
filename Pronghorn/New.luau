@@ -103,14 +103,20 @@ function New.Event(): Event<...any>
 		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function(): ()
-				table.remove(callbacks, table.find(callbacks, callback))
+				local index = table.find(callbacks, callback)
+				if index then
+					table.remove(callbacks, index)
+				end
 			end}
 		end;
 
 		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function(): ()
-				table.remove(waiting, table.find(waiting, callback))
+				local index = table.find(waiting, callback)
+				if index then
+					table.remove(waiting, index)
+				end
 			end}
 		end;
 
@@ -208,7 +214,10 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			table.insert(callbacks, callback)
 			resumeQueuedEventInvocations(self)
 			return {Disconnect = function(): ()
-				table.remove(callbacks, table.find(callbacks, callback))
+				local index = table.find(callbacks, callback)
+				if index then
+					table.remove(callbacks, index)
+				end
 			end}
 		end;
 
@@ -216,7 +225,10 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			table.insert(waiting, callback)
 			resumeQueuedEventInvocations(self)
 			return {Disconnect = function(): ()
-				table.remove(waiting, table.find(waiting, callback))
+				local index = table.find(waiting, callback)
+				if index then
+					table.remove(waiting, index)
+				end
 			end}
 		end;
 
@@ -297,14 +309,20 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 		Connect = function(self: TrackedVariable<T>, callback: Callback<T, T>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function(): ()
-				table.remove(callbacks, table.find(callbacks, callback))
+				local index = table.find(callbacks, callback)
+				if index then
+					table.remove(callbacks, index)
+				end
 			end}
 		end;
 
 		Once = function(self: TrackedVariable<T>, callback: Callback<T, T>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function(): ()
-				table.remove(waiting, table.find(waiting, callback))
+				local index = table.find(waiting, callback)
+				if index then
+					table.remove(waiting, index)
+				end
 			end}
 		end;
 
