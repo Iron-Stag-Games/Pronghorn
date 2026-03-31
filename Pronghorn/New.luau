@@ -153,9 +153,7 @@ function New.Event(): Event<...any>
 		end;
 	}
 
-	table.freeze(actions)
-
-	return actions :: Event<...any>
+	return table.freeze(actions) :: Event<...any>
 end
 
 --- Creates and returns a `QueuedEvent`.
@@ -269,9 +267,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		end;
 	}
 
-	table.freeze(actions)
-
-	return actions :: Event<...any>
+	return table.freeze(actions) :: Event<...any>
 end
 
 --- Creates and returns a `TrackedVariable`.
@@ -379,9 +375,7 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 		end;
 	}
 
-	table.freeze(actions)
-
-	return actions :: TrackedVariable<T>
+	return table.freeze(actions) :: TrackedVariable<T>
 end
 
 --- Starts an `InstanceStream` and returns its UID and any newly created `Instances`.
@@ -556,4 +550,4 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return New
+return table.freeze(New)

@@ -13,10 +13,10 @@ local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
 if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Cannot require Pronghorn/Remotes from more than one Luau VM; please use BindableFunctions", 0) end
 
 local Remotes = {
-	Server = {} :: {[string]: {[string]: ServerRemote}} & {
+	Server = {} :: {
 		CreateToClient: (self: any, name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, moduleNameOverride: string?) -> ServerRemote;
 		CreateToServer: (self: any, name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?, moduleNameOverride: string?) -> ServerRemote;
-	};
+	} & {[string]: {[string]: ServerRemote}};
 	Client = {} :: {[string]: {[string]: ClientRemote}};
 }
 
@@ -140,7 +140,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 	if not Remotes.Client[moduleName] then
 		Remotes.Client[moduleName] = {}
 	end
-	Remotes.Client[moduleName][remote.Name] = (setmetatable(actions, metaTable) :: any) :: ClientRemote
+	Remotes.Client[moduleName][remote.Name] = table.freeze(setmetatable(actions, metaTable) :: any) :: ClientRemote
 end
 
 local function haveClientEventsLoaded(): boolean
@@ -243,7 +243,7 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	if not Remotes.Server[moduleName] then
 		Remotes.Server[moduleName] = {}
 	end
-	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
+	Remotes.Server[moduleName][remote.Name] = table.freeze(actions) :: ServerRemote
 
 	script:SetAttribute("NumRemotes", (script:GetAttribute("NumRemotes") :: number? or 0) + 1)
 
@@ -327,7 +327,7 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 
 	script:SetAttribute("NumRemotes", (script:GetAttribute("NumRemotes") :: number? or 0) + 1)
 
-	return actions
+	return table.freeze(actions)
 end
 
 --- @ignore
@@ -363,4 +363,4 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-return Remotes
+return table.freeze(Remotes)
