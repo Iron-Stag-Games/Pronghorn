@@ -12,19 +12,19 @@
 -- Dependencies
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local RunService = game:GetService("RunService")
+const RunService = game:GetService("RunService")
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local IS_STUDIO = RunService:IsStudio()
+const IS_STUDIO = RunService:IsStudio()
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function abort(errorMessage: string): ()
+const function abort(errorMessage: string): ()
 	if IS_STUDIO then
 		error(errorMessage, 0)
 	else
@@ -37,12 +37,12 @@ end
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 return function(remote: any, callingPlayer: Player?, requiredParameterTypes: {string}, ...: any): ()
-	local requiredParameterTypesTemp = table.clone(requiredParameterTypes)
-	local parameters = {...}
-	local numRequiredParameterTypes = #requiredParameterTypesTemp
+	const requiredParameterTypesTemp = table.clone(requiredParameterTypes)
+	const parameters = {...}
+	const numRequiredParameterTypes = #requiredParameterTypesTemp
 
 	if numRequiredParameterTypes > 0 and requiredParameterTypesTemp[numRequiredParameterTypes]:sub(1, 3) == "..." then
-		local variadicRequiredParameterType = requiredParameterTypesTemp[numRequiredParameterTypes]:sub(4)
+		const variadicRequiredParameterType = requiredParameterTypesTemp[numRequiredParameterTypes]:sub(4)
 
 		for index = 1, #parameters do
 			if index >= numRequiredParameterTypes then
@@ -54,13 +54,13 @@ return function(remote: any, callingPlayer: Player?, requiredParameterTypes: {st
 	for index = 1, math.max(numRequiredParameterTypes, #parameters) do
 		requiredParameterTypesTemp[index] = requiredParameterTypesTemp[index] or "nil"
 
-		local parameter = parameters[index]
-		local parameterType = typeof(parameter)
-		local requiredParameterType = requiredParameterTypesTemp[index]:gsub(" ", ""):gsub("?", "")
+		const parameter = parameters[index]
+		const parameterType = typeof(parameter)
+		const requiredParameterType = requiredParameterTypesTemp[index]:gsub(" ", ""):gsub("?", "")
 
 		if requiredParameterType == "..." then break end
 
-		local requiredParameterTypeOptions = requiredParameterType:split("|")
+		const requiredParameterTypeOptions = requiredParameterType:split("|")
 		local pass = false
 
 		if

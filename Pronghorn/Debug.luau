@@ -9,10 +9,10 @@
 ]]
 
 if pcall(function(): () game:GetService("RunService"):IsEdit() end) then error("Cannot require Pronghorn/Debug in Edit mode", 0) end
-local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
+const a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
 if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Cannot require Pronghorn/Debug from more than one Luau VM; please use BindableFunctions", 0) end
 
-local Debug = {}
+const Debug = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -30,8 +30,8 @@ local enabledChannels: {[string]: boolean}?
 function Debug.Print(...: any): ()
 	if not enabledChannels then return end
 
-	local split = (debug.info(2, "s") :: string):split(".")
-	local channel = split[#split]
+	const split = (debug.info(2, "s") :: string):split(".")
+	const channel = split[#split]
 
 	if enabledChannels[channel] == nil then error(`"{channel}" is not a valid debug channel`) end
 
@@ -46,8 +46,8 @@ end
 function Debug.Warn(...: any): ()
 	if not enabledChannels then return end
 
-	local split = (debug.info(2, "s") :: string):split(".")
-	local channel = split[#split]
+	const split = (debug.info(2, "s") :: string):split(".")
+	const channel = split[#split]
 
 	if enabledChannels[channel] == nil then error(`"{channel}" is not a valid debug channel`) end
 
@@ -62,13 +62,13 @@ end
 function Debug.Trace(...: any): ()
 	if not enabledChannels then return end
 
-	local split = (debug.info(2, "s") :: string):split(".")
-	local channel = split[#split]
+	const split = (debug.info(2, "s") :: string):split(".")
+	const channel = split[#split]
 
 	if enabledChannels[channel] == nil then error(`"{channel}" is not a valid debug channel`) end
 
 	if enabledChannels[channel] then
-		local args = {...}
+		const args = {...}
 		table.insert(args, `\n{debug.traceback()}`)
 		warn(`[{channel}]`, table.unpack(args))
 	end

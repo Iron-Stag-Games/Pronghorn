@@ -9,10 +9,10 @@
 ]]
 
 if pcall(function(): () game:GetService("RunService"):IsEdit() end) then error("Cannot require Pronghorn/Remotes in Edit mode", 0) end
-local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
+const a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
 if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Cannot require Pronghorn/Remotes from more than one Luau VM; please use BindableFunctions", 0) end
 
-local Remotes = {
+const Remotes = {
 	Server = {} :: {
 		CreateToClient: (self: any, name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, moduleNameOverride: string?) -> ServerRemote;
 		CreateToServer: (self: any, name: string, requiredParameterTypes: {string}, remoteType: ("Unreliable" | "Reliable" | "Returns")?, func: (Player, ...any) -> (...any)?, moduleNameOverride: string?) -> ServerRemote;
@@ -25,15 +25,15 @@ local Remotes = {
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+const ReplicatedStorage = game:GetService("ReplicatedStorage")
+const Players = game:GetService("Players")
+const RunService = game:GetService("RunService")
 
 -- Core
-local Print = require(script.Parent.Debug).Print
+const Print = require(script.Parent.Debug).Print
 
 -- Child Modules
-local TypeChecker = require(script.TypeChecker)
+const TypeChecker = require(script.TypeChecker)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -58,8 +58,8 @@ type ClientRemote = typeof(setmetatable({} :: {
 }))
 
 -- Constants
-local IS_SERVER = RunService:IsServer()
-local IS_CLIENT = RunService:IsClient()
+const IS_SERVER = RunService:IsServer()
+const IS_CLIENT = RunService:IsClient()
 
 -- Objects
 local remotesFolder: Folder
@@ -68,17 +68,17 @@ local remotesFolder: Folder
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function getEnvironment(): string
-	local info = debug.info(3, "s") or "ERR_DEBUG.INFO_RETURNED_NIL"
-	local split = info:split(".")
+const function getEnvironment(): string
+	const info = debug.info(3, "s") or "ERR_DEBUG.INFO_RETURNED_NIL"
+	const split = info:split(".")
 	return "[" .. split[#split] .. "]"
 end
 
-local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent | RemoteEvent): ()
-	local moduleName: string = (remote :: any).Parent.Name
-	local debugPrintText = `{moduleName}:{remote.Name}`
-	local actions: any = {}
-	local metaTable: any = {
+const function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent | RemoteEvent): ()
+	const moduleName: string = (remote :: any).Parent.Name
+	const debugPrintText = `{moduleName}:{remote.Name}`
+	const actions: any = {}
+	const metaTable: any = {
 		__call = function(self: ClientRemote, context: any, ...: any): ...any
 			if context ~= Remotes.Client[moduleName] then error(`Must call {moduleName}:{remote.Name}() with a colon`, 0) end
 			return actions:Fire(...)
@@ -128,7 +128,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 
 		actions.Fire = function(self: ClientRemote, ...: any): ()
 			if remote:IsA("UnreliableRemoteEvent") then
-				local nextServerTime = script:GetAttribute("ServerTime") :: number
+				const nextServerTime = script:GetAttribute("ServerTime") :: number
 				if nextServerTime == lastServerTime then return end
 				lastServerTime = nextServerTime
 			end
@@ -143,7 +143,7 @@ local function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 	Remotes.Client[moduleName][remote.Name] = table.freeze(setmetatable(actions, metaTable) :: any) :: ClientRemote
 end
 
-local function haveClientEventsLoaded(): boolean
+const function haveClientEventsLoaded(): boolean
 	local numClientEventsLoaded = 0
 
 	for _, instance in remotesFolder:GetDescendants() do
@@ -175,27 +175,27 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	if type(requiredParameterTypes) ~= "table" then error(`Remotes.CreateToClient: Parameter "requiredParameterTypes" expected type "\{string}", got "{typeof(requiredParameterTypes)}"`, 0) end
 	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter "remoteType" expected "nil | "Unreliable" | "Reliable" | "Returns"", got "{remoteType}"`, 0) end
 
-	local split = (debug.info(2, "s") :: string):split(".")
-	local moduleName = moduleNameOverride or split[#split]
+	const split = (debug.info(2, "s") :: string):split(".")
+	const moduleName = moduleNameOverride or split[#split]
 
 	if type(Remotes.Server[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name "{moduleName}" would overwrite a function`, 0) end
 	if Remotes.Server[moduleName] and Remotes.Server[moduleName][name] then error(`Remote "{name}" already created in "{moduleName}"`, 0) end
 
-	local environment = "[" .. moduleName .. "]"
+	const environment = "[" .. moduleName .. "]"
 
 	local serverFolder = remotesFolder:FindFirstChild(moduleName)
 	if not serverFolder then
-		local newServerFolder = Instance.new("Folder")
+		const newServerFolder = Instance.new("Folder")
 		newServerFolder.Name = moduleName
 		newServerFolder.Parent = remotesFolder
 		serverFolder = newServerFolder
 	end
 
-	local remote: any = Instance.new(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent")
+	const remote: any = Instance.new(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent")
 	remote.Name = name
 	remote.Parent = serverFolder
 
-	local actions: any = {}
+	const actions: any = {}
 
 	actions.Destroy = function(self: ServerRemote): ()
 		if not Remotes.Server[moduleName][remote.Name] then return end
@@ -268,32 +268,32 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 	if remoteType ~= nil and remoteType ~= "Unreliable" and remoteType ~= "Reliable" and remoteType ~= "Returns" then error(`Remotes.CreateToClient: Parameter "remoteType" expected "nil | "Unreliable" | "Reliable" | "Returns"", got "{remoteType}"`, 0) end
 	if func ~= nil and type(func) ~= "function" then error(`Remotes.CreateToServer: Parameter "func" expected type "(Player, ...any) -> (...any)?", got "{typeof(func)}"`, 0) end
 
-	local split = (debug.info(2, "s") :: string):split(".")
-	local moduleName = moduleNameOverride or split[#split]
+	const split = (debug.info(2, "s") :: string):split(".")
+	const moduleName = moduleNameOverride or split[#split]
 
 	if type(Remotes.Server[moduleName]) == "function" then error(`Creating remotes under the ModuleScript name "{moduleName}" would overwrite a function`, 0) end
 	if Remotes.Server[moduleName] and Remotes.Server[moduleName][name] then error(`Remote "{name}" already created in "{moduleName}"`, 0) end
 
 	local serverFolder = remotesFolder:FindFirstChild(moduleName)
 	if not serverFolder then
-		local newServerFolder = Instance.new("Folder")
+		const newServerFolder = Instance.new("Folder")
 		newServerFolder.Name = moduleName
 		newServerFolder.Parent = remotesFolder
 		serverFolder = newServerFolder
 	end
 
-	local remote: any = Instance.new(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent")
+	const remote: any = Instance.new(if remoteType == "Returns" then "RemoteFunction" elseif remoteType == "Unreliable" then "UnreliableRemoteEvent" else "RemoteEvent")
 	remote.Name = name
 	remote.Parent = serverFolder
 
-	local actions: any = {}
+	const actions: any = {}
 
 	if not Remotes.Server[moduleName] then
 		Remotes.Server[moduleName] = {}
 	end
 	Remotes.Server[moduleName][remote.Name] = actions :: ServerRemote
 
-	local function getTypeCheckedFunction(newFunction: (Player, ...any) -> ...any): (player: Player, ...any) -> ...any
+	const function getTypeCheckedFunction(newFunction: (Player, ...any) -> ...any): (player: Player, ...any) -> ...any
 		return function(player: Player, ...: any): ...any
 			TypeChecker(remote, player, requiredParameterTypes, ...)
 			return newFunction(player, ...)

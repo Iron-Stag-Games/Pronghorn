@@ -50,21 +50,21 @@
 ]]
 
 if pcall(function(): () game:GetService("RunService"):IsEdit() end) then error("Cannot require Pronghorn in Edit mode", 0) end
-local a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
+const a = if game:GetService("RunService"):IsServer() then "__s" else "__c"
 if not script:GetAttribute(a) then script:SetAttribute(a, true) else error("Cannot require Pronghorn from more than one Luau VM; please use BindableFunctions", 0) end
 
-local Pronghorn = {}
+const Pronghorn = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Dependencies
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Services
-local Players = game:GetService("Players")
+const Players = game:GetService("Players")
 
 -- Core
-local Debug = require(script.Debug)
-local New = require(script.New)
+const Debug = require(script.Debug)
+const New = require(script.New)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -92,7 +92,7 @@ Pronghorn.ModuleStatus = {} :: {[ModuleScript]: New.TrackedVariable<number>}
 -- Helper Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function addModules(allModules: {Module}, object: Instance): ()
+const function addModules(allModules: {Module}, object: Instance): ()
 	if object ~= script then
 		if object:IsA("ModuleScript") then
 			local alreadyAdded = false
@@ -107,7 +107,7 @@ local function addModules(allModules: {Module}, object: Instance): ()
 				Pronghorn.ModuleStatus[object] = New.TrackedVariable(0)
 			end
 		else
-			local children = object:GetChildren()
+			const children = object:GetChildren()
 			table.sort(children, function(a0: Instance, a1: Instance): boolean
 				return a0.Name < a1.Name
 			end)
@@ -134,7 +134,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 		error("Pronghorn:Import() cannot be called more than once", 0)
 	end
 
-	local allModules: {Module} = {}
+	const allModules: {Module} = {}
 
 	for _, object in paths do
 		addModules(allModules, object)
@@ -145,7 +145,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 	-- Init
 	for _, moduleTable in allModules do
 		if type(moduleTable.Return) == "table" and moduleTable.Return.Init then
-			local thread = task.spawn(moduleTable.Return.Init :: (self: typeof(moduleTable.Return)) -> (), moduleTable.Return)
+			const thread = task.spawn(moduleTable.Return.Init :: (self: typeof(moduleTable.Return)) -> (), moduleTable.Return)
 			if coroutine.status(thread) ~= "dead" then
 				error(`{moduleTable.Object:GetFullName()}: Yielded during Init function`, 0)
 			end
@@ -182,7 +182,7 @@ function Pronghorn:Import(paths: {Instance}): ()
 	end
 
 	-- PlayerAdded
-	local function playerAdded(player: Player): ()
+	const function playerAdded(player: Player): ()
 		for _, moduleTable in allModules do
 			if type(moduleTable.Return) == "table" and moduleTable.Return.PlayerAdded then
 				task.spawn(moduleTable.Return.PlayerAdded :: (player: Player) -> (), player)
@@ -237,7 +237,7 @@ end
 
 -- Import Core Modules --
 
-local coreModules = {}
+const coreModules = {}
 
 for _, child in script:GetChildren() do
 	if child:IsA("ModuleScript") then

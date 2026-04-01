@@ -8,20 +8,20 @@
 ╚═══════════════════════════════════════════════╝
 ]]
 
-local New = {}
+const New = {}
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Dependencies
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Services
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+const HttpService = game:GetService("HttpService")
+const Players = game:GetService("Players")
+const RunService = game:GetService("RunService")
 
 -- Core
-local Print = require(script.Parent.Debug).Print
-local Warn = require(script.Parent.Debug).Warn
+const Print = require(script.Parent.Debug).Print
+const Warn = require(script.Parent.Debug).Warn
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Helper Variables
@@ -53,12 +53,12 @@ export type InstanceStream<T...> = {
 }
 
 -- Constants
-local IS_SERVER = RunService:IsServer()
-local IS_CLIENT = RunService:IsClient()
-local QUEUED_EVENT_QUEUE_SIZE = 256
+const IS_SERVER = RunService:IsServer()
+const IS_CLIENT = RunService:IsClient()
+const QUEUED_EVENT_QUEUE_SIZE = 256
 
 -- Objects
-local localPlayer = Players.LocalPlayer :: Player
+const localPlayer = Players.LocalPlayer :: Player
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Module Functions
@@ -80,12 +80,12 @@ end
 --- Creates and returns an `Event`.
 --- @return Event<...any> -- The new `Event`.
 function New.Event(): Event<...any>
-	local callbacks: {Callback<...any>} = {}
-	local waiting: {Callback<...any> | thread} = {}
+	const callbacks: {Callback<...any>} = {}
+	const waiting: {Callback<...any> | thread} = {}
 
-	local actions: Event<...any> = {
+	const actions: Event<...any> = {
 		Fire = function(self: Event<...any>, ...: any): ()
-			local currentlyWaiting = table.clone(waiting)
+			const currentlyWaiting = table.clone(waiting)
 			table.clear(waiting)
 			for _, callback in table.clone(callbacks) do
 				task.spawn(callback, ...)
@@ -103,7 +103,7 @@ function New.Event(): Event<...any>
 		Connect = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function(): ()
-				local index = table.find(callbacks, callback)
+				const index = table.find(callbacks, callback)
 				if index then
 					table.remove(callbacks, index)
 				end
@@ -113,7 +113,7 @@ function New.Event(): Event<...any>
 		Once = function(self: Event<...any>, callback: Callback<...any>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function(): ()
-				local index = table.find(waiting, callback)
+				const index = table.find(waiting, callback)
 				if index then
 					table.remove(waiting, index)
 				end
@@ -121,12 +121,12 @@ function New.Event(): Event<...any>
 		end;
 
 		Wait = function(self: Event<...any>, timeout: number?): (boolean, ...any)
-			local co = coroutine.running()
+			const co = coroutine.running()
 			table.insert(waiting, co)
 			local timeoutThread: thread?
 			if timeout then
 				timeoutThread = task.delay(timeout, function(): ()
-					local index = table.find(waiting, co)
+					const index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)
 					end
@@ -135,7 +135,7 @@ function New.Event(): Event<...any>
 					end
 				end)
 			end
-			local returns = {coroutine.yield()}
+			const returns = {coroutine.yield()}
 			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
 				task.cancel(timeoutThread)
 			end
@@ -161,15 +161,15 @@ end
 --- @param queueSize? -- The queue size of the `QueuedEvent`.
 --- @return Event<...any> -- The new `QueuedEvent`.
 function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
-	local queueSize = queueSize or QUEUED_EVENT_QUEUE_SIZE
+	const queueSize = queueSize or QUEUED_EVENT_QUEUE_SIZE
 
-	local callbacks: {Callback<...any>} = {}
-	local waiting: {Callback<...any> | thread} = {}
+	const callbacks: {Callback<...any>} = {}
+	const waiting: {Callback<...any> | thread} = {}
 	local queueCount = 0
-	local queuedEventInvocations: {{any}} = {}
+	const queuedEventInvocations: {{any}} = {}
 
-	local function resumeQueuedEventInvocations(self: Event<...any>): {any}?
-		local _, firstInvocation = next(queuedEventInvocations)
+	const function resumeQueuedEventInvocations(self: Event<...any>): {any}?
+		const _, firstInvocation = next(queuedEventInvocations)
 
 		if next(callbacks) or next(waiting) then
 			for _, invocation in queuedEventInvocations do
@@ -183,7 +183,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		return firstInvocation
 	end
 
-	local actions: Event<...any> = {
+	const actions: Event<...any> = {
 		Fire = function(self: Event<...any>, ...: any): ()
 			if not next(callbacks) and not next(waiting) then
 				if queueCount >= queueSize then
@@ -192,7 +192,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 				queueCount += 1
 				table.insert(queuedEventInvocations, {...})
 			else
-				local currentlyWaiting = table.clone(waiting)
+				const currentlyWaiting = table.clone(waiting)
 				table.clear(waiting)
 				for _, callback in table.clone(callbacks) do
 					task.spawn(callback, ...)
@@ -212,7 +212,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			table.insert(callbacks, callback)
 			resumeQueuedEventInvocations(self)
 			return {Disconnect = function(): ()
-				local index = table.find(callbacks, callback)
+				const index = table.find(callbacks, callback)
 				if index then
 					table.remove(callbacks, index)
 				end
@@ -223,7 +223,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 			table.insert(waiting, callback)
 			resumeQueuedEventInvocations(self)
 			return {Disconnect = function(): ()
-				local index = table.find(waiting, callback)
+				const index = table.find(waiting, callback)
 				if index then
 					table.remove(waiting, index)
 				end
@@ -231,16 +231,16 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 		end;
 
 		Wait = function(self: Event<...any>, timeout: number?): (boolean, ...any)
-			local queuedInvocation = resumeQueuedEventInvocations(self)
+			const queuedInvocation = resumeQueuedEventInvocations(self)
 			if queuedInvocation then
 				return true, table.unpack(queuedInvocation)
 			end
-			local co = coroutine.running()
+			const co = coroutine.running()
 			table.insert(waiting, co)
 			local timeoutThread: thread?
 			if timeout then
 				timeoutThread = task.delay(timeout, function(): ()
-					local index = table.find(waiting, co)
+					const index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)
 					end
@@ -249,7 +249,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 					end
 				end)
 			end
-			local returns = {coroutine.yield()}
+			const returns = {coroutine.yield()}
 			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
 				task.cancel(timeoutThread)
 			end
@@ -274,19 +274,19 @@ end
 --- @param variable -- The initial value of the `TrackedVariable`.
 --- @return TrackedVariable<T> -- The new `TrackedVariable`.
 function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
-	local callbacks: {Callback<T, T>} = {}
-	local waiting: {Callback<T, T> | thread} = {}
+	const callbacks: {Callback<T, T>} = {}
+	const waiting: {Callback<T, T> | thread} = {}
 
-	local actions: TrackedVariable<T> = {
+	const actions: TrackedVariable<T> = {
 		Get = function(self: TrackedVariable<T>): T
 			return variable
 		end;
 
 		Set = function(self: TrackedVariable<T>, newValue: T): ()
 			if variable ~= newValue then
-				local oldValue = variable
+				const oldValue = variable
 				variable = newValue
-				local currentlyWaiting = table.clone(waiting)
+				const currentlyWaiting = table.clone(waiting)
 				table.clear(waiting)
 				for _, callback in table.clone(callbacks) do
 					task.spawn(callback, oldValue, newValue)
@@ -305,7 +305,7 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 		Connect = function(self: TrackedVariable<T>, callback: Callback<T, T>): Connection
 			table.insert(callbacks, callback)
 			return {Disconnect = function(): ()
-				local index = table.find(callbacks, callback)
+				const index = table.find(callbacks, callback)
 				if index then
 					table.remove(callbacks, index)
 				end
@@ -315,7 +315,7 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 		Once = function(self: TrackedVariable<T>, callback: Callback<T, T>): Connection
 			table.insert(waiting, callback)
 			return {Disconnect = function(): ()
-				local index = table.find(waiting, callback)
+				const index = table.find(waiting, callback)
 				if index then
 					table.remove(waiting, index)
 				end
@@ -323,12 +323,12 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 		end;
 
 		Wait = function(self: TrackedVariable<T>, timeout: number?): (boolean, T, T)
-			local co = coroutine.running()
+			const co = coroutine.running()
 			table.insert(waiting, co)
 			local timeoutThread: thread?
 			if timeout then
 				timeoutThread = task.delay(timeout, function(): ()
-					local index = table.find(waiting, co)
+					const index = table.find(waiting, co)
 					if index then
 						table.remove(waiting, index)
 					end
@@ -337,7 +337,7 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 					end
 				end)
 			end
-			local returns = {coroutine.yield()}
+			const returns = {coroutine.yield()}
 			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
 				task.cancel(timeoutThread)
 			end
@@ -345,7 +345,7 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 		end;
 
 		WaitFor = function(self: TrackedVariable<T>, value: T, timeout: number?): (boolean, T, T)
-			local co = coroutine.running()
+			const co = coroutine.running()
 			local timeoutThread: thread?
 			if timeout then
 				timeoutThread = task.delay(timeout, function(): ()
@@ -389,20 +389,20 @@ end
 function New.ServerInstanceStream(players: Player | {Player}, instances: {Instance}, exclusive: boolean?): (string, {[Player]: Instance}?, {[Player]: {any}}?)
 	if IS_CLIENT then error("InstanceStream cannot be created on the client", 0) end
 
-	local uid = `{HttpService:GenerateGUID(false)}_{#instances}`
-	local containers: {[Player]: Instance}? = if exclusive then {} else nil
-	local clonedInstances: {[Player]: {any}}? = if exclusive and type(players) == "table" then {} else nil
-	local ancestryListeners: {RBXScriptConnection} = {}
+	const uid = `{HttpService:GenerateGUID(false)}_{#instances}`
+	const containers: {[Player]: Instance}? = if exclusive then {} else nil
+	const clonedInstances: {[Player]: {any}}? = if exclusive and type(players) == "table" then {} else nil
+	const ancestryListeners: {RBXScriptConnection} = {}
 
 	for _, player in (if type(players) == "table" then players else {players}) :: {Player} do
 		if not player.Parent then continue end
 
-		local container = Instance.new("ScreenGui")
+		const container = Instance.new("ScreenGui")
 		container.Name = `__instanceStream_{uid}`
 		container.Enabled = false
 		container.ResetOnSpawn = false
 
-		local remoteEvent = Instance.new("RemoteEvent")
+		const remoteEvent = Instance.new("RemoteEvent")
 		remoteEvent.OnServerEvent:Connect(function(): ()
 			if not exclusive then
 				container:Destroy()
@@ -426,7 +426,7 @@ function New.ServerInstanceStream(players: Player | {Player}, instances: {Instan
 				instance = instance:Clone()
 				clonedInstances[player][index] = instance
 			end
-			local objectValue = Instance.new("ObjectValue")
+			const objectValue = Instance.new("ObjectValue")
 			objectValue.Name = tostring(index)
 			objectValue.Value = instance
 			objectValue:SetAttribute("FullName", instance:GetFullName())
@@ -459,16 +459,16 @@ end
 function New.ClientInstanceStream(uid: string): (Event<...Instance?>, Event<Instance?>, Instance)
 	if IS_SERVER then error("ClientInstanceStream cannot be created on the server", 0) end
 
-	local container = assert(localPlayer.PlayerGui:WaitForChild("__instanceStream_" .. uid, 30), `Cannot find InstanceStream with UID "{uid}"`) :: ScreenGui
-	local remoteEvent = assert(container:WaitForChild("RemoteEvent", 30), `InstanceStream with UID "{uid}" missing RemoteEvent`) :: RemoteEvent
-	local numInstances = assert(tonumber(uid:split("_")[2]))
-	local instances: {Instance} = {}
-	local failedInstances: {true} = {}
+	const container = assert(localPlayer.PlayerGui:WaitForChild("__instanceStream_" .. uid, 30), `Cannot find InstanceStream with UID "{uid}"`) :: ScreenGui
+	const remoteEvent = assert(container:WaitForChild("RemoteEvent", 30), `InstanceStream with UID "{uid}" missing RemoteEvent`) :: RemoteEvent
+	const numInstances = assert(tonumber(uid:split("_")[2]))
+	const instances: {Instance} = {}
+	const failedInstances: {true} = {}
 	local finished = false
-	local finishedEvent = New.QueuedEvent("InstanceStream Finished Event") :: Event<...Instance?>
-	local streamEvent = New.QueuedEvent("InstanceStream Stream Event", math.huge) :: Event<Instance?>
+	const finishedEvent = New.QueuedEvent("InstanceStream Finished Event") :: Event<...Instance?>
+	const streamEvent = New.QueuedEvent("InstanceStream Stream Event", math.huge) :: Event<Instance?>
 
-	local function checkFinished(): boolean
+	const function checkFinished(): boolean
 		if finished then return true end
 		for index = 1, numInstances do
 			if not instances[index] and not failedInstances[index] then
