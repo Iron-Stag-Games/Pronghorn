@@ -49,13 +49,13 @@ type ServerRemote = {
 	AddListener: (self: ServerRemote, newFunction: (Player, ...any) -> ()) -> RBXScriptConnection;
 	Destroy: (self: ServerRemote) -> ();
 }
-type ClientRemote = typeof(setmetatable({} :: {
+type ClientRemote = setmetatable<{
 	Fire: (self: ClientRemote, ...any) -> ...any;
 	Connect: (self: ClientRemote, func: (...any) -> ...any) -> RBXScriptConnection;
 	ConnectDeferred: (self: ClientRemote, func: (...any) -> ...any) -> RBXScriptConnectionProxy;
-}, {} :: {
+}, {
 	__call: (self: ClientRemote, context: any, ...any) -> ...any
-}))
+}>
 
 -- Constants
 const IS_SERVER = RunService:IsServer()
