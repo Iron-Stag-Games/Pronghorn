@@ -24,7 +24,7 @@ Pronghorn is a Roblox framework with a direct approach to Module scripting that 
 - No Controller or Service structure.
 - Not Promise based.
 
-# Core Module Functions
+# Core Public Functions
 
 ## Debug
 ```luau
@@ -131,7 +131,7 @@ local OtherExampleModule = require(ReplicatedStorage.Modules.OtherExampleModule)
 return ExampleModule
 ```
 
-## Automated Module Functions
+## Automated Public Functions
 ```luau
 function ExampleModule:Init(): ()
 	-- Runs after all modules are imported. Cannot yield.
