@@ -24,7 +24,7 @@ local enabledChannels: {[string]: boolean}?
 
 --- Prints content to the output.
 --- @param ... -- The content to print.
---- @error "{channel}" is not a valid debug channel -- Internal error.
+--- @error "{channel}" is not a valid debug channel -- The calling `ModuleScript`'s name was not included in `Pronghorn:SetEnabledChannels(...)`.
 function Debug.Print(...: any): ()
 	if not enabledChannels then return end
 
@@ -40,7 +40,7 @@ end
 
 --- Prints content to the output as a warning.
 --- @param ... -- The content to print.
---- @error "{channel}" is not a valid debug channel -- Internal error.
+--- @error "{channel}" is not a valid debug channel -- The calling `ModuleScript`'s name was not included in `Pronghorn:SetEnabledChannels(...)`.
 function Debug.Warn(...: any): ()
 	if not enabledChannels then return end
 
@@ -56,7 +56,7 @@ end
 
 --- Prints content to the output as a warning with a call stack.
 --- @param ... -- The content to print.
---- @error "{channel}" is not a valid debug channel -- Internal error.
+--- @error "{channel}" is not a valid debug channel -- The calling `ModuleScript`'s name was not included in `Pronghorn:SetEnabledChannels(...)`.
 function Debug.Trace(...: any): ()
 	if not enabledChannels then return end
 

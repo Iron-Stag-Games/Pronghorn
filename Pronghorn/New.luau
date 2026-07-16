@@ -64,7 +64,7 @@ const localPlayer = Players.LocalPlayer :: Player
 -- Public Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---- Parents all children to an instance.
+--- Parents all children to an `Instance`.
 --- @param parent -- The new parent `Instance` of the children.
 --- @param children? -- The list of `Instances` to be parented.
 function New.Children(parent: Instance, children: {Instance}?): ()

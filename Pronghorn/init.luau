@@ -29,7 +29,7 @@
 ║                           ██████▀██▓▌▀▌ ▄     ▄▓▌▐▓█▌                ║
 ║                                                                      ║
 ║                                                                      ║
-║                    Pronghorn Framework  Rev. B127                    ║
+║                     Pronghorn Framework  Rev. R1                     ║
 ║             https://github.com/Iron-Stag-Games/Pronghorn             ║
 ║                GNU Lesser General Public License v2.1                ║
 ║                                                                      ║
@@ -120,12 +120,14 @@ end
 -- Public Functions
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
---- @todo
+--- Toggles which `ModuleScript` names will appear in `Debug` outputs.
+--- @error Parameter "newEnabledChannels" expected type "{[string]: boolean}", got {...} -- Incorrect usage.
 function Pronghorn:SetEnabledChannels(newEnabledChannels: {[string]: boolean}): ()
 	Debug:SetEnabledChannels(newEnabledChannels)
 end
 
---- @todo
+--- Starts Pronghorn.
+--- @param paths -- The list of `Instances` and their descendants to be imported. Descendants of `ModuleScripts` are ignored.
 --- @yields
 function Pronghorn:Import(paths: {Instance}): ()
 	if Pronghorn.Importing:Get() then
