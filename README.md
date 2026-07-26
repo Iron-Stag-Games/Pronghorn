@@ -59,8 +59,6 @@ New.TrackedVariable(variable: any): TrackedVariable<T> = {
 	WaitFor: (self: TrackedVariable<T>, value: T, timeout: number?) -> (boolean, T, T);
 	DisconnectAll: (self: TrackedVariable<T>) -> ();
 }
-New.ServerInstanceStream(players: Player | {Player}, instances: {Instance}, exclusive: boolean?): (string, {[Player]: Instance}?, {[Player]: {any}}?)
-New.ClientInstanceStream(uid: string): (Event<T...>, Event<U>, Instance)
 ```
 
 ## Remotes
