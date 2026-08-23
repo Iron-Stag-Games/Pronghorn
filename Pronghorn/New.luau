@@ -30,7 +30,7 @@ export type TrackedVariable<T> = {
 	Connect: (self: TrackedVariable<T>, callback: Callback<T, T>) -> Connection;
 	Once: (self: TrackedVariable<T>, callback: Callback<T, T>) -> Connection;
 	Wait: (self: TrackedVariable<T>, timeout: number?) -> (boolean, T, T);
-	WaitFor: (self: TrackedVariable<T>, value: T, timeout: number?) -> (boolean, T, T);
+	WaitFor: (self: TrackedVariable<T>, value: T, timeout: number?) -> (boolean, T?);
 	DisconnectAll: (self: TrackedVariable<T>) -> ();
 }
 
@@ -321,7 +321,10 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 			return (table.unpack :: any)(returns)
 		end;
 
-		WaitFor = function(self: TrackedVariable<T>, value: T, timeout: number?): (boolean, T, T)
+		WaitFor = function(self: TrackedVariable<T>, value: T, timeout: number?): (boolean, T?)
+			if self:Get() == value then
+				return true, nil
+			end
 			const co = coroutine.running()
 			local timeoutThread: thread?
 			if timeout then
@@ -338,7 +341,7 @@ function New.TrackedVariable<T>(variable: T): TrackedVariable<T>
 			if timeoutThread and coroutine.status(timeoutThread) == "suspended" then
 				task.cancel(timeoutThread)
 			end
-			return success, oldValue, newValue
+			return success, oldValue
 		end;
 
 		DisconnectAll = function(self: TrackedVariable<T>): ()
