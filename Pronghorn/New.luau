@@ -146,9 +146,9 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 	const queuedEventInvocations: {{any}} = {}
 
 	const function resumeQueuedEventInvocations(self: Event<...any>): {any}?
-		const _, firstInvocation = next(queuedEventInvocations)
+		const firstInvocation = queuedEventInvocations[1]
 
-		if next(callbacks) or next(waiting) then
+		if callbacks[1] or waiting[1] then
 			for _, invocation in queuedEventInvocations do
 				self:Fire(table.unpack(invocation))
 			end
@@ -162,7 +162,7 @@ function New.QueuedEvent(nameHint: string?, queueSize: number?): Event<...any>
 
 	const actions: Event<...any> = {
 		Fire = function(self: Event<...any>, ...: any): ()
-			if not next(callbacks) and not next(waiting) then
+			if not callbacks[1] and not waiting[1] then
 				if queueCount >= queueSize then
 					task.spawn(error, `QueuedEvent invocation queue exhausted{if nameHint then ` for "{nameHint}"` else ""}; did you forget to connect to it?`, 0)
 				end
