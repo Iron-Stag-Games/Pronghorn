@@ -60,6 +60,7 @@ type ClientRemote = setmetatable<{
 -- Constants
 const IS_SERVER = RunService:IsServer()
 const IS_CLIENT = RunService:IsClient()
+const FOLDER_ICON_TINT = Color3.new(1, 0.25, 0)
 
 -- Objects
 local remotesFolder: Folder
@@ -187,6 +188,7 @@ function Remotes.Server:CreateToClient(name: string, requiredParameterTypes: {st
 	if not serverFolder then
 		const newServerFolder = Instance.new("Folder")
 		newServerFolder.Name = moduleName
+		newServerFolder.IconTint = FOLDER_ICON_TINT
 		newServerFolder.Parent = remotesFolder
 		serverFolder = newServerFolder
 	end
@@ -278,6 +280,7 @@ function Remotes.Server:CreateToServer(name: string, requiredParameterTypes: {st
 	if not serverFolder then
 		const newServerFolder = Instance.new("Folder")
 		newServerFolder.Name = moduleName
+		newServerFolder.IconTint = FOLDER_ICON_TINT
 		newServerFolder.Parent = remotesFolder
 		serverFolder = newServerFolder
 	end
@@ -337,6 +340,7 @@ function Remotes:Init()
 
 		remotesFolder = Instance.new("Folder")
 		remotesFolder.Name = "__remotes"
+		remotesFolder.IconTint = FOLDER_ICON_TINT
 		remotesFolder.Parent = ReplicatedStorage
 
 		RunService.Heartbeat:Connect(function(dt: number): ()
