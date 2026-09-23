@@ -31,8 +31,6 @@ const RunService = game:GetService("RunService")
 
 -- Core
 const Print = require(script.Parent.Debug).Print
-
--- Child Modules
 const TypeChecker = require(script.TypeChecker)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
