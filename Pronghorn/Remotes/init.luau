@@ -91,7 +91,7 @@ const function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 		end
 
 		actions.ConnectDeferred = function(self: ClientRemote, func: (...any) -> ...any): ()
-			task.defer(function()
+			task.defer(function(): ()
 				remote.OnClientInvoke = func
 			end)
 		end
@@ -118,7 +118,7 @@ const function connectEventClient(remote: RemoteFunction | UnreliableRemoteEvent
 					proxy.Connected = false
 				end
 			}
-			task.defer(function()
+			task.defer(function(): ()
 				connection = (remote :: RemoteEvent).OnClientEvent:Connect(func)
 				proxy.Connected = true
 			end)
